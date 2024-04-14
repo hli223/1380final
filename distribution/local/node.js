@@ -88,7 +88,7 @@ const start = function(onStart) {
         return;
       }
       console.log('before parse body: ', body);
-      // body = JSON.parse(body);
+      body = JSON.parse(body);
       console.log('body: ', body);
       body = serialization.deserialize(body);
       let args = body;
