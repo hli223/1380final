@@ -80,32 +80,51 @@ routes.put = function(service, key, cb) {
   }
 };
 
-const comm = {};
-comm.send = function(args, remote, cb) {
-  global.myStates.counts += 1;
-  const options = {
-    hostname: remote.node.ip,
-    port: remote.node.port,
-    path: '/' + remote.service + '/' + remote.method,
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  };
-  let responseData = '';
-  const req = http.request(options, (res) => {
-    res.on('data', (data) => {
-      // cb(serialization.deserialize(data));
-      responseData += data;
+const comm = {
+  send: function(message, remote, callback) {
+    status.messageCount++;
+    if (remote.node === 'NODE_INFO') {
+      remote.node = global.config;
+    }
+    // console.log("remote: ",remote)
+
+    const requestOptions = {
+      hostname: remote.node.ip,
+      port: remote.node.port,
+      path: `/${remote.service}/${remote.method}`,
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    };
+
+    const req = http.request(requestOptions, (res) => {
+      let data = '';
+      res.on('data', (chunk) => data += chunk);
+      res.on('end', () => {
+        try {
+          // The result from http server
+          const deserializedData = serialization.deserialize(data);
+          // console.log('data: ', data);
+          // console.log('deserializedData:  ', deserializedData);
+          callback(deserializedData[0], deserializedData[1]);
+        } catch (error) {
+          console.error(`Error handling response: ${error}`); // For debugging
+          callback(error);
+        }
+      });
     });
-    res.on('end', () => {
-      responseData = JSON.parse(responseData);
-      cb(...serialization.deserialize(responseData));
+
+    const serializedMessage = serialization.serialize(message);
+    // console.log("serializedMessage", serializedMessage)
+    req.write(serializedMessage);
+    req.end();
+
+    req.on('error', (error) => {
+      console.error(`HTTP request error: ${error}`);
+      callback(error, null);
     });
-  });
-  const message = {args: args, cb: cb};
-  req.write(serialization.serialize(message));
-  req.end();
+  },
 };
 
 global.myStates.status = status;

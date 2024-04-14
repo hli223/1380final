@@ -109,6 +109,7 @@ const start = function(onStart) {
       then it will serialize the result and send it back to the caller.
         */
         const serviceCallback = (e, v) => {
+          // console.log('[SERVER] serviceCallback', e, v);
           res.end(serialization.serialize([e, v]));
         };
 
@@ -117,7 +118,6 @@ const start = function(onStart) {
 
         console.log(`[SERVER] Args: ${JSON.stringify(args)}
             ServiceCallback: ${serviceCallback}`);
-
         service[method](...args, serviceCallback);
       });
     });
