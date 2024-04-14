@@ -135,4 +135,8 @@ module.exports = {
   status: status,
   routes: routes,
   comm: comm,
+  mem: mem,
+  groups: groups,
+  store: store,
+  gossip: gossip,
 };

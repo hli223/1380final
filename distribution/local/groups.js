@@ -25,7 +25,7 @@ groups.put = function(groupName, nodes, callback) {
     require('../all/routes.js')(context);
   // global.distribution[cgroupName].gossip
   // = require("../all/gossip.js")(context)
-  console.log('putting!', groupName, nodes);
+//   console.log('putting!', groupName, nodes);
   if (nodes === null) {
     this.localGroup[groupName] = {};
     callback(null, {});
