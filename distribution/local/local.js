@@ -3,7 +3,12 @@ const http = require('http');
 const serialization = require('../util/serialization');
 const id = require('../util/id');
 
-const node = global.config;
+const node = global.nodeConfig;
+
+const mem = require('./mem');
+const groups = require('./groups');
+const store = require('./store');
+const gossip = require('./gossip');
 
 /*
 
@@ -14,7 +19,12 @@ comm     A message communication interface     send
 
 */
 const status = {};
-global.myStates = {};
+global.myStates = {
+  mem: mem,
+  groups: groups,
+  store: store,
+  gossip: gossip,
+};
 global.myStates.counts = 0;
 status.get = function(key, cb) {
   let res = null;
@@ -53,7 +63,7 @@ routes.get = function(service, cb) {
   } else if (global.myStates.hasOwnProperty(service)) {
     res = global.myStates[service];
   } else {
-    err = new Error('Service does not exist');
+    err = new Error(`Service ${service} does not exist`);
   }
   if (cb !== null) {
     cb(err, res);

@@ -6,7 +6,7 @@ global.toLocal = new Map();
 
 function createRPC(func) {
     let funcID = id.getID(serialization.serialize(func));
-    global.toLocal.set(funcID, func);
+    global.myStates[funcID] = func;
 
     let functionSrc = `
         const callback = args.pop() || function() {};
