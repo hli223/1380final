@@ -79,6 +79,9 @@ test('(25 pts) Inverted index wordflow', (done) => {
         // content: string, the content of the document
         // output: array of objects, each object has a single key-value pair
         const terms = content.match(/\w+/g) || [];
+        // stem each term
+        terms = terms.map((term) => stemmer(term));
+
         let out = [];
         terms.forEach((term) => {
             let termKey = term.toLowerCase();
