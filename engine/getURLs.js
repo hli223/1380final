@@ -10,7 +10,7 @@ const url = process.argv[2];
 let baseURL = '';
 if (url.slice(-5)=='.html') {
   baseURL = url.slice(0, -10);
-} else if (baseURL.slice(-1)!='/') {
+} else if (url.slice(-1)!='/') {
   baseURL = url + '/';
 } else {
   baseURL = url;
@@ -55,6 +55,3 @@ rl.on('line', (line) => {
   });
 });
 
-rl.on('close', () => {
-  // TODO some code
-});
