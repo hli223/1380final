@@ -106,6 +106,11 @@ afterAll((done) => {
 
 test('(25 pts) crawler workflow', (done) => {
   let m1 = async (key, url) => {
+    if (url.slice(-5)==='.html') {
+      url = url.slice(0, -10);
+    } else if (url.slice(-1)!=='/') {
+      url = url + '/';
+    }
     let out = {};
     try {
       process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
@@ -115,78 +120,96 @@ test('(25 pts) crawler workflow', (done) => {
       }
       var htmlContent = await response.text();
       htmlContent = htmlContent.replace("\u00a9", "&copy;")
-    let urls = [];
-    const dom = new global.JSDOM(htmlContent);
-    const document = dom.window.document;
+      let urls = [];
+      const dom = new global.JSDOM(htmlContent);
+      const document = dom.window.document;
 
 
-    const anchors = document.querySelectorAll('a');
+      const anchors = document.querySelectorAll('a');
 
-    anchors.forEach((anchor) => {
-        const href = anchor.getAttribute('href');
-        if (href) {
-        const absoluteUrl = new URL(href, url).toString();
-        urls.push(absoluteUrl);
-        }
-    });
-
+      anchors.forEach((anchor) => {
+          const href = anchor.getAttribute('href');
+          if (href) {
+          const absoluteUrl = new URL(href, url).toString();
+          urls.push(absoluteUrl);
+          }
+      });
       out[url] = urls;
     } catch (error) {
       console.error(url+'Fetch error: ', error);
-      out[url] = 'Error fetching URL: '+url + ' ' + error;
+      out = {...out, [url]: 'Error fetching URL: '+url + ' ' + error};
     }
     return out;
   };
 
-  let urlsToBeStore = [];
+  
 
 
-  const levels = [['https://cs.brown.edu/courses/csci1380/sandbox/1']];
+  
   var currDepth = 0;
-  const baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/1';
+  const baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/1/level_1c/';
+  const levels = [[baseUrl]];
   const visited = new Set();
-  const urlKeys = [];
+  
 
-  const levelCrawl = (urlKeys) => {
-      console.log('start level crawl, level: ', currDepth, urlKeys);
-      if (urlKeys===undefined) {
-          done();
-      }
-      distribution.ncdc.mr.exec({keys: urlKeys, map: m1, reduce: null, notStore: true}, (e, v) => {
-        try {
-            console.log('mapreduce result: ', v);
-            currDepth++;
-            levels.push(v);
+  function crawl() {
+    const levelCrawl = (urlKeys) => {
+        console.log('start level crawl, level: ', currDepth, urlKeys);
+        if (urlKeys===undefined || urlKeys.length===0) {
             done();
-        } catch (e) {
-            done(e);
         }
-      });
-  } 
-
-
-  levels[currDepth].forEach((url) => {
-    if (!(visited.has(url) || url.length < baseUrl.length && baseUrl.includes(url))) {
-      visited.add(url);
-      console.log(url);
-      const urlKey = id.getID(url);
-      urlKeys.push(urlKey);
-      urlsToBeStore.push({url: url, key: urlKey});
+        distribution.ncdc.mr.exec({keys: urlKeys, map: m1, reduce: null, notStore: true}, (e, v) => {
+          try {
+              console.log('mapreduce result at level: ', currDepth, v, urlKeys);
+              currDepth++;
+              const newUrls = []
+              for (let i = 0; i < Object.keys(v).length; i++) {
+                if (v[Object.keys(v)[i]].length > 0) {
+                  newUrls.push(...v[Object.keys(v)[i]][0]);
+                }
+              }
+              levels.push(newUrls);
+              console.log('levels: ', levels);
+              crawl();
+          } catch (e) {
+              done(e);
+          }
+        });
+    } 
+    if (levels[currDepth].length === 0) {
+      done();
     }
-  });
-
-  let cntr = 0;
-  urlsToBeStore.forEach((o) => {
-    let key = o.key;
-    let value = o.url;
-    distribution.ncdc.store.put(value, key, (e, v) => {
-      cntr++;
-      console.log('put urlsToBeStore:', v)
-      if (cntr === urlsToBeStore.length) {
-        console.log('urlsToBeStore store done! check urlKeys', urlKeys)
-        levelCrawl(urlKeys);
-        // doMapReduce();
+    console.log('level[currDepth]: ', currDepth, levels[currDepth]);
+    let urlsToBeStore = [];
+    const urlKeys = [];
+    levels[currDepth].forEach((url) => {
+      if (!(visited.has(url) || url.length < baseUrl.length && baseUrl.includes(url))) {
+        visited.add(url);
+        console.log(url);
+        const urlKey = id.getID(url);
+        urlKeys.push(urlKey);
+        urlsToBeStore.push({url: url, key: urlKey});
       }
     });
-  });
+
+    let cntr = 0;
+    
+    urlsToBeStore.forEach((o) => {
+      let key = o.key;
+      let value = o.url;
+      distribution.ncdc.store.put(value, key, (e, v) => {
+        cntr++;
+        console.log('put urlsToBeStore:', v)
+        if (cntr === urlsToBeStore.length) {
+          console.log('urlsToBeStore store done! check urlKeys, urlsToBeStore', currDepth, urlKeys, urlsToBeStore)
+          levelCrawl(urlKeys);
+          // doMapReduce();
+        }
+      });
+    });
+
+  }
+  crawl();
+
+
 });
