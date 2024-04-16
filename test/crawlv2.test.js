@@ -135,8 +135,8 @@ test('(25 pts) crawler workflow', (done) => {
     //   '1235': 'https://cs0320.github.io/#assignments',
     // },
     // {'3425': 'https://google.com'},
-    {key: '424', url: 'https://cs.brown.edu/courses/csci1380/sandbox/1/level_1a/level_2a/'},
-    {key: '421', url: 'https://cs.brown.edu/courses/csci1380/sandbox/1'},
+    // {key: '424', url: 'https://cs.brown.edu/courses/csci1380/sandbox/1/level_1a/level_2a/'},
+    // {key: '421', url: 'https://cs.brown.edu/courses/csci1380/sandbox/1'},
     // {'243': 'https://atlas.cs.brown.edu/data/dblp/'}
   ];
 
@@ -151,7 +151,22 @@ test('(25 pts) crawler workflow', (done) => {
 
   let cntr = 0;
 
-  // We send the dataset to the cluster
+  levels[currDepth].forEach((url) => {
+    if ((visited.has(url) || url.length < baseUrl.length && baseUrl.includes(url))) {
+        completedUrls++;
+        if (completedUrls === levels[currDepth].length) {
+            levelCrawl();
+        }
+    } else {
+        visited.add(url);
+        console.log(url);
+        const urlKey = id.getID(url);
+        urlKeys.push(urlKey);
+        dataset.push({url: url, key: urlKey});
+    }
+  });
+
+
   dataset.forEach((o) => {
     let key = o.key;
     let value = o.url;
