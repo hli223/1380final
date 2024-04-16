@@ -204,18 +204,37 @@ test('(25 pts) crawler workflow', (done) => {
         console.log('urls to be store: ', urlsToBeStore);
 
         let completedUrls = 0;
-        urlsToBeStore.forEach((urlInfo) => {
-            let url = urlInfo.url;
-            let urlKey = urlInfo.key;
+
+        const checkAllDoneUrlsStore = () => {
+            completedUrls++;
+            if (completedUrls === urlsToBeStore.length) {
+                // levelCrawl(urlKeys);
+                console.log('store completed!')
+            }
+        }
+
+        for (let i = 0; i < urlsToBeStore.length; i++) {
+            let url = urlsToBeStore[i].url;
+            let urlKey = urlsToBeStore[i].key;
             console.log('start storing!', url, urlKey)
             global.distribution['ncdc'].store.put(url, urlKey, (e, v) => {
-                completedUrls++;
-                if (completedUrls === urlsToBeStore.length) {
-                    // levelCrawl(urlKeys);
-                    console.log('store completed!')
-                }
+                checkAllDoneUrlsStore();
             });
-        });
+        }
+
+
+        // urlsToBeStore.forEach((urlInfo) => {
+        //     let url = urlInfo.url;
+        //     let urlKey = urlInfo.key;
+        //     console.log('start storing!', url, urlKey)
+        //     global.distribution['ncdc'].store.put(url, urlKey, (e, v) => {
+        //         completedUrls++;
+        //         if (completedUrls === urlsToBeStore.length) {
+        //             // levelCrawl(urlKeys);
+        //             console.log('store completed!')
+        //         }
+        //     });
+        // });
 
         // distribution.ncdc.store.put(url, urlKey, (e, v) => {
         //     completedUrls++;
