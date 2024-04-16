@@ -62,6 +62,8 @@ distribution['all'].mem =
 distribution['all'].store =
     require('./distribution/all/store')({gid: 'all'});
 
+const {JSDOM} = require('jsdom');
+global.JSDOM = JSDOM;
 module.exports = global.distribution;
 
 /* The following code is run when distribution.js is run directly */
