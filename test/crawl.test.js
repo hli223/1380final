@@ -127,7 +127,7 @@ test('(25 pts) crawler workflow', (done) => {
         const href = anchor.getAttribute('href');
         if (href) {
         const absoluteUrl = new URL(href, url).toString();
-        urls.push(absoluteUrl);
+        urls.push({ url: absoluteUrl, depth: depth + 1, parent: url });
         }
     });
 
@@ -146,49 +146,109 @@ test('(25 pts) crawler workflow', (done) => {
     // },
     // {'3425': 'https://google.com'},
     // {'424': 'https://cs.brown.edu/courses/csci1380/sandbox/1/level_1a/level_2a/'},
-    {'421': 'https://cs.brown.edu/courses/csci1380/sandbox/1'},
+    {key: '421', url: 'https://cs.brown.edu/courses/csci1380/sandbox/1'},
     // {'243': 'https://atlas.cs.brown.edu/data/dblp/'}
   ];
 
-  /* Sanity check: map and reduce locally */
-  // sanityCheck(m1, r1, dataset, expected, done);
+    const baseUrl = dataset[0].url;
+    const doMapReduce = (cb) => {
+    
+    const visited = new Set();
+    // const queue = [{ url: dataset[0].url, depth: 0, parent: null}];
+    var currDepth = 0;
+    const levels = [[dataset[0].url]];
 
-  /* Now we do the same thing but on the cluster */
-  const doMapReduce = (cb) => {
-    distribution.ncdc.store.get(null, (e, v) => {
-      try {
-        expect(v.length).toBe(dataset.length);
-      } catch (e) {
-        done(e);
-      }
+    console.log('start running')
 
-      distribution.ncdc.mr.exec({keys: v, map: m1, reduce: null, notStore: true}, (e, v) => {
-        try {
-          console.log('mapreduce result: ', v);
-          done();
-        } catch (e) {
-          done(e);
+    // while (levels[currDepth].length > 0) {
+
+        const urlKeys = [];
+        
+
+
+        function levelCrawl(urlKeys) {
+            console.log('start level crawl, level: ', currDepth, urlKeys);
+            if (urlKeys===undefined) {
+                done();
+            }
+
+            distribution.ncdc.mr.exec({keys: urlKeys, map: m1, reduce: null, notStore: true}, (e, v) => {
+                try {
+                    console.log('mapreduce result: ', v);
+                    currDepth++;
+                    levels[currDepth] = v;
+                } catch (e) {
+                    done(e);
+                }
+            });
         }
-      });
-    });
+
+
+        let urlsToBeStore = []
+        levels[currDepth].forEach((url) => {
+            if ((visited.has(url) || url.length < baseUrl.length && baseUrl.includes(url))) {
+                completedUrls++;
+                if (completedUrls === levels[currDepth].length) {
+                    levelCrawl();
+                }
+            } else {
+                visited.add(url);
+                console.log(url);
+                const urlKey = id.getID(url);
+                urlKeys.push(urlKey);
+                urlsToBeStore.push({url: url, key: urlKey});
+            }
+
+        });
+
+        console.log('urls to be store: ', urlsToBeStore);
+
+        let completedUrls = 0;
+        urlsToBeStore.forEach((urlInfo) => {
+            let url = urlInfo.url;
+            let urlKey = urlInfo.key;
+            console.log('start storing!', url, urlKey)
+            global.distribution['ncdc'].store.put(url, urlKey, (e, v) => {
+                completedUrls++;
+                if (completedUrls === urlsToBeStore.length) {
+                    // levelCrawl(urlKeys);
+                    console.log('store completed!')
+                }
+            });
+        });
+
+        // distribution.ncdc.store.put(url, urlKey, (e, v) => {
+        //     completedUrls++;
+        //     console.log('urlKeys in store: ', urlKeys);
+        //     if (completedUrls === levels[currDepth].length) {
+        //         // levelCrawl(urlKeys);
+        //         console.log('store completed!')
+        //     }
+        // });
+
+
+    // }
+
+    done();
   };
+    doMapReduce();
 
-  let cntr = 0;
+//   let cntr = 0;
 
-  // We send the dataset to the cluster
-  dataset.forEach((o) => {
-    let key = Object.keys(o)[0];
-    let value = o[key];
-    distribution.ncdc.store.put(value, key, (e, v) => {
-      cntr++;
-      // Once we are done, run the map reduce
-      if (cntr === dataset.length) {
-        doMapReduce();
-      }
-    });
-  });
-  // m1('000', dataset[1]['106']).then((res) => {
-  //   console.log(res);
-  //   done();
-  // });
+//   // We send the dataset to the cluster
+//   dataset.forEach((o) => {
+//     let key = Object.keys(o)[0];
+//     let value = o[key];
+//     distribution.ncdc.store.put(value, key, (e, v) => {
+//       cntr++;
+//       // Once we are done, run the map reduce
+//       if (cntr === dataset.length) {
+//         doMapReduce();
+//       }
+//     });
+//   });
+//   m1('000', dataset[1]['106']).then((res) => {
+//     console.log(res);
+//     done();
+//   });
 });
