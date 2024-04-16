@@ -1,9 +1,10 @@
-global.nodeConfig = {ip: '127.0.0.1', port: 7070};
+const startPort = 8000;
+global.nodeConfig = {ip: '127.0.0.1', port: startPort};
 const distribution = require('../distribution');
 const id = distribution.util.id;
 
 const groupsTemplate = require('../distribution/all/groups');
-global.fetch = require('node-fetch');
+
 
 const ncdcGroup = {};
 const dlibGroup = {};
@@ -23,9 +24,9 @@ let localServer = null;
     The local node will be the orchestrator.
 */
 
-const n1 = {ip: '127.0.0.1', port: 7110};
-const n2 = {ip: '127.0.0.1', port: 7111};
-const n3 = {ip: '127.0.0.1', port: 7112};
+const n1 = {ip: '127.0.0.1', port: startPort+1};
+const n2 = {ip: '127.0.0.1', port: startPort+2};
+const n3 = {ip: '127.0.0.1', port: startPort+3};
 
 beforeAll((done) => {
   /* Stop the nodes if they are running */
@@ -146,7 +147,23 @@ test('(25 pts) crawler workflow', (done) => {
   const visited = new Set();
   const urlKeys = [];
 
-  let cntr = 0;
+  const levelCrawl = (urlKeys) => {
+      console.log('start level crawl, level: ', currDepth, urlKeys);
+      if (urlKeys===undefined) {
+          done();
+      }
+      distribution.ncdc.mr.exec({keys: urlKeys, map: m1, reduce: null, notStore: true}, (e, v) => {
+        try {
+            console.log('mapreduce result: ', v);
+            currDepth++;
+            levels.push(v);
+            done();
+        } catch (e) {
+            done(e);
+        }
+      });
+  } 
+
 
   levels[currDepth].forEach((url) => {
     if (!(visited.has(url) || url.length < baseUrl.length && baseUrl.includes(url))) {
@@ -158,7 +175,7 @@ test('(25 pts) crawler workflow', (done) => {
     }
   });
 
-
+  let cntr = 0;
   urlsToBeStore.forEach((o) => {
     let key = o.key;
     let value = o.url;
@@ -167,6 +184,7 @@ test('(25 pts) crawler workflow', (done) => {
       console.log('put urlsToBeStore:', v)
       if (cntr === urlsToBeStore.length) {
         console.log('urlsToBeStore store done! check urlKeys', urlKeys)
+        levelCrawl(urlKeys);
         done();
         // doMapReduce();
       }
