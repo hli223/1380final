@@ -126,7 +126,7 @@ test('(25 pts) crawler workflow', (done) => {
         const href = anchor.getAttribute('href');
         if (href) {
         const absoluteUrl = new URL(href, url).toString();
-        urls.push({ url: absoluteUrl, depth: depth + 1, parent: url });
+        urls.push(absoluteUrl);
         }
     });
 
@@ -152,7 +152,7 @@ test('(25 pts) crawler workflow', (done) => {
       if (urlKeys===undefined) {
           done();
       }
-      distribution.ncdc.mr.exec({keys: urlKeys, map: (key, url) => {return {url:['123']}}, reduce: null, notStore: true}, (e, v) => {
+      distribution.ncdc.mr.exec({keys: urlKeys, map: m1, reduce: null, notStore: true}, (e, v) => {
         try {
             console.log('mapreduce result: ', v);
             currDepth++;
