@@ -113,6 +113,10 @@ const mr = function (config) {
             console.log('completedRequests: ', completedRequests);
             if (completedRequests === totalRequests) {
               console.log('shuffled mapResults: ', mapResults);
+              if (configuration.notStore) {
+                callback(null, mapResults);
+                return;
+              }
               let storePutCompletedRequests = 0;
               let storePutResult = [];
               const checkAllDoneStorePut = () => {
