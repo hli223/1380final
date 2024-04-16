@@ -129,19 +129,8 @@ test('(25 pts) crawler workflow', (done) => {
     return out;
   };
 
-  let dataset = [
-    // {'5244': 'http://www.maxdml.com/'},
-    // {
-    //   '1235': 'https://cs0320.github.io/#assignments',
-    // },
-    // {'3425': 'https://google.com'},
-    // {key: '424', url: 'https://cs.brown.edu/courses/csci1380/sandbox/1/level_1a/level_2a/'},
-    // {key: '421', url: 'https://cs.brown.edu/courses/csci1380/sandbox/1'},
-    // {'243': 'https://atlas.cs.brown.edu/data/dblp/'}
-  ];
+  let urlsToBeStore = [];
 
-  /* Sanity check: map and reduce locally */
-  // sanityCheck(m1, r1, dataset, expected, done);
 
   const levels = [['https://cs.brown.edu/courses/csci1380/sandbox/1']];
   var currDepth = 0;
@@ -162,26 +151,22 @@ test('(25 pts) crawler workflow', (done) => {
         console.log(url);
         const urlKey = id.getID(url);
         urlKeys.push(urlKey);
-        dataset.push({url: url, key: urlKey});
+        urlsToBeStore.push({url: url, key: urlKey});
     }
   });
 
 
-  dataset.forEach((o) => {
+  urlsToBeStore.forEach((o) => {
     let key = o.key;
     let value = o.url;
     distribution.ncdc.store.put(value, key, (e, v) => {
       cntr++;
-      console.log('put dataset:', v)
-      if (cntr === dataset.length) {
-        console.log('dataset store done!')
+      console.log('put urlsToBeStore:', v)
+      if (cntr === urlsToBeStore.length) {
+        console.log('urlsToBeStore store done!')
         done();
         // doMapReduce();
       }
     });
   });
-  // m1('000', dataset[1]['106']).then((res) => {
-  //   console.log(res);
-  //   done();
-  // });
 });
