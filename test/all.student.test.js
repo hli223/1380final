@@ -147,6 +147,7 @@ test('(25 pts) crawler workflow', (done) => {
   const doMapReduce = (cb) => {
     distribution.ncdc.store.get(null, (e, v) => {
       try {
+        console.log('keys v', v)
         expect(v.length).toBe(dataset.length);
       } catch (e) {
         done(e);
@@ -172,6 +173,7 @@ test('(25 pts) crawler workflow', (done) => {
     distribution.ncdc.store.put(value, key, (e, v) => {
       cntr++;
       // Once we are done, run the map reduce
+      console.log('put dataset:', v)
       if (cntr === dataset.length) {
         doMapReduce();
       }
