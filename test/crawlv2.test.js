@@ -109,19 +109,27 @@ test('(25 pts) crawler workflow', (done) => {
     try {
       process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
       const response = await global.fetch(url);
-      // const response = {
-      //   ok: true,
-      //   status: 200,
-      //   text: () => {
-      //     return '<html><body>Hello, world!</body></html>';
-      //   }
-      // }
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       var htmlContent = await response.text();
       htmlContent = htmlContent.replace("\u00a9", "&copy;")
-      out[url] = htmlContent;
+    let urls = [];
+    const dom = new global.JSDOM(htmlContent);
+    const document = dom.window.document;
+
+
+    const anchors = document.querySelectorAll('a');
+
+    anchors.forEach((anchor) => {
+        const href = anchor.getAttribute('href');
+        if (href) {
+        const absoluteUrl = new URL(href, url).toString();
+        urls.push({ url: absoluteUrl, depth: depth + 1, parent: url });
+        }
+    });
+
+      out[url] = urls;
     } catch (error) {
       console.error(url+'Fetch error: ', error);
       out[url] = 'Error fetching URL: '+url + ' ' + error;
@@ -141,17 +149,12 @@ test('(25 pts) crawler workflow', (done) => {
   let cntr = 0;
 
   levels[currDepth].forEach((url) => {
-    if ((visited.has(url) || url.length < baseUrl.length && baseUrl.includes(url))) {
-        completedUrls++;
-        if (completedUrls === levels[currDepth].length) {
-            levelCrawl();
-        }
-    } else {
-        visited.add(url);
-        console.log(url);
-        const urlKey = id.getID(url);
-        urlKeys.push(urlKey);
-        urlsToBeStore.push({url: url, key: urlKey});
+    if (!(visited.has(url) || url.length < baseUrl.length && baseUrl.includes(url))) {
+      visited.add(url);
+      console.log(url);
+      const urlKey = id.getID(url);
+      urlKeys.push(urlKey);
+      urlsToBeStore.push({url: url, key: urlKey});
     }
   });
 
@@ -163,7 +166,7 @@ test('(25 pts) crawler workflow', (done) => {
       cntr++;
       console.log('put urlsToBeStore:', v)
       if (cntr === urlsToBeStore.length) {
-        console.log('urlsToBeStore store done!')
+        console.log('urlsToBeStore store done! check urlKeys', urlKeys)
         done();
         // doMapReduce();
       }
