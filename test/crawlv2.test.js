@@ -152,7 +152,7 @@ test('(25 pts) crawler workflow', (done) => {
       if (urlKeys===undefined) {
           done();
       }
-      distribution.ncdc.mr.exec({keys: urlKeys, map: m1, reduce: null, notStore: true}, (e, v) => {
+      distribution.ncdc.mr.exec({keys: urlKeys, map: (key, url) => {return {url:['123']}}, reduce: null, notStore: true}, (e, v) => {
         try {
             console.log('mapreduce result: ', v);
             currDepth++;
@@ -185,7 +185,6 @@ test('(25 pts) crawler workflow', (done) => {
       if (cntr === urlsToBeStore.length) {
         console.log('urlsToBeStore store done! check urlKeys', urlKeys)
         levelCrawl(urlKeys);
-        done();
         // doMapReduce();
       }
     });
