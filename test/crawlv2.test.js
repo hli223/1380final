@@ -147,7 +147,7 @@ test('(25 pts) crawler workflow', (done) => {
 
   
   var currDepth = 0;
-  const baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/1/level_1c/';
+  const baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/1';
   const levels = [[baseUrl]];
   const visited = new Set();
   
@@ -177,6 +177,8 @@ test('(25 pts) crawler workflow', (done) => {
         });
     } 
     if (levels[currDepth].length === 0) {
+      const allUrls = levels.flat(Infinity);
+      console.log('allUrls: ', allUrls);
       done();
     }
     console.log('level[currDepth]: ', currDepth, levels[currDepth]);
