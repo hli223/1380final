@@ -6,6 +6,7 @@ cd "$(dirname "$0")/..$R_FOLDER" || exit 1
 
 
 url="https://cs.brown.edu/courses/csci1380/sandbox/2/"
+url="https://cs.brown.edu/courses/csci1380/sandbox/1/"
 
 # curl -k $url | engine/getURLs.js $url
 node engine/getURLs.js $url
