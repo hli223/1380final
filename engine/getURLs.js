@@ -1,57 +1,54 @@
-#!/usr/bin/env node
-
-const readline = require('readline');
-const {JSDOM} = require('jsdom');
-const {URL} = require('url');
-
 // Example usage:
-
+const cheerio = require('cheerio');
+const fs = require('fs');
 const url = process.argv[2];
 let baseURL = '';
-if (url.slice(-5)=='.html') {
+if (url.slice(-5)==='.html') {
   baseURL = url.slice(0, -10);
-} else if (url.slice(-1)!='/') {
+} else if (url.slice(-1)!=='/') {
   baseURL = url + '/';
 } else {
   baseURL = url;
 }
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
 
-const rl = readline.createInterface({
-  input: process.stdin,
-});
+  // Empty the urls.txt file if it exists
+if (fs.existsSync('urls.txt')) {
+  fs.truncateSync('urls.txt', 0);
+}
 
-// TODO some code
-// console.log(baseURL)
+async function crawl(url) {
+  const visited = new Set();
+  const queue = [{ url, depth: 0, parent: null}];
+  console.log('start running', queue.length)
 
-const extractUrls = (htmlContent, baseUrl) => {
-  const dom = new JSDOM(htmlContent);
-  const document = dom.window.document;
+  while (queue.length > 0) {
+    const { url, depth, parent } = queue.shift();
 
-  const urls = [];
-  const anchors = document.querySelectorAll('a');
+    if (visited.has(url) || url.length < baseURL.length && baseURL.includes(url)) {
+      continue;
+    } 
 
-  anchors.forEach((anchor) => {
-    const href = anchor.getAttribute('href');
-    if (href) {
-      const absoluteUrl = new URL(href, baseUrl).toString();
-      urls.push(absoluteUrl);
-    }
-  });
+    visited.add(url);
+    console.log(url);
 
-  return urls;
-};
+    fs.appendFileSync('urls.txt', url + '\n');
 
+    const response = await fetch(url);
+    const html = await response.text();
 
-const printedUrls = new Set();
+    const $ = cheerio.load(html);
 
-rl.on('line', (line) => {
-  // TODO some code
-  const urls = extractUrls(line, baseURL);
-  urls.forEach((url) => {
-    if (!printedUrls.has(url)) {
-      console.log(url);
-      printedUrls.add(url);
-    }
-  });
-});
+    $('a').each((i, el) => {
+      const href = $(el).attr('href');
+      if (href) {
+        // console.log(href, parent)
+        const absoluteUrl = new URL(href, url).toString();
+        queue.push({ url: absoluteUrl, depth: depth + 1, parent: url });
+      }
+    });
+  }
+}
+
+crawl(baseURL);
 
