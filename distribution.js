@@ -65,6 +65,7 @@ distribution['all'].store =
 const {JSDOM} = require('jsdom');
 global.JSDOM = JSDOM;
 module.exports = global.distribution;
+global.fetch = require('node-fetch');
 
 /* The following code is run when distribution.js is run directly */
 if (require.main === module) {
