@@ -165,7 +165,7 @@ test('(25 pts) crawler workflow', (done) => {
   
   var currDepth = 0;
   // var baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/books.txt'
-  var baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg';
+  // var baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg';
   // var baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3/'
   // var baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3/?C=N;O=D'//problemetic
   // var baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3/?C=D;O=A'
@@ -176,7 +176,7 @@ test('(25 pts) crawler workflow', (done) => {
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/the-book-of-mormon_571/index.html'
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/the-book-of-mormon_571/'
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/4/tag/truth/index.html';
-  // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox'
+  var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox'
   // baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/animal-farm_313/'
 
 
@@ -211,7 +211,7 @@ test('(25 pts) crawler workflow', (done) => {
                 }
               }
               levels.push(newUrls);
-              // crawl();
+              crawl();
           } catch (e) {
             console.log('error in levelcrawl: ', e);
               done(e);
