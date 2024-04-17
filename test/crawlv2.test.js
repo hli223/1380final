@@ -132,12 +132,14 @@ test('(25 pts) crawler workflow', (done) => {
           if (href) {
           const absoluteUrl = new URL(href, url).toString();
           urls.push(absoluteUrl);
-          }
+
+        }
       });
       out[url] = urls;
     } catch (error) {
       console.error(url+'Fetch error: ', error);
-      out = {...out, [url]: 'Error fetching URL: '+url + ' ' + error};
+      // out = {...out, [url]: 'Error fetching URL: '+url + ' ' + error};
+      out = {}
     }
     return out;
   };
@@ -147,20 +149,24 @@ test('(25 pts) crawler workflow', (done) => {
 
   
   var currDepth = 0;
-  const baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/1';
+  // const baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/';
+  // const baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/';
+  // const baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/4/';
+  const baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/4/tag/truth/index.html';
+
   const levels = [[baseUrl]];
   const visited = new Set();
   
 
   function crawl() {
     const levelCrawl = (urlKeys) => {
-        console.log('start level crawl, level: ', currDepth, urlKeys);
+        // console.log('start level crawl, level: ', currDepth, urlKeys);
         if (urlKeys===undefined || urlKeys.length===0) {
             done();
         }
         distribution.ncdc.mr.exec({keys: urlKeys, map: m1, reduce: null, notStore: true}, (e, v) => {
           try {
-              console.log('mapreduce result at level: ', currDepth, v, urlKeys);
+              // console.log('mapreduce result at level: ', currDepth, v, urlKeys);
               currDepth++;
               const newUrls = []
               for (let i = 0; i < Object.keys(v).length; i++) {
@@ -181,11 +187,11 @@ test('(25 pts) crawler workflow', (done) => {
       console.log('allUrls: ', allUrls);
       done();
     }
-    console.log('level[currDepth]: ', currDepth, levels[currDepth]);
+    // console.log('level[currDepth]: ', currDepth, levels[currDepth]);
     let urlsToBeStore = [];
     const urlKeys = [];
     levels[currDepth].forEach((url) => {
-      if (!(visited.has(url) || url.length < baseUrl.length && baseUrl.includes(url))) {
+      if (url.length>0&&!(visited.has(url) || url.length < baseUrl.length && baseUrl.includes(url))) {
         visited.add(url);
         console.log(url);
         const urlKey = id.getID(url);
@@ -195,23 +201,28 @@ test('(25 pts) crawler workflow', (done) => {
     });
 
     let cntr = 0;
-    
+    console.log('urlsToBeStore: ', urlsToBeStore, currDepth);
     urlsToBeStore.forEach((o) => {
       let key = o.key;
       let value = o.url;
       distribution.ncdc.store.put(value, key, (e, v) => {
         cntr++;
-        console.log('put urlsToBeStore:', v)
+        // console.log('put urlsToBeStore:', value, key, e, v)
         if (cntr === urlsToBeStore.length) {
-          console.log('urlsToBeStore store done! check urlKeys, urlsToBeStore', currDepth, urlKeys, urlsToBeStore)
+          // console.log('urlsToBeStore store done! check urlsToBeStore', currDepth,urlsToBeStore)
           levelCrawl(urlKeys);
           // doMapReduce();
         }
       });
     });
+    if (urlsToBeStore.length === 0) {
+      const allUrls = levels.flat(Infinity);
+      console.log('allUrls: ', visited.size);
+      done();
+    }
 
   }
   crawl();
 
 
-});
+}, 600000);
