@@ -228,4 +228,4 @@ test('(25 pts) crawler workflow', (done) => {
   crawl();
 
 
-}, 600000);
+}, 200000);
