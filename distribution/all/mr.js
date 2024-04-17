@@ -105,7 +105,7 @@ const mr = function (config) {
           // statusCheck();
           let totalRequests = configuration.keys.length;
           console.log('totalRequests: ', totalRequests);
-          console.log('configuration.keys: ', configuration.keys);
+          // console.log('configuration.keys: ', configuration.keys);
           let completedRequests = 0;
           let errors = [];
           let mapResults = {};
