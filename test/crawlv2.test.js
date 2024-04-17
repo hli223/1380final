@@ -110,14 +110,17 @@ test('(25 pts) crawler workflow', (done) => {
       return {};
     }
     try {
-      if (url.slice(-5)==='.html') {
-        url = url.slice(0, -10);
-      } else if (url.slice(-1)!=='/' && !url.endsWith('.txt')) {
-        url = url + '/';
+      // // if (url.slice(-5)==='.html') {
+      // //   url = url.slice(0, -10);
+      // // } else if (url.slice(-1)!=='/' && !url.endsWith('.txt')) {
+      // //   url = url + '/';
+      // // }
+      if (url.slice(-1)!=='/' && !url.endsWith('.txt')) {
+        url += '/'
       }
     } catch (e) {
       console.log('error in m1: '+key+' '+url+ ' ', e);
-      return {url:[url]};
+      return {url:['error in m1: '+key+' '+url+ ' ', e]};
     }
 
     let out = {};
@@ -138,11 +141,14 @@ test('(25 pts) crawler workflow', (done) => {
 
       anchors.forEach((anchor) => {
           const href = anchor.getAttribute('href');
-          if (href) {
-          const absoluteUrl = new URL(href, url).toString();
-          urls.push(absoluteUrl);
+          if (href && !href.includes('../')) {
+            var absoluteUrl = new URL(href, url).toString();
+            if (absoluteUrl.endsWith('.html')) {
+              absoluteUrl = new URL(absoluteUrl+'/../').toString();
+            } 
+            urls.push(absoluteUrl);
 
-        }
+          }
       });
       out[url] = urls;
     } catch (error) {
@@ -158,23 +164,31 @@ test('(25 pts) crawler workflow', (done) => {
 
   
   var currDepth = 0;
-  // const baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/books.txt'
-  // const baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3';
-  // const baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3/'
-  // const baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3/?C=N;O=D'//problemetic
-  // const baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3/?C=D;O=A'
-  // const baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3/8/12380/?C=M;O=A'
-  // const baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3/7/?C=N;O=D/'
-  // const baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/mesaerion-the-best-science-fiction-stories-1800-1849_983/index.html';//problemetic
-  // const baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/category/books/default_15/';
-  // const baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/the-book-of-mormon_571/index.html'
-  // const baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/4/tag/truth/index.html';
-  const baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/'
+  // var baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/books.txt'
+  var baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg';
+  // var baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3/'
+  // var baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3/?C=N;O=D'//problemetic
+  // var baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3/?C=D;O=A'
+  // var baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3/8/12380/?C=M;O=A'
+  // var baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3/7/?C=N;O=D/'
+  // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/mesaerion-the-best-science-fiction-stories-1800-1849_983/index.html';//problemetic
+  // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/category/books/default_15/';
+  // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/the-book-of-mormon_571/index.html'
+  // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/the-book-of-mormon_571/'
+  // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/4/tag/truth/index.html';
+  // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox'
+  // baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/animal-farm_313/'
 
-  const levels = [[baseUrl]];
+
   const visited = new Set();
-  
-
+  if (baseUrl.endsWith('/')) {
+    baseUrl = baseUrl.slice(0, -1);
+  } 
+  if (baseUrl.endsWith('.html')) {
+    baseUrl = new URL(baseUrl+'/../').toString();
+  } 
+  const levels = [[baseUrl]];
+  console.log('baseURL is ', baseUrl);
   function crawl() {
     const levelCrawl = (urlKeys) => {
         // console.log('start level crawl, level: ', currDepth, urlKeys);
@@ -197,7 +211,7 @@ test('(25 pts) crawler workflow', (done) => {
                 }
               }
               levels.push(newUrls);
-              crawl();
+              // crawl();
           } catch (e) {
             console.log('error in levelcrawl: ', e);
               done(e);
@@ -237,7 +251,9 @@ test('(25 pts) crawler workflow', (done) => {
       distribution.ncdc.store.put(value, key, (e, v) => {
         cntr++;
         console.log('put urlsToBeStore:', value, key, e, v)
-        // done()
+        if (e) {
+          done(e);
+        }
         if (cntr === urlsToBeStore.length) {
           // console.log('urlsToBeStore store done! check urlsToBeStore', currDepth,urlsToBeStore)
           levelCrawl(urlKeys);
@@ -250,4 +266,4 @@ test('(25 pts) crawler workflow', (done) => {
   crawl();
 
 
-}, 40000);
+}, 300000);

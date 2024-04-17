@@ -26,7 +26,11 @@ let store = (config) => {
 
               const checkAllDone = () => {
                 if (completedRequests === totalRequests) {
-                  callback({}, values);
+                  if (errors.length>0) {
+                    callback(errors, null);
+                  } else {
+                    callback({}, values);
+                  }
                 }
               };
               for (const node of Object.values(nodes)) {
