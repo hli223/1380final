@@ -73,8 +73,10 @@ distribution['all'].mem =
 distribution['all'].store =
   require('./distribution/all/store')({ gid: 'all' });
 
-const {JSDOM} = require('jsdom');
+const { JSDOM } = require('jsdom');
 global.JSDOM = JSDOM;
+const { PorterStemmer } = require('natural');
+global.stemmer = PorterStemmer;
 module.exports = global.distribution;
 global.fetch = require('node-fetch');
 

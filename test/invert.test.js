@@ -1,9 +1,9 @@
 global.nodeConfig = { ip: '127.0.0.1', port: 7070 };
 const distribution = require('../distribution');
 const id = distribution.util.id;
-const { PorterStemmer } = require('natural');
-global.stemmer = PorterStemmer;
-console.log('stemmer: ', global.stemmer);
+// const { PorterStemmer } = require('natural');
+// global.stemmer = PorterStemmer;
+// console.log('stemmer: ', global.stemmer);
 
 const groupsTemplate = require('../distribution/all/groups');
 
@@ -22,9 +22,9 @@ let localServer = null;
     The local node will be the orchestrator.
 */
 
-const n1 = { ip: '127.0.0.1', port: 7113 };
-const n2 = { ip: '127.0.0.1', port: 7114 };
-const n3 = { ip: '127.0.0.1', port: 7115 };
+const n1 = { ip: '127.0.0.1', port: 7013 };
+const n2 = { ip: '127.0.0.1', port: 7014 };
+const n3 = { ip: '127.0.0.1', port: 7015 };
 
 beforeAll((done) => {
     /* Stop the nodes if they are running */
@@ -59,7 +59,7 @@ beforeAll((done) => {
             });
         });
     });
-});
+}, 40000);
 
 
 // shut down the nodes
@@ -86,10 +86,12 @@ test('(25 pts) Inverted index wordflow', (done) => {
         // key: string, the url of the document
         // content: string, the content of the document
         // output: array of objects, each object has a single key-value pair
-        const terms = content.match(/\w+/g) || [];
+        console.log('map inpnut is ', key, content);
+        let terms = content.match(/\w+/g) || [];
         // stem each term
-        // terms = terms.map((term) => stemmer(term));
-        console.log('stemmer is: ', distribution.invertedIdx);
+        terms = terms.map((term) => global.stemmer.stem(term));
+        console.log('stemmer is: ', global.stemmer);
+        console.log('stemmer result is: ', terms);
         let out = [];
         terms.forEach((term) => {
             let termKey = term.toLowerCase();
@@ -148,8 +150,8 @@ test('(25 pts) Inverted index wordflow', (done) => {
         dataset.forEach((document) => {
             const terms = document.content.match(/\w+/g) || [];
             terms.forEach((term) => {
-                // const lowerCaseTerm = global.stemmer.stem(term.toLowerCase());
-                const lowerCaseTerm = term.toLowerCase();
+                const lowerCaseTerm = global.stemmer.stem(term.toLowerCase());
+                // const lowerCaseTerm = term.toLowerCase();
                 if (!invertedIndex[lowerCaseTerm]) {
                     invertedIndex[lowerCaseTerm] = [];
                 }
@@ -276,4 +278,4 @@ test('(25 pts) Inverted index wordflow', (done) => {
             }
         });
     });
-});
+}, 40000);
