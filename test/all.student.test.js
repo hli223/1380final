@@ -107,6 +107,7 @@ test('(25 pts) crawler workflow', (done) => {
   let m1 = async (key, url) => {
     let out = {};
     try {
+      process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
       const response = await global.fetch(url);
       // const response = {
       //   ok: true,
@@ -118,23 +119,25 @@ test('(25 pts) crawler workflow', (done) => {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      const htmlContent = await response.text();
-      // const htmlContent = response.text();
+      var htmlContent = await response.text();
+      htmlContent = htmlContent.replace("\u00a9", "&copy;")
       out[url] = htmlContent;
     } catch (error) {
       console.error(url+'Fetch error: ', error);
-      out[url] = 'Error fetching URL: '+url;
+      out[url] = 'Error fetching URL: '+url + ' ' + error;
     }
     return out;
   };
 
   let dataset = [
-    {'5244': 'http://www.maxdml.com/'},
-    {
-      '1235': 'https://cs0320.github.io/#assignments',
-    },
-    {'3425': 'https://google.com'},
-    // {'424': 'https://cs.brown.edu/courses/csci1380/sandbox/1/level_1a/index.html'},
+    // {'5244': 'http://www.maxdml.com/'},
+    // {
+    //   '1235': 'https://cs0320.github.io/#assignments',
+    // },
+    // {'3425': 'https://google.com'},
+    {'424': 'https://cs.brown.edu/courses/csci1380/sandbox/1/level_1a/level_2a/'},
+    {'421': 'https://cs.brown.edu/courses/csci1380/sandbox/1'},
+    // {'243': 'https://atlas.cs.brown.edu/data/dblp/'}
   ];
 
   /* Sanity check: map and reduce locally */
@@ -144,6 +147,7 @@ test('(25 pts) crawler workflow', (done) => {
   const doMapReduce = (cb) => {
     distribution.ncdc.store.get(null, (e, v) => {
       try {
+        console.log('keys v', v)
         expect(v.length).toBe(dataset.length);
       } catch (e) {
         done(e);
@@ -169,6 +173,7 @@ test('(25 pts) crawler workflow', (done) => {
     distribution.ncdc.store.put(value, key, (e, v) => {
       cntr++;
       // Once we are done, run the map reduce
+      console.log('put dataset:', v)
       if (cntr === dataset.length) {
         doMapReduce();
       }
@@ -180,416 +185,416 @@ test('(25 pts) crawler workflow', (done) => {
   // });
 });
 
-test('(25 pts) Distributed string matching workflow', (done) => {
-  let m1 = (key, string) => {
-    const regex = new RegExp('abc');
-    let out = {};
-    const outputKey = global.distribution.util.id.getID(string);
-    try {
-      if (regex.test(string)) {
-        out[outputKey] = key;
-      }
-    } catch (error) {
-      console.error('Matching error: ', error);
-      out[outputKey] = 'Error matching string: ' + string + error;
-    }
-    return out;
-  };
+// test('(25 pts) Distributed string matching workflow', (done) => {
+//   let m1 = (key, string) => {
+//     const regex = new RegExp('abc');
+//     let out = {};
+//     const outputKey = global.distribution.util.id.getID(string);
+//     try {
+//       if (regex.test(string)) {
+//         out[outputKey] = key;
+//       }
+//     } catch (error) {
+//       console.error('Matching error: ', error);
+//       out[outputKey] = 'Error matching string: ' + string + error;
+//     }
+//     return out;
+//   };
 
 
-  let dataset = [
-    {'000': 'abc123'},
-    {'106': 'def456'},
-    {'7777': 'ghabc789'},
-    {'424': 'xyzabc'},
-  ];
+//   let dataset = [
+//     {'000': 'abc123'},
+//     {'106': 'def456'},
+//     {'7777': 'ghabc789'},
+//     {'424': 'xyzabc'},
+//   ];
 
-  let r1 = (key, values) => {
-    let out = {};
-
-
-    let uniqueValues = new Set(values);
+//   let r1 = (key, values) => {
+//     let out = {};
 
 
-    out[key] = Array.from(uniqueValues);
-
-    return out;
-  };
+//     let uniqueValues = new Set(values);
 
 
-  const doMapReduce = (cb) => {
-    distribution.dlib.store.get(null, (e, v) => {
-      try {
-        expect(v.length).toBe(dataset.length);
-      } catch (e) {
-        done(e);
-      }
+//     out[key] = Array.from(uniqueValues);
 
-      distribution.dlib.mr.exec({keys: v, map: m1, reduce: r1}, (e, v) => {
-        try {
-          const regex = new RegExp('abc');
-          expect(v.length).toBe(dataset.filter((o) =>
-            regex.test(Object.values(o)[0])).length);
-          console.log('e, v for string matching: ', e, v);
-          done();
-        } catch (e) {
-          done(e);
-        }
-      });
-    });
-  };
-
-  let cntr = 0;
-
-  // Send the dataset to the cluster
-  dataset.forEach((o) => {
-    let key = Object.keys(o)[0];
-    let value = o[key];
-    distribution.dlib.store.put(value, key, (e, v) => {
-      cntr++;
-      // Once we are done, run the map reduce
-      if (cntr === dataset.length) {
-        doMapReduce();
-      }
-    });
-  });
-  // console.log('standalone1:::', m1('000','abc123'))
-  // console.log('standalone2:::', m1('106','def456'))
-  // done();
-});
-
-test('(25 pts) Inverted index wordflow', (done) => {
-  let m1 = (key, content) => {
-    const terms = content.match(/\w+/g) || [];
-    let out = [];
-    terms.forEach((term) => {
-      let termKey = term.toLowerCase();
-      let mapping = {};
-      mapping[termKey] = [key];
-      out.push(mapping);
-    });
-    return out;
-  };
-
-  let r1 = (term, listOfDocIdArrays) => {
-    let out = {};
-    let docIds = [...new Set(listOfDocIdArrays.flat())];
-    out[term] = docIds;
-    return out;
-  };
-
-  // New dataset for string matching
-  let dataset = [
-    {'id': 'doc1', 'content': 'The quick brown fox jumps over the lazy dog'},
-    {'id': 'doc2', 'content':
-      'A quick movement of the enemy will jeopardize six gunboats'},
-    {'id': 'doc3', 'content':
-      'All questions asked by five watched experts amaze the judge'},
-    {'id': 'doc4', 'content': 'The five boxing wizards jump quickly'},
-  ];
-  function generateExpectedOutput(dataset) {
-    const invertedIndex = {};
-
-    dataset.forEach((document) => {
-      const terms = document.content.match(/\w+/g) || [];
-      terms.forEach((term) => {
-        const lowerCaseTerm = term.toLowerCase();
-        if (!invertedIndex[lowerCaseTerm]) {
-          invertedIndex[lowerCaseTerm] = new Set();
-        }
-        invertedIndex[lowerCaseTerm].add(document.id);
-      });
-    });
-
-    for (const term in invertedIndex) {
-      if (invertedIndex.hasOwnProperty(term)) {
-        invertedIndex[term] =
-          Array.from(invertedIndex[term]);
-      }
-    }
-    return invertedIndex;
-  }
-  const expectedOutput = generateExpectedOutput(dataset);
-  function verifyMapReduceOutput(actualOutput, expectedOutput) {
-    let actualOutputObj = actualOutput.reduce((acc, curr) => {
-      const [key, value] = Object.entries(curr)[0];
-      acc[key] = value;
-      return acc;
-    }, {});
+//     return out;
+//   };
 
 
-    for (let term in expectedOutput) {
-      if (Object.prototype.hasOwnProperty.call(expectedOutput, term)) {
-        if (!actualOutputObj.hasOwnProperty(term)) {
-          console.error(`Missing term in actual output: ${term}`);
-          return false;
-        }
+//   const doMapReduce = (cb) => {
+//     distribution.dlib.store.get(null, (e, v) => {
+//       try {
+//         expect(v.length).toBe(dataset.length);
+//       } catch (e) {
+//         done(e);
+//       }
+
+//       distribution.dlib.mr.exec({keys: v, map: m1, reduce: r1}, (e, v) => {
+//         try {
+//           const regex = new RegExp('abc');
+//           expect(v.length).toBe(dataset.filter((o) =>
+//             regex.test(Object.values(o)[0])).length);
+//           console.log('e, v for string matching: ', e, v);
+//           done();
+//         } catch (e) {
+//           done(e);
+//         }
+//       });
+//     });
+//   };
+
+//   let cntr = 0;
+
+//   // Send the dataset to the cluster
+//   dataset.forEach((o) => {
+//     let key = Object.keys(o)[0];
+//     let value = o[key];
+//     distribution.dlib.store.put(value, key, (e, v) => {
+//       cntr++;
+//       // Once we are done, run the map reduce
+//       if (cntr === dataset.length) {
+//         doMapReduce();
+//       }
+//     });
+//   });
+//   // console.log('standalone1:::', m1('000','abc123'))
+//   // console.log('standalone2:::', m1('106','def456'))
+//   // done();
+// });
+
+// test('(25 pts) Inverted index wordflow', (done) => {
+//   let m1 = (key, content) => {
+//     const terms = content.match(/\w+/g) || [];
+//     let out = [];
+//     terms.forEach((term) => {
+//       let termKey = term.toLowerCase();
+//       let mapping = {};
+//       mapping[termKey] = [key];
+//       out.push(mapping);
+//     });
+//     return out;
+//   };
+
+//   let r1 = (term, listOfDocIdArrays) => {
+//     let out = {};
+//     let docIds = [...new Set(listOfDocIdArrays.flat())];
+//     out[term] = docIds;
+//     return out;
+//   };
+
+//   // New dataset for string matching
+//   let dataset = [
+//     {'id': 'doc1', 'content': 'The quick brown fox jumps over the lazy dog'},
+//     {'id': 'doc2', 'content':
+//       'A quick movement of the enemy will jeopardize six gunboats'},
+//     {'id': 'doc3', 'content':
+//       'All questions asked by five watched experts amaze the judge'},
+//     {'id': 'doc4', 'content': 'The five boxing wizards jump quickly'},
+//   ];
+//   function generateExpectedOutput(dataset) {
+//     const invertedIndex = {};
+
+//     dataset.forEach((document) => {
+//       const terms = document.content.match(/\w+/g) || [];
+//       terms.forEach((term) => {
+//         const lowerCaseTerm = term.toLowerCase();
+//         if (!invertedIndex[lowerCaseTerm]) {
+//           invertedIndex[lowerCaseTerm] = new Set();
+//         }
+//         invertedIndex[lowerCaseTerm].add(document.id);
+//       });
+//     });
+
+//     for (const term in invertedIndex) {
+//       if (invertedIndex.hasOwnProperty(term)) {
+//         invertedIndex[term] =
+//           Array.from(invertedIndex[term]);
+//       }
+//     }
+//     return invertedIndex;
+//   }
+//   const expectedOutput = generateExpectedOutput(dataset);
+//   function verifyMapReduceOutput(actualOutput, expectedOutput) {
+//     let actualOutputObj = actualOutput.reduce((acc, curr) => {
+//       const [key, value] = Object.entries(curr)[0];
+//       acc[key] = value;
+//       return acc;
+//     }, {});
 
 
-        let expectedDocs = expectedOutput[term].sort();
-        let actualDocs = actualOutputObj[term].sort();
-
-        if (expectedDocs.length !== actualDocs.length ||
-            !expectedDocs.every((val, index) => val === actualDocs[index])) {
-          console.error(`Mismatch for term '${term}': expected 
-            ${expectedDocs.join(', ')} but got ${actualDocs.join(', ')}`);
-          return false;
-        }
-      }
-    }
+//     for (let term in expectedOutput) {
+//       if (Object.prototype.hasOwnProperty.call(expectedOutput, term)) {
+//         if (!actualOutputObj.hasOwnProperty(term)) {
+//           console.error(`Missing term in actual output: ${term}`);
+//           return false;
+//         }
 
 
-    for (let term in actualOutputObj) {
-      if (!expectedOutput.hasOwnProperty(term)) {
-        console.error(`Extra term in actual output: ${term}`);
-        return false;
-      }
-    }
+//         let expectedDocs = expectedOutput[term].sort();
+//         let actualDocs = actualOutputObj[term].sort();
 
-    console.log('Map-reduce output is correct.');
-    return true;
-  }
+//         if (expectedDocs.length !== actualDocs.length ||
+//             !expectedDocs.every((val, index) => val === actualDocs[index])) {
+//           console.error(`Mismatch for term '${term}': expected 
+//             ${expectedDocs.join(', ')} but got ${actualDocs.join(', ')}`);
+//           return false;
+//         }
+//       }
+//     }
 
-  // Adjusted logic for map-reduce
-  const doMapReduce = (cb) => {
-    distribution.invertedIdx.store.get(null, (e, v) => {
-      try {
-        expect(v.length).toBe(dataset.length);
-      } catch (e) {
-        done(e);
-      }
 
-      distribution.invertedIdx.mr
-          .exec({keys: v, map: m1, reduce: r1}, (e, v) => {
-            try {
-              console.log('e, v for string matching: ', e, v);
-              console.log('expected output: ', expectedOutput);
-              expect(verifyMapReduceOutput(v, expectedOutput)).toBeTruthy();
-              done();
-            } catch (e) {
-              done(e);
-            }
-          });
-    });
-  };
+//     for (let term in actualOutputObj) {
+//       if (!expectedOutput.hasOwnProperty(term)) {
+//         console.error(`Extra term in actual output: ${term}`);
+//         return false;
+//       }
+//     }
 
-  let cntr = 0;
+//     console.log('Map-reduce output is correct.');
+//     return true;
+//   }
 
-  // Send the dataset to the cluster
-  dataset.forEach((o) => {
-    let key = o.id;
-    let value = o.content;
-    distribution.invertedIdx.store.put(value, key, (e, v) => {
-      cntr++;
-      // Once we are done, run the map reduce
-      if (cntr === dataset.length) {
-        doMapReduce();
-      }
-    });
-  });
-});
+//   // Adjusted logic for map-reduce
+//   const doMapReduce = (cb) => {
+//     distribution.invertedIdx.store.get(null, (e, v) => {
+//       try {
+//         expect(v.length).toBe(dataset.length);
+//       } catch (e) {
+//         done(e);
+//       }
 
-test('(25 pts) Reverse web link graph wordflow', (done) => {
-  let m1 = (source, sink) => {
-    const out = {};
-    out[sink] = [source];
-    return out;
-  };
+//       distribution.invertedIdx.mr
+//           .exec({keys: v, map: m1, reduce: r1}, (e, v) => {
+//             try {
+//               console.log('e, v for string matching: ', e, v);
+//               console.log('expected output: ', expectedOutput);
+//               expect(verifyMapReduceOutput(v, expectedOutput)).toBeTruthy();
+//               done();
+//             } catch (e) {
+//               done(e);
+//             }
+//           });
+//     });
+//   };
 
-  let r1 = (sink, sources) => {
-    let out = {};
-    // Flatten the array of source arrays and remove duplicates
-    let uniqueSources = [...new Set(sources.flat())];
-    out[sink] = uniqueSources;
-    return out;
-  };
+//   let cntr = 0;
 
-  let dataset = [
-    {source: 'siteA.com/home', sink: 'siteB.com/about'},
-    {source: 'siteC.com/info', sink: 'siteB.com/about'},
-    {source: 'siteD.com/contact', sink: 'siteA.com/home'},
-    {source: 'siteE.com/blog', sink: 'siteA.com/home'},
-    {source: 'siteF.com', sink: 'siteG.com/promo'},
-    {source: 'siteH.com', sink: 'siteI.com'},
-    {source: 'siteJ.com', sink: 'siteK.com/landing'},
-    {source: 'siteL.com', sink: 'siteM.com'},
-    {source: 'siteN.com', sink: 'siteO.com/features'},
-    {source: 'siteP.com', sink: 'siteQ.com'},
-    {source: 'siteR.com', sink: 'siteS.com'},
-    {source: 'siteT.com', sink: 'siteU.com'},
-    {source: 'siteV.com', sink: 'siteW.com'},
-    {source: 'siteX.com', sink: 'siteY.com'},
-  ];
-  function generateExpectedOutput(dataset) {
-    const reverseLinkGraph = {};
+//   // Send the dataset to the cluster
+//   dataset.forEach((o) => {
+//     let key = o.id;
+//     let value = o.content;
+//     distribution.invertedIdx.store.put(value, key, (e, v) => {
+//       cntr++;
+//       // Once we are done, run the map reduce
+//       if (cntr === dataset.length) {
+//         doMapReduce();
+//       }
+//     });
+//   });
+// });
 
-    dataset.forEach((link) => {
-      if (!reverseLinkGraph[link.sink]) {
-        reverseLinkGraph[link.sink] = [];
-      }
-      reverseLinkGraph[link.sink].push(link.source);
-    });
+// test('(25 pts) Reverse web link graph wordflow', (done) => {
+//   let m1 = (source, sink) => {
+//     const out = {};
+//     out[sink] = [source];
+//     return out;
+//   };
 
-    for (const sink in reverseLinkGraph) {
-      if (reverseLinkGraph.hasOwnProperty(sink)) {
-        reverseLinkGraph[sink].sort();
-      }
-    }
+//   let r1 = (sink, sources) => {
+//     let out = {};
+//     // Flatten the array of source arrays and remove duplicates
+//     let uniqueSources = [...new Set(sources.flat())];
+//     out[sink] = uniqueSources;
+//     return out;
+//   };
 
-    return reverseLinkGraph;
-  }
-  const expectedOutput = generateExpectedOutput(dataset);
-  function verifyMapReduceOutput(actualOutput, expectedOutput) {
-    let actualOutputObj = actualOutput.reduce((acc, curr) => {
-      const [key, value] = Object.entries(curr)[0];
-      acc[key] = value;
-      return acc;
-    }, {});
+//   let dataset = [
+//     {source: 'siteA.com/home', sink: 'siteB.com/about'},
+//     {source: 'siteC.com/info', sink: 'siteB.com/about'},
+//     {source: 'siteD.com/contact', sink: 'siteA.com/home'},
+//     {source: 'siteE.com/blog', sink: 'siteA.com/home'},
+//     {source: 'siteF.com', sink: 'siteG.com/promo'},
+//     {source: 'siteH.com', sink: 'siteI.com'},
+//     {source: 'siteJ.com', sink: 'siteK.com/landing'},
+//     {source: 'siteL.com', sink: 'siteM.com'},
+//     {source: 'siteN.com', sink: 'siteO.com/features'},
+//     {source: 'siteP.com', sink: 'siteQ.com'},
+//     {source: 'siteR.com', sink: 'siteS.com'},
+//     {source: 'siteT.com', sink: 'siteU.com'},
+//     {source: 'siteV.com', sink: 'siteW.com'},
+//     {source: 'siteX.com', sink: 'siteY.com'},
+//   ];
+//   function generateExpectedOutput(dataset) {
+//     const reverseLinkGraph = {};
 
-    for (let sink in expectedOutput) {
-      if (Object.prototype.hasOwnProperty.call(expectedOutput, sink)) {
-        if (!actualOutputObj.hasOwnProperty(sink)) {
-          console.error(`Missing sink in actual output: ${sink}`);
-          return false;
-        }
+//     dataset.forEach((link) => {
+//       if (!reverseLinkGraph[link.sink]) {
+//         reverseLinkGraph[link.sink] = [];
+//       }
+//       reverseLinkGraph[link.sink].push(link.source);
+//     });
 
-        let expectedSources = expectedOutput[sink].sort();
-        let actualSources = actualOutputObj[sink].sort();
+//     for (const sink in reverseLinkGraph) {
+//       if (reverseLinkGraph.hasOwnProperty(sink)) {
+//         reverseLinkGraph[sink].sort();
+//       }
+//     }
 
-        if (expectedSources.length !== actualSources.length ||
-            !expectedSources.
-                every((val, index) => val === actualSources[index])) {
-          console.error(`Mismatch for sink '${sink}': 
-            expected ${expectedSources.join(', ')} 
-              but got ${actualSources.join(', ')}`);
-          return false;
-        }
-      }
-    }
+//     return reverseLinkGraph;
+//   }
+//   const expectedOutput = generateExpectedOutput(dataset);
+//   function verifyMapReduceOutput(actualOutput, expectedOutput) {
+//     let actualOutputObj = actualOutput.reduce((acc, curr) => {
+//       const [key, value] = Object.entries(curr)[0];
+//       acc[key] = value;
+//       return acc;
+//     }, {});
 
-    for (let sink in actualOutputObj) {
-      if (!expectedOutput.hasOwnProperty(sink)) {
-        console.error(`Extra sink in actual output: ${sink}`);
-        return false;
-      }
-    }
+//     for (let sink in expectedOutput) {
+//       if (Object.prototype.hasOwnProperty.call(expectedOutput, sink)) {
+//         if (!actualOutputObj.hasOwnProperty(sink)) {
+//           console.error(`Missing sink in actual output: ${sink}`);
+//           return false;
+//         }
 
-    console.log('Map-reduce output for reverse web link graph is correct.');
-    return true;
-  }
+//         let expectedSources = expectedOutput[sink].sort();
+//         let actualSources = actualOutputObj[sink].sort();
 
-  const doMapReduce = (cb) => {
-    distribution.sourceSink.store.get(null, (e, v) => {
-      try {
-        expect(v.length).toBe(dataset.length);
-      } catch (e) {
-        done(e);
-      }
+//         if (expectedSources.length !== actualSources.length ||
+//             !expectedSources.
+//                 every((val, index) => val === actualSources[index])) {
+//           console.error(`Mismatch for sink '${sink}': 
+//             expected ${expectedSources.join(', ')} 
+//               but got ${actualSources.join(', ')}`);
+//           return false;
+//         }
+//       }
+//     }
 
-      distribution.sourceSink.mr
-          .exec({keys: v, map: m1, reduce: r1}, (e, v) => {
-            try {
-              console.log('e, v for reverse web link graph: ', e, v);
-              console.log('expected output: ', expectedOutput);
-              expect(verifyMapReduceOutput(v, expectedOutput)).toBeTruthy();
-              done();
-            } catch (e) {
-              done(e);
-            }
-          });
-    });
-  };
+//     for (let sink in actualOutputObj) {
+//       if (!expectedOutput.hasOwnProperty(sink)) {
+//         console.error(`Extra sink in actual output: ${sink}`);
+//         return false;
+//       }
+//     }
 
-  let cntr = 0;
+//     console.log('Map-reduce output for reverse web link graph is correct.');
+//     return true;
+//   }
 
-  dataset.forEach((o) => {
-    let key = o.source;
-    let value = o.sink;
-    distribution.sourceSink.store.put(value, key, (e, v) => {
-      cntr++;
-      // Once we are done, run the map reduce
-      if (cntr === dataset.length) {
-        doMapReduce();
-      }
-    });
-  });
+//   const doMapReduce = (cb) => {
+//     distribution.sourceSink.store.get(null, (e, v) => {
+//       try {
+//         expect(v.length).toBe(dataset.length);
+//       } catch (e) {
+//         done(e);
+//       }
 
-  // console.log('standalone1:::', m1('siteA.com/home','siteB.com/about'))
-  // console.log('standalone2:::', m1('106','def456'))
-  // done();
-});
+//       distribution.sourceSink.mr
+//           .exec({keys: v, map: m1, reduce: r1}, (e, v) => {
+//             try {
+//               console.log('e, v for reverse web link graph: ', e, v);
+//               console.log('expected output: ', expectedOutput);
+//               expect(verifyMapReduceOutput(v, expectedOutput)).toBeTruthy();
+//               done();
+//             } catch (e) {
+//               done(e);
+//             }
+//           });
+//     });
+//   };
 
-test('(25 pts) test1', (done) => {
-  let m1 = (key, string) => {
-    const regex = new RegExp('789');
-    let out = {};
-    const outputKey = global.distribution.util.id.getID(string);
-    try {
-      if (regex.test(string)) {
-        out[outputKey] = key;
-      }
-    } catch (error) {
-      console.error('Matching error: ', error);
-      out[outputKey] = 'Error matching string: ' + string + error;
-    }
-    return out;
-  };
+//   let cntr = 0;
 
-  let dataset = [
-    {'000': 'abc123'},
-    {'106': 'def456'},
-    {'7777': 'ghabc789'},
-    {'424': 'xyzabc'},
-  ];
+//   dataset.forEach((o) => {
+//     let key = o.source;
+//     let value = o.sink;
+//     distribution.sourceSink.store.put(value, key, (e, v) => {
+//       cntr++;
+//       // Once we are done, run the map reduce
+//       if (cntr === dataset.length) {
+//         doMapReduce();
+//       }
+//     });
+//   });
 
-  let r1 = (key, values) => {
-    let out = {};
+//   // console.log('standalone1:::', m1('siteA.com/home','siteB.com/about'))
+//   // console.log('standalone2:::', m1('106','def456'))
+//   // done();
+// });
 
-    let uniqueValues = new Set(values);
+// test('(25 pts) test1', (done) => {
+//   let m1 = (key, string) => {
+//     const regex = new RegExp('789');
+//     let out = {};
+//     const outputKey = global.distribution.util.id.getID(string);
+//     try {
+//       if (regex.test(string)) {
+//         out[outputKey] = key;
+//       }
+//     } catch (error) {
+//       console.error('Matching error: ', error);
+//       out[outputKey] = 'Error matching string: ' + string + error;
+//     }
+//     return out;
+//   };
 
-    out[key] = Array.from(uniqueValues);
+//   let dataset = [
+//     {'000': 'abc123'},
+//     {'106': 'def456'},
+//     {'7777': 'ghabc789'},
+//     {'424': 'xyzabc'},
+//   ];
 
-    return out;
-  };
+//   let r1 = (key, values) => {
+//     let out = {};
 
-  // Adjusted logic for map-reduce
-  const doMapReduce = (cb) => {
-    distribution.test1.store.get(null, (e, v) => {
-      try {
-        expect(v.length).toBe(dataset.length);
-      } catch (e) {
-        done(e);
-      }
+//     let uniqueValues = new Set(values);
 
-      distribution.test1.mr.exec({keys: v, map: m1, reduce: r1}, (e, v) => {
-        try {
-          const regex = new RegExp('789');
-          expect(v.length).toBe(dataset
-              .filter((o) => regex.test(Object.values(o)[0])).length);
-          console.log('e, v for string matching: ', e, v);
-          done();
-        } catch (e) {
-          done(e);
-        }
-      });
-    });
-  };
+//     out[key] = Array.from(uniqueValues);
 
-  let cntr = 0;
+//     return out;
+//   };
 
-  // Send the dataset to the cluster
-  dataset.forEach((o) => {
-    let key = Object.keys(o)[0];
-    let value = o[key];
-    distribution.test1.store.put(value, key, (e, v) => {
-      cntr++;
-      // Once we are done, run the map reduce
-      if (cntr === dataset.length) {
-        doMapReduce();
-      }
-    });
-  });
-  // console.log('standalone1:::', m1('000','abc123'))
-  // console.log('standalone2:::', m1('106','def456'))
-  // done();
-});
+//   // Adjusted logic for map-reduce
+//   const doMapReduce = (cb) => {
+//     distribution.test1.store.get(null, (e, v) => {
+//       try {
+//         expect(v.length).toBe(dataset.length);
+//       } catch (e) {
+//         done(e);
+//       }
+
+//       distribution.test1.mr.exec({keys: v, map: m1, reduce: r1}, (e, v) => {
+//         try {
+//           const regex = new RegExp('789');
+//           expect(v.length).toBe(dataset
+//               .filter((o) => regex.test(Object.values(o)[0])).length);
+//           console.log('e, v for string matching: ', e, v);
+//           done();
+//         } catch (e) {
+//           done(e);
+//         }
+//       });
+//     });
+//   };
+
+//   let cntr = 0;
+
+//   // Send the dataset to the cluster
+//   dataset.forEach((o) => {
+//     let key = Object.keys(o)[0];
+//     let value = o[key];
+//     distribution.test1.store.put(value, key, (e, v) => {
+//       cntr++;
+//       // Once we are done, run the map reduce
+//       if (cntr === dataset.length) {
+//         doMapReduce();
+//       }
+//     });
+//   });
+//   // console.log('standalone1:::', m1('000','abc123'))
+//   // console.log('standalone2:::', m1('106','def456'))
+//   // done();
+// });

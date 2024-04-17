@@ -105,14 +105,22 @@ const mr = function (config) {
           // statusCheck();
           let totalRequests = configuration.keys.length;
           console.log('totalRequests: ', totalRequests);
-          console.log('configuration.keys: ', configuration.keys);
+          // console.log('configuration.keys: ', configuration.keys);
           let completedRequests = 0;
-          let errors = [];
+          let errorsMap = {};
           let mapResults = {};
           const checkAllDoneMap = () => {
             console.log('completedRequests: ', completedRequests);
             if (completedRequests === totalRequests) {
+              if (Object.keys(errorsMap).length > 0) {
+                callback(errorsMap, null);
+                return;
+              }
               console.log('shuffled mapResults: ', mapResults);
+              if (configuration.notStore) {
+                callback(null, mapResults);
+                return;
+              }
               let storePutCompletedRequests = 0;
               let storePutResult = [];
               const checkAllDoneStorePut = () => {
@@ -221,7 +229,8 @@ const mr = function (config) {
             console.log('map args: ', args);
             localComm.send(args, remote, (e, mapResult) => {
               if (e) {
-                errors.push(e);
+                // errors.push(e);
+                errorsMap[key] = e;
               } else {
                 console.log('mapResult: ', mapResult, e);
                 if (Array.isArray(mapResult)) {
