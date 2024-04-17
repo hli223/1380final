@@ -28,12 +28,14 @@ const n1 = {ip: '127.0.0.1', port: startPort+1};
 const n2 = {ip: '127.0.0.1', port: startPort+2};
 const n3 = {ip: '127.0.0.1', port: startPort+3};
 
+
 beforeAll((done) => {
   /* Stop the nodes if they are running */
 
   ncdcGroup[id.getSID(n1)] = n1;
   ncdcGroup[id.getSID(n2)] = n2;
   ncdcGroup[id.getSID(n3)] = n3;
+
 
   dlibGroup[id.getSID(n1)] = n1;
   dlibGroup[id.getSID(n2)] = n2;
@@ -97,8 +99,8 @@ afterAll((done) => {
     distribution.local.comm.send([], remote, (e, v) => {
       remote.node = n3;
       distribution.local.comm.send([], remote, (e, v) => {
-        localServer.close();
-        done();
+          localServer.close();
+          done();
       });
     });
   });
@@ -141,7 +143,7 @@ test('(25 pts) crawler workflow', (done) => {
 
       anchors.forEach((anchor) => {
           const href = anchor.getAttribute('href');
-          if (href && !href.includes('../')) {
+          if (href) {
             var absoluteUrl = new URL(href, url).toString();
             if (absoluteUrl.endsWith('.html')) {
               absoluteUrl = new URL(absoluteUrl+'/../').toString();
@@ -176,7 +178,7 @@ test('(25 pts) crawler workflow', (done) => {
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/the-book-of-mormon_571/index.html'
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/the-book-of-mormon_571/'
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/4/tag/truth/index.html';
-  var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox'
+  var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3'
   // baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/animal-farm_313/'
 
 
@@ -227,7 +229,7 @@ test('(25 pts) crawler workflow', (done) => {
     const urlKeys = [];
     const keyUrlsMap = {}
     levels[currDepth].forEach((url) => {
-      if (url.length>0&&!(visited.has(url) || url.length < baseUrl.length && baseUrl.includes(url))) {
+      if (url.length>0&&!(visited.has(url) || url.length < baseUrl.length && baseUrl.includes(url)) && url.includes(baseUrl)) {
         visited.add(url);
         console.log(url);
         const urlKey = 'url-'+id.getID(url);
