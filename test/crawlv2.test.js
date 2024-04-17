@@ -24,42 +24,51 @@ let localServer = null;
     The local node will be the orchestrator.
 */
 
-const n1 = {ip: '127.0.0.1', port: startPort+1};
-const n2 = {ip: '127.0.0.1', port: startPort+2};
-const n3 = {ip: '127.0.0.1', port: startPort+3};
+const nodes = [];
+for (let i = 1; i <= 3; i++) {
+  nodes.push({ip: '127.0.0.1', port: startPort + i});
+}
 
 
 beforeAll((done) => {
   /* Stop the nodes if they are running */
 
-  ncdcGroup[id.getSID(n1)] = n1;
-  ncdcGroup[id.getSID(n2)] = n2;
-  ncdcGroup[id.getSID(n3)] = n3;
+  nodes.forEach(node => {
+    ncdcGroup[id.getSID(node)] = node;
+    dlibGroup[id.getSID(node)] = node;
+    invertedIdxGroup[id.getSID(node)] = node;
+    sourceSinkGroup[id.getSID(node)] = node;
+    test1Group[id.getSID(node)] = node;
+  });
 
 
-  dlibGroup[id.getSID(n1)] = n1;
-  dlibGroup[id.getSID(n2)] = n2;
-  dlibGroup[id.getSID(n3)] = n3;
 
-  invertedIdxGroup[id.getSID(n1)] = n1;
-  invertedIdxGroup[id.getSID(n2)] = n2;
-  invertedIdxGroup[id.getSID(n3)] = n3;
+  // dlibGroup[id.getSID(n1)] = n1;
+  // dlibGroup[id.getSID(n2)] = n2;
+  // dlibGroup[id.getSID(n3)] = n3;
 
-  sourceSinkGroup[id.getSID(n1)] = n1;
-  sourceSinkGroup[id.getSID(n2)] = n2;
-  sourceSinkGroup[id.getSID(n3)] = n3;
+  // invertedIdxGroup[id.getSID(n1)] = n1;
+  // invertedIdxGroup[id.getSID(n2)] = n2;
+  // invertedIdxGroup[id.getSID(n3)] = n3;
 
-  test1Group[id.getSID(n1)] = n1;
-  test1Group[id.getSID(n2)] = n2;
-  test1Group[id.getSID(n3)] = n3;
+  // sourceSinkGroup[id.getSID(n1)] = n1;
+  // sourceSinkGroup[id.getSID(n2)] = n2;
+  // sourceSinkGroup[id.getSID(n3)] = n3;
 
+  // test1Group[id.getSID(n1)] = n1;
+  // test1Group[id.getSID(n2)] = n2;
+  // test1Group[id.getSID(n3)] = n3;
 
+  let cntr = 0;
   const startNodes = (cb) => {
-    distribution.local.status.spawn(n1, (e, v) => {
-      distribution.local.status.spawn(n2, (e, v) => {
-        distribution.local.status.spawn(n3, (e, v) => {
+    nodes.forEach(node => {
+      distribution.local.status.spawn(node, (e, v) => {
+        // Handle the callback
+        cntr++;
+        if (cntr === nodes.length) {
+          console.log('all nodes started!');
           cb();
-        });
+        }
       });
     });
   };
@@ -92,16 +101,18 @@ beforeAll((done) => {
 });
 
 afterAll((done) => {
-  let remote = {service: 'status', method: 'stop'};
-  remote.node = n1;
-  distribution.local.comm.send([], remote, (e, v) => {
-    remote.node = n2;
+  let cntr = 0;
+  const remote = {service: 'status', method: 'stop'};
+  nodes.forEach(node => {
+    remote.node = node;
     distribution.local.comm.send([], remote, (e, v) => {
-      remote.node = n3;
-      distribution.local.comm.send([], remote, (e, v) => {
-          localServer.close();
-          done();
-      });
+      // Handle the callback
+      cntr++;
+      if (cntr === nodes.length) {
+        console.log('all nodes stopped!');
+        localServer.close();
+        done();
+      }
     });
   });
 });
@@ -178,7 +189,7 @@ test('(25 pts) crawler workflow', (done) => {
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/the-book-of-mormon_571/index.html'
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/the-book-of-mormon_571/'
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/4/tag/truth/index.html';
-  var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3'
+  var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/4'
   // baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/animal-farm_313/'
 
 
