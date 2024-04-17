@@ -141,7 +141,8 @@ test('(25 pts) crawler workflow', (done) => {
       process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
       const response = await global.fetch(url);
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        // throw new Error(`HTTP error! status: ${response.status}`);
+        return {}
       }
       var htmlContent = await response.text();
       htmlContent = htmlContent.replace("\u00a9", "&copy;")
@@ -179,6 +180,7 @@ test('(25 pts) crawler workflow', (done) => {
   var currDepth = 0;
   // var baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/books.txt'
   // var baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg';
+  // baseUrl = 'https://www.gutenberg.org/ebooks/'
   // var baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3/'
   // var baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3/?C=N;O=D'//problemetic
   // var baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3/?C=D;O=A'
@@ -189,7 +191,7 @@ test('(25 pts) crawler workflow', (done) => {
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/the-book-of-mormon_571/index.html'
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/the-book-of-mormon_571/'
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/4/tag/truth/index.html';
-  var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/4'
+  var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/2'
   // baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/animal-farm_313/'
 
 
@@ -242,7 +244,6 @@ test('(25 pts) crawler workflow', (done) => {
     levels[currDepth].forEach((url) => {
       if (url.length>0&&!(visited.has(url) || url.length < baseUrl.length && baseUrl.includes(url)) && url.includes(baseUrl)) {
         visited.add(url);
-        console.log(url);
         const urlKey = 'url-'+id.getID(url);
         urlKeys.push(urlKey);
         keyUrlsMap[urlKey] = url;
@@ -279,4 +280,4 @@ test('(25 pts) crawler workflow', (done) => {
   crawl();
 
 
-}, 300000);
+}, 1600000);

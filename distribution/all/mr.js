@@ -123,6 +123,7 @@ const mr = function (config) {
               }
               let storePutCompletedRequests = 0;
               let storePutResult = [];
+              let storePutErrors = {};
               const checkAllDoneStorePut = () => {
                 console.log('shuffle key store not complete!',
                   storePutCompletedRequests,
@@ -132,6 +133,10 @@ const mr = function (config) {
                   console.log('shuffle key store complete!',
                     storePutCompletedRequests,
                     Object.keys(mapResults).length);
+                  if (Object.keys(storePutErrors).length > 0) {
+                    callback(storePutErrors, null);
+                    return;
+                  }
                   if (configuration.reduce === null) {
                     // if there is no reduce,
                     // we just distributed map result store
@@ -208,6 +213,9 @@ const mr = function (config) {
               for (const key of Object.keys(mapResults)) {
                 global.distribution[context.gid].
                   store.put(mapResults[key], key, (e, resultKey) => {
+                    if (e) {
+                      storePutErrors[key] = e;
+                    }
                     storePutCompletedRequests++;
                     storePutResult.push(resultKey);
                     checkAllDoneStorePut();
