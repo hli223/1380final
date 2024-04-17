@@ -154,7 +154,11 @@ test('(25 pts) crawler workflow', (done) => {
   var currDepth = 0;
   // const baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/books.txt'
   // const baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3';
-  const baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3/'
+  // const baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3/'
+  // const baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3/?C=N;O=D'//problemetic
+  const baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3/?C=D;O=A'
+  // const baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3/8/12380/?C=M;O=A'
+  // const baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3/7/?C=N;O=D/'
   // const baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/';
   // const baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/2/';
   // const baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/4/tag/truth/index.html';
@@ -204,7 +208,7 @@ test('(25 pts) crawler workflow', (done) => {
       if (url.length>0&&!(visited.has(url) || url.length < baseUrl.length && baseUrl.includes(url))) {
         visited.add(url);
         console.log(url);
-        const urlKey = id.getID(url);
+        const urlKey = id.getID(url) + url;
         urlKeys.push(urlKey);
         keyUrlsMap[urlKey] = url;
         urlsToBeStore.push({url: url, key: urlKey});
@@ -237,4 +241,4 @@ test('(25 pts) crawler workflow', (done) => {
   crawl();
 
 
-}, 50000);
+}, 40000);
