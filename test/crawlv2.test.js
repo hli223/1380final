@@ -151,8 +151,8 @@ test('(25 pts) crawler workflow', (done) => {
   var currDepth = 0;
   // const baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/';
   // const baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/';
-  // const baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/4/';
-  const baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/4/tag/truth/index.html';
+  const baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/';
+  // const baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/4/tag/truth/index.html';
 
   const levels = [[baseUrl]];
   const visited = new Set();
@@ -183,11 +183,10 @@ test('(25 pts) crawler workflow', (done) => {
         });
     } 
     if (levels[currDepth].length === 0) {
-      const allUrls = levels.flat(Infinity);
-      console.log('allUrls: ', allUrls);
+      console.log('allUrls: ', visited.size);
       done();
     }
-    // console.log('level[currDepth]: ', currDepth, levels[currDepth]);
+    console.log('level[currDepth]: ', currDepth, levels[currDepth]);
     let urlsToBeStore = [];
     const urlKeys = [];
     levels[currDepth].forEach((url) => {
@@ -216,7 +215,6 @@ test('(25 pts) crawler workflow', (done) => {
       });
     });
     if (urlsToBeStore.length === 0) {
-      const allUrls = levels.flat(Infinity);
       console.log('allUrls: ', visited.size);
       done();
     }
