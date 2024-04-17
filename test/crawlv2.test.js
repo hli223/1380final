@@ -109,11 +109,17 @@ test('(25 pts) crawler workflow', (done) => {
     if (url === undefined) {
       return {};
     }
-    if (url.slice(-5)==='.html') {
-      url = url.slice(0, -10);
-    } else if (url.slice(-1)!=='/' && !url.endsWith('.txt')) {
-      url = url + '/';
+    try {
+      if (url.slice(-5)==='.html') {
+        url = url.slice(0, -10);
+      } else if (url.slice(-1)!=='/' && !url.endsWith('.txt')) {
+        url = url + '/';
+      }
+    } catch (e) {
+      console.log('error in m1: '+key+' '+url+ ' ', e);
+      return {url:[url]};
     }
+
     let out = {};
     try {
       process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
@@ -156,12 +162,14 @@ test('(25 pts) crawler workflow', (done) => {
   // const baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3';
   // const baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3/'
   // const baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3/?C=N;O=D'//problemetic
-  const baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3/?C=D;O=A'
+  // const baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3/?C=D;O=A'
   // const baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3/8/12380/?C=M;O=A'
   // const baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3/7/?C=N;O=D/'
-  // const baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/';
-  // const baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/2/';
+  // const baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/mesaerion-the-best-science-fiction-stories-1800-1849_983/index.html';//problemetic
+  // const baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/category/books/default_15/';
+  // const baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/the-book-of-mormon_571/index.html'
   // const baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/4/tag/truth/index.html';
+  const baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/'
 
   const levels = [[baseUrl]];
   const visited = new Set();
@@ -200,7 +208,7 @@ test('(25 pts) crawler workflow', (done) => {
     //   console.log('allUrls: ', visited.size);
     //   done();
     // }
-    console.log('level[currDepth]: ', currDepth, 'number of links:', visited.size);
+    console.log('level[currDepth]: ', levels[currDepth], currDepth, 'number of links:', visited.size);
     let urlsToBeStore = [];
     const urlKeys = [];
     const keyUrlsMap = {}
@@ -208,7 +216,7 @@ test('(25 pts) crawler workflow', (done) => {
       if (url.length>0&&!(visited.has(url) || url.length < baseUrl.length && baseUrl.includes(url))) {
         visited.add(url);
         console.log(url);
-        const urlKey = id.getID(url) + url;
+        const urlKey = 'url-'+id.getID(url);
         urlKeys.push(urlKey);
         keyUrlsMap[urlKey] = url;
         urlsToBeStore.push({url: url, key: urlKey});
@@ -228,7 +236,8 @@ test('(25 pts) crawler workflow', (done) => {
       let value = o.url;
       distribution.ncdc.store.put(value, key, (e, v) => {
         cntr++;
-        // console.log('put urlsToBeStore:', value, key, e, v)
+        console.log('put urlsToBeStore:', value, key, e, v)
+        // done()
         if (cntr === urlsToBeStore.length) {
           // console.log('urlsToBeStore store done! check urlsToBeStore', currDepth,urlsToBeStore)
           levelCrawl(urlKeys);
