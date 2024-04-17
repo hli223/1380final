@@ -106,9 +106,12 @@ afterAll((done) => {
 
 test('(25 pts) crawler workflow', (done) => {
   let m1 = async (key, url) => {
+    if (url === undefined) {
+      return {};
+    }
     if (url.slice(-5)==='.html') {
       url = url.slice(0, -10);
-    } else if (url.slice(-1)!=='/') {
+    } else if (url.slice(-1)!=='/' && !url.endsWith('.txt')) {
       url = url + '/';
     }
     let out = {};
@@ -137,7 +140,7 @@ test('(25 pts) crawler workflow', (done) => {
       });
       out[url] = urls;
     } catch (error) {
-      console.error(url+'Fetch error: ', error);
+      console.error(url+' Fetch error: ', error);
       // out = {...out, [url]: 'Error fetching URL: '+url + ' ' + error};
       out = {}
     }
@@ -149,9 +152,10 @@ test('(25 pts) crawler workflow', (done) => {
 
   
   var currDepth = 0;
-  // const baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/';
+  // const baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/books.txt'
+  const baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/';
   // const baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/';
-  const baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/';
+  // const baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/2/';
   // const baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/4/tag/truth/index.html';
 
   const levels = [[baseUrl]];
@@ -175,18 +179,18 @@ test('(25 pts) crawler workflow', (done) => {
                 }
               }
               levels.push(newUrls);
-              console.log('levels: ', levels);
               crawl();
           } catch (e) {
+            console.log('error in levelcrawl: ', e);
               done(e);
           }
         });
     } 
-    if (levels[currDepth].length === 0) {
-      console.log('allUrls: ', visited.size);
-      done();
-    }
-    console.log('level[currDepth]: ', currDepth, levels[currDepth]);
+    // if (levels[currDepth].length === 0) {
+    //   console.log('allUrls: ', visited.size);
+    //   done();
+    // }
+    console.log('level[currDepth]: ', currDepth, 'number of links:', visited.size);
     let urlsToBeStore = [];
     const urlKeys = [];
     levels[currDepth].forEach((url) => {
@@ -201,6 +205,11 @@ test('(25 pts) crawler workflow', (done) => {
 
     let cntr = 0;
     console.log('urlsToBeStore: ', urlsToBeStore, currDepth);
+    if (urlsToBeStore.length === 0) {
+      console.log('allUrls: ', visited.size);
+      done();
+      return;
+    }
     urlsToBeStore.forEach((o) => {
       let key = o.key;
       let value = o.url;
@@ -214,10 +223,6 @@ test('(25 pts) crawler workflow', (done) => {
         }
       });
     });
-    if (urlsToBeStore.length === 0) {
-      console.log('allUrls: ', visited.size);
-      done();
-    }
 
   }
   crawl();
