@@ -153,7 +153,8 @@ test('(25 pts) crawler workflow', (done) => {
   
   var currDepth = 0;
   // const baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/books.txt'
-  const baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/';
+  // const baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3';
+  const baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3/'
   // const baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/';
   // const baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/2/';
   // const baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/4/tag/truth/index.html';
@@ -169,6 +170,11 @@ test('(25 pts) crawler workflow', (done) => {
             done();
         }
         distribution.ncdc.mr.exec({keys: urlKeys, map: m1, reduce: null, notStore: true}, (e, v) => {
+          if (e!==null && Object.keys(e).length > 0) {
+            console.log('map reduce errorr: ', e);
+            done(e);
+            return;
+          }
           try {
               // console.log('mapreduce result at level: ', currDepth, v, urlKeys);
               currDepth++;
@@ -193,20 +199,23 @@ test('(25 pts) crawler workflow', (done) => {
     console.log('level[currDepth]: ', currDepth, 'number of links:', visited.size);
     let urlsToBeStore = [];
     const urlKeys = [];
+    const keyUrlsMap = {}
     levels[currDepth].forEach((url) => {
       if (url.length>0&&!(visited.has(url) || url.length < baseUrl.length && baseUrl.includes(url))) {
         visited.add(url);
         console.log(url);
         const urlKey = id.getID(url);
         urlKeys.push(urlKey);
+        keyUrlsMap[urlKey] = url;
         urlsToBeStore.push({url: url, key: urlKey});
       }
     });
 
     let cntr = 0;
+    console.log('keyUrlsMap: ', keyUrlsMap)
     console.log('urlsToBeStore: ', urlsToBeStore, currDepth);
     if (urlsToBeStore.length === 0) {
-      console.log('allUrls: ', visited.size);
+      console.log('allUrls: ', currDepth, visited.size, visited);
       done();
       return;
     }
@@ -228,4 +237,4 @@ test('(25 pts) crawler workflow', (done) => {
   crawl();
 
 
-}, 200000);
+}, 50000);
