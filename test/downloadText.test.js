@@ -101,17 +101,24 @@ afterAll((done) => {
 });
 
 test('(25 pts) downloadText workflow', (done) => {
-  let m1 = (key, string) => {
-    const regex = new RegExp('abc');
+  let m1 = async (key, url) => {
     let out = {};
-    const outputKey = global.distribution.util.id.getID(string);
     try {
-      if (regex.test(string)) {
-        out[outputKey] = key;
-      }
-    } catch (error) {
-      console.error('Matching error: ', error);
-      out[outputKey] = 'Error matching string: ' + string + error;
+        process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
+        const response = await global.fetch(url);
+
+        let contentKey = 'content'+global.distribution.util.id.getID(url);
+        if (!response.ok) {
+            out[contentKey] = 'HTTP error! status: '+response.status;
+            return out;
+        }
+        var htmlContent = await response.text();
+        htmlContent = htmlContent.replace("\u00a9", "&copy;")
+        out[contentKey] = htmlContent;
+
+    } catch (e) {
+        console.error(url+'Fetch error: ', e);
+        out[contentKey] = 'Error fetching URL: '+url + ' ' + e;
     }
     return out;
   };
@@ -123,20 +130,18 @@ test('(25 pts) downloadText workflow', (done) => {
           console.log('errors fetching urlKeys', e);
           done();
         }
+    console.log('Retrieved all url keys, number of keys: ', urlKeys.length);
+    distribution.crawlUrl.mr.exec({keys: urlKeys, map: m1, reduce: null, storeGroup:'downloadText'}, (e, v) => {
+        if (e!==null && Object.keys(e).length > 0) {
+            console.log('downloadText errorr: ', e);
+            done(e);
+            return;
+        }
+        console.log('download Text success!', v);
+        done();
+    });
 
-      
 
-    //   distribution.downloadText.mr.exec({keys: v, map: m1, reduce: r1}, (e, v) => {
-    //     try {
-    //       const regex = new RegExp('abc');
-    //       expect(v.length).toBe(dataset.filter((o) =>
-    //         regex.test(Object.values(o)[0])).length);
-    //       console.log('e, v for string matching: ', e, v);
-    //       done();
-    //     } catch (e) {
-    //       done(e);
-    //     }
-    //   });
     });
   };
   downloadText();

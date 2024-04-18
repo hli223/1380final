@@ -209,9 +209,14 @@ const mr = function (config) {
                   }
                 }
               };
-
+              var storeGroup = '';
+              if (configuration.storeGroup) {
+                storeGroup = configuration.storeGroup;
+              } else {
+                storeGroup = context.gid;
+              }
               for (const key of Object.keys(mapResults)) {
-                global.distribution[context.gid].
+                global.distribution[storeGroup].
                   store.put(mapResults[key], key, (e, resultKey) => {
                     if (e) {
                       storePutErrors[key] = e;
