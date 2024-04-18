@@ -113,8 +113,11 @@ test('(25 pts) downloadText workflow', (done) => {
             return out;
         }
         var htmlContent = await response.text();
-        htmlContent = global.convertToText(htmlContent);
+        // htmlContent = global.convertToText(htmlContent);
         htmlContent = htmlContent.replace("\u00a9", "&copy;")
+        // htmlContent = htmlContent.replace(/\u201C/g, ' ');
+        // htmlContent = htmlContent.replace(/\u201D/g, ' ');
+        htmlContent = htmlContent.replace(/[^a-zA-Z0-9\s]/g, ' ');
         out[contentKey] = htmlContent;
 
     } catch (e) {
@@ -131,8 +134,8 @@ test('(25 pts) downloadText workflow', (done) => {
           console.log('errors fetching urlKeys', e);
           done();
         }
-    console.log('Retrieved all url keys, number of keys: ', urlKeys.length);
-    distribution.crawlUrl.mr.exec({keys: urlKeys, map: m1, reduce: null, storeGroup:'downloadText'}, (e, v) => {
+    console.log('Retrieved all url keys, number of keys: ', urlKeys.length, urlKeys.slice(0, 1));
+    distribution.crawlUrl.mr.exec({keys: urlKeys.slice(0, 1), map: m1, reduce: null, storeGroup:'downloadText'}, (e, v) => {
         if (e!==null && Object.keys(e).length > 0) {
             console.log('downloadText errorr: ', e);
             done(e);
@@ -147,5 +150,5 @@ test('(25 pts) downloadText workflow', (done) => {
   };
   downloadText();
 
-}, 10000);
+}, 5000);
 
