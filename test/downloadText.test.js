@@ -118,7 +118,7 @@ test('(25 pts) downloadText workflow', (done) => {
         // htmlContent = htmlContent.replace(/\u201C/g, ' ');
         // htmlContent = htmlContent.replace(/\u201D/g, ' ');
         htmlContent = htmlContent.replace(/[^a-zA-Z0-9\s]/g, ' ');
-        out[contentKey] = htmlContent;
+        out[contentKey] = {url: url, htmlContent: htmlContent};
 
     } catch (e) {
         console.error(url+'Fetch error: ', e);
