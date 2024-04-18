@@ -2,12 +2,13 @@ const startPort = 8000;
 global.nodeConfig = {ip: '127.0.0.1', port: startPort};
 const distribution = require('../distribution');
 const id = distribution.util.id;
+const fs = require('fs');
 
 const groupsTemplate = require('../distribution/all/groups');
 
 
-const ncdcGroup = {};
-const dlibGroup = {};
+const crawlUrlGroup = {};
+const downloadTextGroup = {};
 const invertedIdxGroup = {};
 const sourceSinkGroup = {};
 const test1Group = {};
@@ -34,30 +35,12 @@ beforeAll((done) => {
   /* Stop the nodes if they are running */
 
   nodes.forEach(node => {
-    ncdcGroup[id.getSID(node)] = node;
-    dlibGroup[id.getSID(node)] = node;
+    crawlUrlGroup[id.getSID(node)] = node;
+    downloadTextGroup[id.getSID(node)] = node;
     invertedIdxGroup[id.getSID(node)] = node;
     sourceSinkGroup[id.getSID(node)] = node;
     test1Group[id.getSID(node)] = node;
   });
-
-
-
-  // dlibGroup[id.getSID(n1)] = n1;
-  // dlibGroup[id.getSID(n2)] = n2;
-  // dlibGroup[id.getSID(n3)] = n3;
-
-  // invertedIdxGroup[id.getSID(n1)] = n1;
-  // invertedIdxGroup[id.getSID(n2)] = n2;
-  // invertedIdxGroup[id.getSID(n3)] = n3;
-
-  // sourceSinkGroup[id.getSID(n1)] = n1;
-  // sourceSinkGroup[id.getSID(n2)] = n2;
-  // sourceSinkGroup[id.getSID(n3)] = n3;
-
-  // test1Group[id.getSID(n1)] = n1;
-  // test1Group[id.getSID(n2)] = n2;
-  // test1Group[id.getSID(n3)] = n3;
 
   let cntr = 0;
   const startNodes = (cb) => {
@@ -76,11 +59,11 @@ beforeAll((done) => {
   distribution.node.start((server) => {
     localServer = server;
 
-    const ncdcConfig = {gid: 'ncdc'};
+    const crawlUrlConfig = {gid: 'crawlUrl'};
     startNodes(() => {
-      groupsTemplate(ncdcConfig).put(ncdcConfig, ncdcGroup, (e, v) => {
-        const dlibConfig = {gid: 'dlib'};
-        groupsTemplate(dlibConfig).put(dlibConfig, dlibGroup, (e, v) => {
+      groupsTemplate(crawlUrlConfig).put(crawlUrlConfig, crawlUrlGroup, (e, v) => {
+        const downloadTextConfig = {gid: 'downloadText'};
+        groupsTemplate(downloadTextConfig).put(downloadTextConfig, downloadTextGroup, (e, v) => {
           const invertedIdxConfig = {gid: 'invertedIdx'};
           groupsTemplate(invertedIdxConfig).
               put(invertedIdxConfig, invertedIdxGroup, (e, v) => {
@@ -128,7 +111,7 @@ test('(25 pts) crawler workflow', (done) => {
       // // } else if (url.slice(-1)!=='/' && !url.endsWith('.txt')) {
       // //   url = url + '/';
       // // }
-      if (url.slice(-1)!=='/' && !url.endsWith('.txt')) {
+      if (url.slice(-1)!=='/' && !url.endsWith('.txt') && !url.endsWith('.html')) {
         url += '/'
       }
     } catch (e) {
@@ -142,7 +125,7 @@ test('(25 pts) crawler workflow', (done) => {
       const response = await global.fetch(url);
       if (!response.ok) {
         // throw new Error(`HTTP error! status: ${response.status}`);
-        return {}
+        return {...out, [url]: `HTTP error! status: ${response.status}`};
       }
       var htmlContent = await response.text();
       htmlContent = htmlContent.replace("\u00a9", "&copy;")
@@ -157,9 +140,12 @@ test('(25 pts) crawler workflow', (done) => {
           const href = anchor.getAttribute('href');
           if (href) {
             var absoluteUrl = new URL(href, url).toString();
-            if (absoluteUrl.endsWith('.html')) {
+            // if (absoluteUrl.endsWith('/')) {
+            //   absoluteUrl = absoluteUrl.slice(0, -1);
+            // }
+            if (absoluteUrl.endsWith('index.html')) {
               absoluteUrl = new URL(absoluteUrl+'/../').toString();
-            } 
+            }
             urls.push(absoluteUrl);
 
           }
@@ -167,8 +153,8 @@ test('(25 pts) crawler workflow', (done) => {
       out[url] = urls;
     } catch (error) {
       console.error(url+' Fetch error: ', error);
-      // out = {...out, [url]: 'Error fetching URL: '+url + ' ' + error};
-      out = {}
+      out = {...out, [url]: 'Error fetching URL: '+url + ' ' + error};
+      // out = {}
     }
     return out;
   };
@@ -191,15 +177,15 @@ test('(25 pts) crawler workflow', (done) => {
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/the-book-of-mormon_571/index.html'
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/the-book-of-mormon_571/'
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/4/tag/truth/index.html';
-  var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/2'
-  // baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/animal-farm_313/'
+  var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3'
+  // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/category/books_1'
 
 
   const visited = new Set();
   if (baseUrl.endsWith('/')) {
     baseUrl = baseUrl.slice(0, -1);
   } 
-  if (baseUrl.endsWith('.html')) {
+  if (baseUrl.endsWith('index.html')) {
     baseUrl = new URL(baseUrl+'/../').toString();
   } 
   const levels = [[baseUrl]];
@@ -210,7 +196,7 @@ test('(25 pts) crawler workflow', (done) => {
         if (urlKeys===undefined || urlKeys.length===0) {
             done();
         }
-        distribution.ncdc.mr.exec({keys: urlKeys, map: m1, reduce: null, notStore: true}, (e, v) => {
+        distribution.crawlUrl.mr.exec({keys: urlKeys, map: m1, reduce: null, notStore: true}, (e, v) => {
           if (e!==null && Object.keys(e).length > 0) {
             console.log('map reduce errorr: ', e);
             done(e);
@@ -242,6 +228,9 @@ test('(25 pts) crawler workflow', (done) => {
     const urlKeys = [];
     const keyUrlsMap = {}
     levels[currDepth].forEach((url) => {
+      if (url.endsWith('/')) {
+        url = url.slice(0, -1);
+      }
       if (url.length>0&&!(visited.has(url) || url.length < baseUrl.length && baseUrl.includes(url)) && url.includes(baseUrl)) {
         visited.add(url);
         const urlKey = 'url-'+id.getID(url);
@@ -256,13 +245,14 @@ test('(25 pts) crawler workflow', (done) => {
     console.log('urlsToBeStore: ', urlsToBeStore, currDepth);
     if (urlsToBeStore.length === 0) {
       console.log('allUrls: ', currDepth, visited.size, visited);
+      fs.writeFileSync('visited.txt', Array.from(visited).join('\n'));
       done();
       return;
     }
     urlsToBeStore.forEach((o) => {
       let key = o.key;
       let value = o.url;
-      distribution.ncdc.store.put(value, key, (e, v) => {
+      distribution.crawlUrl.store.put(value, key, (e, v) => {
         cntr++;
         console.log('put urlsToBeStore:', value, key, e, v)
         if (e) {
