@@ -53,11 +53,13 @@ const mr = function (config) {
             if (e) {
               callback(e, null);
             }
+            console.log('start processing key: ', key, 'value: ', value);
             if (m.constructor.name === 'AsyncFunction') {
               m(key, value).then((result) => {
                 if (compact) {
                   result = compact(result);
                 }
+                console.log('end processing key: ', key, 'value: ', value);
                 callback(null, result);
               });
             } else {
@@ -66,8 +68,10 @@ const mr = function (config) {
                 if (compact) {
                   result = compact(result);
                 }
+                console.log('end processing key: ', key, 'value: ', value);
                 callback(null, result);
               } catch (e) {
+                console.log('end processing key with ERRORR: ', key, 'value: ', value, e);
                 callback(e, null);
               }
             }
