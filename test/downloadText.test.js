@@ -134,8 +134,8 @@ test('(25 pts) downloadText workflow', (done) => {
           console.log('errors fetching urlKeys', e);
           done();
         }
-    console.log('Retrieved all url keys, number of keys: ', urlKeys.length, urlKeys.slice(0, 1));
-    distribution.crawlUrl.mr.exec({keys: urlKeys.slice(0, 1), map: m1, reduce: null, storeGroup:'downloadText'}, (e, v) => {
+    console.log('Retrieved all url keys, number of keys: ', urlKeys.length);
+    distribution.crawlUrl.mr.exec({keys: urlKeys, map: m1, reduce: null, storeGroup:'downloadText'}, (e, v) => {
         if (e!==null && Object.keys(e).length > 0) {
             console.log('downloadText errorr: ', e);
             done(e);

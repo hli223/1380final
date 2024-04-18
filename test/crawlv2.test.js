@@ -178,6 +178,10 @@ test('(25 pts) crawler workflow', (done) => {
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/the-book-of-mormon_571/'
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/4/tag/truth/index.html';
   var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3'
+  // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/category/books/science-fiction_16'
+  // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/4/tag/authors/page/1'
+  // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/2/static/book1.txt'//text cannot be downloaded
+  // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/1/level_1a/level_2a'//this one is downloadable
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/category/books_1'
 
 
@@ -259,7 +263,7 @@ test('(25 pts) crawler workflow', (done) => {
           done(e);
         }
         if (cntr === urlsToBeStore.length) {
-          // console.log('urlsToBeStore store done! check urlsToBeStore', currDepth,urlsToBeStore)
+          console.log('urlsToBeStore store done! check urlsToBeStore', currDepth,urlsToBeStore)
           levelCrawl(urlKeys);
           // doMapReduce();
         }
@@ -270,4 +274,4 @@ test('(25 pts) crawler workflow', (done) => {
   crawl();
 
 
-}, 1600000);
+}, 800000);

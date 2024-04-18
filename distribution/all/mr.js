@@ -232,7 +232,7 @@ const mr = function (config) {
               }
             }
           };
-
+          console.log('Start mapping phase!');
           for (const key of configuration.keys) {
             console.log('calling map on key: ', key);
             const selectedNode = getSelectedNode(key, nodes, context);
