@@ -113,6 +113,7 @@ test('(25 pts) downloadText workflow', (done) => {
             return out;
         }
         var htmlContent = await response.text();
+        htmlContent = global.convertToText(htmlContent);
         htmlContent = htmlContent.replace("\u00a9", "&copy;")
         out[contentKey] = htmlContent;
 
@@ -146,5 +147,5 @@ test('(25 pts) downloadText workflow', (done) => {
   };
   downloadText();
 
-}, 1600000);
+}, 10000);
 
