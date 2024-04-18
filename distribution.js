@@ -74,9 +74,7 @@ distribution['all'].store =
   require('./distribution/all/store')({ gid: 'all' });
 
 const { JSDOM } = require('jsdom');
-const {convert} = require('html-to-text');
 global.JSDOM = JSDOM;
-global.convertToText = convert;
 const { PorterStemmer } = require('natural');
 global.stemmer = PorterStemmer;
 module.exports = global.distribution;

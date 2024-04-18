@@ -113,7 +113,6 @@ test('(25 pts) downloadText workflow', (done) => {
             return out;
         }
         var htmlContent = await response.text();
-        // htmlContent = global.convertToText(htmlContent);
         htmlContent = htmlContent.replace("\u00a9", "&copy;")
         // htmlContent = htmlContent.replace(/\u201C/g, ' ');
         // htmlContent = htmlContent.replace(/\u201D/g, ' ');
