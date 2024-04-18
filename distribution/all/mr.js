@@ -53,11 +53,13 @@ const mr = function (config) {
             if (e) {
               callback(e, null);
             }
+            console.log('start processing key: ', key, 'value: ', value);
             if (m.constructor.name === 'AsyncFunction') {
               m(key, value).then((result) => {
                 if (compact) {
                   result = compact(result);
                 }
+                console.log('end processing key: ', key, 'value: ', value);
                 callback(null, result);
               });
             } else {
@@ -66,8 +68,10 @@ const mr = function (config) {
                 if (compact) {
                   result = compact(result);
                 }
+                console.log('end processing key: ', key, 'value: ', value);
                 callback(null, result);
               } catch (e) {
+                console.log('end processing key with ERRORR: ', key, 'value: ', value, e);
                 callback(e, null);
               }
             }
@@ -123,6 +127,7 @@ const mr = function (config) {
               }
               let storePutCompletedRequests = 0;
               let storePutResult = [];
+              let storePutErrors = {};
               const checkAllDoneStorePut = () => {
                 console.log('shuffle key store not complete!',
                   storePutCompletedRequests,
@@ -132,6 +137,10 @@ const mr = function (config) {
                   console.log('shuffle key store complete!',
                     storePutCompletedRequests,
                     Object.keys(mapResults).length);
+                  if (Object.keys(storePutErrors).length > 0) {
+                    callback(storePutErrors, null);
+                    return;
+                  }
                   if (configuration.reduce === null) {
                     // if there is no reduce,
                     // we just distributed map result store
@@ -204,10 +213,18 @@ const mr = function (config) {
                   }
                 }
               };
-
+              var storeGroup = '';
+              if (configuration.storeGroup) {
+                storeGroup = configuration.storeGroup;
+              } else {
+                storeGroup = context.gid;
+              }
               for (const key of Object.keys(mapResults)) {
-                global.distribution[context.gid].
+                global.distribution[storeGroup].
                   store.put(mapResults[key], key, (e, resultKey) => {
+                    if (e) {
+                      storePutErrors[key] = e;
+                    }
                     storePutCompletedRequests++;
                     storePutResult.push(resultKey);
                     checkAllDoneStorePut();
@@ -215,7 +232,7 @@ const mr = function (config) {
               }
             }
           };
-
+          console.log('Start mapping phase!');
           for (const key of configuration.keys) {
             console.log('calling map on key: ', key);
             const selectedNode = getSelectedNode(key, nodes, context);

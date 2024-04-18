@@ -2,12 +2,13 @@ const startPort = 8000;
 global.nodeConfig = {ip: '127.0.0.1', port: startPort};
 const distribution = require('../distribution');
 const id = distribution.util.id;
+const fs = require('fs');
 
 const groupsTemplate = require('../distribution/all/groups');
 
 
-const ncdcGroup = {};
-const dlibGroup = {};
+const crawlUrlGroup = {};
+const downloadTextGroup = {};
 const invertedIdxGroup = {};
 const sourceSinkGroup = {};
 const test1Group = {};
@@ -24,40 +25,33 @@ let localServer = null;
     The local node will be the orchestrator.
 */
 
-const n1 = {ip: '127.0.0.1', port: startPort+1};
-const n2 = {ip: '127.0.0.1', port: startPort+2};
-const n3 = {ip: '127.0.0.1', port: startPort+3};
+const nodes = [];
+for (let i = 1; i <= 3; i++) {
+  nodes.push({ip: '127.0.0.1', port: startPort + i});
+}
+
 
 beforeAll((done) => {
   /* Stop the nodes if they are running */
 
-  ncdcGroup[id.getSID(n1)] = n1;
-  ncdcGroup[id.getSID(n2)] = n2;
-  ncdcGroup[id.getSID(n3)] = n3;
+  nodes.forEach(node => {
+    crawlUrlGroup[id.getSID(node)] = node;
+    downloadTextGroup[id.getSID(node)] = node;
+    invertedIdxGroup[id.getSID(node)] = node;
+    sourceSinkGroup[id.getSID(node)] = node;
+    test1Group[id.getSID(node)] = node;
+  });
 
-  dlibGroup[id.getSID(n1)] = n1;
-  dlibGroup[id.getSID(n2)] = n2;
-  dlibGroup[id.getSID(n3)] = n3;
-
-  invertedIdxGroup[id.getSID(n1)] = n1;
-  invertedIdxGroup[id.getSID(n2)] = n2;
-  invertedIdxGroup[id.getSID(n3)] = n3;
-
-  sourceSinkGroup[id.getSID(n1)] = n1;
-  sourceSinkGroup[id.getSID(n2)] = n2;
-  sourceSinkGroup[id.getSID(n3)] = n3;
-
-  test1Group[id.getSID(n1)] = n1;
-  test1Group[id.getSID(n2)] = n2;
-  test1Group[id.getSID(n3)] = n3;
-
-
+  let cntr = 0;
   const startNodes = (cb) => {
-    distribution.local.status.spawn(n1, (e, v) => {
-      distribution.local.status.spawn(n2, (e, v) => {
-        distribution.local.status.spawn(n3, (e, v) => {
+    nodes.forEach(node => {
+      distribution.local.status.spawn(node, (e, v) => {
+        // Handle the callback
+        cntr++;
+        if (cntr === nodes.length) {
+          console.log('all nodes started!');
           cb();
-        });
+        }
       });
     });
   };
@@ -65,11 +59,11 @@ beforeAll((done) => {
   distribution.node.start((server) => {
     localServer = server;
 
-    const ncdcConfig = {gid: 'ncdc'};
+    const crawlUrlConfig = {gid: 'crawlUrl'};
     startNodes(() => {
-      groupsTemplate(ncdcConfig).put(ncdcConfig, ncdcGroup, (e, v) => {
-        const dlibConfig = {gid: 'dlib'};
-        groupsTemplate(dlibConfig).put(dlibConfig, dlibGroup, (e, v) => {
+      groupsTemplate(crawlUrlConfig).put(crawlUrlConfig, crawlUrlGroup, (e, v) => {
+        const downloadTextConfig = {gid: 'downloadText'};
+        groupsTemplate(downloadTextConfig).put(downloadTextConfig, downloadTextGroup, (e, v) => {
           const invertedIdxConfig = {gid: 'invertedIdx'};
           groupsTemplate(invertedIdxConfig).
               put(invertedIdxConfig, invertedIdxGroup, (e, v) => {
@@ -90,16 +84,18 @@ beforeAll((done) => {
 });
 
 afterAll((done) => {
-  let remote = {service: 'status', method: 'stop'};
-  remote.node = n1;
-  distribution.local.comm.send([], remote, (e, v) => {
-    remote.node = n2;
+  let cntr = 0;
+  const remote = {service: 'status', method: 'stop'};
+  nodes.forEach(node => {
+    remote.node = node;
     distribution.local.comm.send([], remote, (e, v) => {
-      remote.node = n3;
-      distribution.local.comm.send([], remote, (e, v) => {
+      // Handle the callback
+      cntr++;
+      if (cntr === nodes.length) {
+        console.log('all nodes stopped!');
         localServer.close();
         done();
-      });
+      }
     });
   });
 });
@@ -109,17 +105,27 @@ test('(25 pts) crawler workflow', (done) => {
     if (url === undefined) {
       return {};
     }
-    if (url.slice(-5)==='.html') {
-      url = url.slice(0, -10);
-    } else if (url.slice(-1)!=='/' && !url.endsWith('.txt')) {
-      url = url + '/';
+    try {
+      // // if (url.slice(-5)==='.html') {
+      // //   url = url.slice(0, -10);
+      // // } else if (url.slice(-1)!=='/' && !url.endsWith('.txt')) {
+      // //   url = url + '/';
+      // // }
+      if (url.slice(-1)!=='/' && !url.endsWith('.txt') && !url.endsWith('.html')) {
+        url += '/'
+      }
+    } catch (e) {
+      console.log('error in m1: '+key+' '+url+ ' ', e);
+      return {url:['error in m1: '+key+' '+url+ ' ', e]};
     }
+
     let out = {};
     try {
       process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
       const response = await global.fetch(url);
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        // throw new Error(`HTTP error! status: ${response.status}`);
+        return {...out, [url]: `HTTP error! status: ${response.status}`};
       }
       var htmlContent = await response.text();
       htmlContent = htmlContent.replace("\u00a9", "&copy;")
@@ -133,16 +139,22 @@ test('(25 pts) crawler workflow', (done) => {
       anchors.forEach((anchor) => {
           const href = anchor.getAttribute('href');
           if (href) {
-          const absoluteUrl = new URL(href, url).toString();
-          urls.push(absoluteUrl);
+            var absoluteUrl = new URL(href, url).toString();
+            // if (absoluteUrl.endsWith('/')) {
+            //   absoluteUrl = absoluteUrl.slice(0, -1);
+            // }
+            if (absoluteUrl.endsWith('index.html')) {
+              absoluteUrl = new URL(absoluteUrl+'/../').toString();
+            }
+            urls.push(absoluteUrl);
 
-        }
+          }
       });
       out[url] = urls;
     } catch (error) {
       console.error(url+' Fetch error: ', error);
-      // out = {...out, [url]: 'Error fetching URL: '+url + ' ' + error};
-      out = {}
+      out = {...out, [url]: 'Error fetching URL: '+url + ' ' + error};
+      // out = {}
     }
     return out;
   };
@@ -152,28 +164,43 @@ test('(25 pts) crawler workflow', (done) => {
 
   
   var currDepth = 0;
-  // const baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/books.txt'
-  // const baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3';
-  // const baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3/'
-  // const baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3/?C=N;O=D'//problemetic
-  const baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3/?C=D;O=A'
-  // const baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3/8/12380/?C=M;O=A'
-  // const baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3/7/?C=N;O=D/'
-  // const baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/';
-  // const baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/2/';
-  // const baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/4/tag/truth/index.html';
+  // var baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/books.txt'
+  // var baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg';
+  // baseUrl = 'https://www.gutenberg.org/ebooks/'
+  // var baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3/'
+  // var baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3/?C=N;O=D'//problemetic
+  // var baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3/?C=D;O=A'
+  // var baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3/8/12380/?C=M;O=A'
+  // var baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3/7/?C=N;O=D/'
+  // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/mesaerion-the-best-science-fiction-stories-1800-1849_983/index.html';//problemetic
+  // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/category/books/default_15/';
+  // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/the-book-of-mormon_571/index.html'
+  // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/the-book-of-mormon_571/'
+  // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/4/tag/truth/index.html';
+  var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3'
+  // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/category/books/science-fiction_16'
+  // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/4/tag/authors/page/1'
+  // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/2/static/book1.txt'//text cannot be downloaded
+  // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/1/level_1a/level_2a'//this one is downloadable
+  // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/category/books_1'
 
-  const levels = [[baseUrl]];
+
   const visited = new Set();
-  
-
+  if (baseUrl.endsWith('/')) {
+    baseUrl = baseUrl.slice(0, -1);
+  } 
+  if (baseUrl.endsWith('index.html')) {
+    baseUrl = new URL(baseUrl+'/../').toString();
+  } 
+  const levels = [[baseUrl]];
+  console.log('baseURL is ', baseUrl);
   function crawl() {
     const levelCrawl = (urlKeys) => {
         // console.log('start level crawl, level: ', currDepth, urlKeys);
         if (urlKeys===undefined || urlKeys.length===0) {
             done();
         }
-        distribution.ncdc.mr.exec({keys: urlKeys, map: m1, reduce: null, notStore: true}, (e, v) => {
+        distribution.crawlUrl.mr.exec({keys: urlKeys, map: m1, reduce: null, notStore: true}, (e, v) => {
           if (e!==null && Object.keys(e).length > 0) {
             console.log('map reduce errorr: ', e);
             done(e);
@@ -200,15 +227,17 @@ test('(25 pts) crawler workflow', (done) => {
     //   console.log('allUrls: ', visited.size);
     //   done();
     // }
-    console.log('level[currDepth]: ', currDepth, 'number of links:', visited.size);
+    console.log('level[currDepth]: ', levels[currDepth], currDepth, 'number of links:', visited.size);
     let urlsToBeStore = [];
     const urlKeys = [];
     const keyUrlsMap = {}
     levels[currDepth].forEach((url) => {
-      if (url.length>0&&!(visited.has(url) || url.length < baseUrl.length && baseUrl.includes(url))) {
+      if (url.endsWith('/')) {
+        url = url.slice(0, -1);
+      }
+      if (url.length>0&&!(visited.has(url) || url.length < baseUrl.length && baseUrl.includes(url)) && url.includes(baseUrl)) {
         visited.add(url);
-        console.log(url);
-        const urlKey = id.getID(url) + url;
+        const urlKey = 'url-'+id.getID(url);
         urlKeys.push(urlKey);
         keyUrlsMap[urlKey] = url;
         urlsToBeStore.push({url: url, key: urlKey});
@@ -220,17 +249,21 @@ test('(25 pts) crawler workflow', (done) => {
     console.log('urlsToBeStore: ', urlsToBeStore, currDepth);
     if (urlsToBeStore.length === 0) {
       console.log('allUrls: ', currDepth, visited.size, visited);
+      fs.writeFileSync('visited.txt', Array.from(visited).join('\n'));
       done();
       return;
     }
     urlsToBeStore.forEach((o) => {
       let key = o.key;
       let value = o.url;
-      distribution.ncdc.store.put(value, key, (e, v) => {
+      distribution.crawlUrl.store.put(value, key, (e, v) => {
         cntr++;
-        // console.log('put urlsToBeStore:', value, key, e, v)
+        console.log('put urlsToBeStore:', value, key, e, v)
+        if (e) {
+          done(e);
+        }
         if (cntr === urlsToBeStore.length) {
-          // console.log('urlsToBeStore store done! check urlsToBeStore', currDepth,urlsToBeStore)
+          console.log('urlsToBeStore store done! check urlsToBeStore', currDepth,urlsToBeStore)
           levelCrawl(urlKeys);
           // doMapReduce();
         }
@@ -241,4 +274,4 @@ test('(25 pts) crawler workflow', (done) => {
   crawl();
 
 
-}, 40000);
+}, 800000);

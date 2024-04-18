@@ -19,6 +19,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "html-to-text": "^9.0.5",
     "natural": "^7.0.2",
     "node-fetch": "^2.7.0",
     "yargs": "^17.7.2"
