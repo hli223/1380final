@@ -1,13 +1,17 @@
-global.nodeConfig = { ip: '127.0.0.1', port: 7070 };
+const startPort = 8020;
+global.nodeConfig = { ip: '127.0.0.1', port: startPort };
+const { url } = require('inspector');
 const distribution = require('../distribution');
 const id = distribution.util.id;
-// const { PorterStemmer } = require('natural');
-// global.stemmer = PorterStemmer;
-// console.log('stemmer: ', global.stemmer);
 
 const groupsTemplate = require('../distribution/all/groups');
 
+
+const crawlUrlGroup = {};
+const downloadTextGroup = {};
 const invertedIdxGroup = {};
+const sourceSinkGroup = {};
+const test1Group = {};
 
 /*
    This hack is necessary since we can not
@@ -17,33 +21,37 @@ const invertedIdxGroup = {};
 */
 let localServer = null;
 
-
 /*
     The local node will be the orchestrator.
 */
 
-const n1 = { ip: '127.0.0.1', port: 7013 };
-const n2 = { ip: '127.0.0.1', port: 7014 };
-const n3 = { ip: '127.0.0.1', port: 7015 };
+const nodes = [];
+for (let i = 1; i <= 3; i++) {
+    nodes.push({ ip: '127.0.0.1', port: startPort + i });
+}
+
 
 beforeAll((done) => {
     /* Stop the nodes if they are running */
 
-    invertedIdxGroup[id.getSID(n1)] = n1;
-    invertedIdxGroup[id.getSID(n2)] = n2;
-    invertedIdxGroup[id.getSID(n3)] = n3;
+    nodes.forEach(node => {
+        crawlUrlGroup[id.getSID(node)] = node;
+        downloadTextGroup[id.getSID(node)] = node;
+        invertedIdxGroup[id.getSID(node)] = node;
+        sourceSinkGroup[id.getSID(node)] = node;
+        test1Group[id.getSID(node)] = node;
+    });
 
-
+    let cntr = 0;
     const startNodes = (cb) => {
-        console.log('startNodes');
-        distribution.local.status.spawn(n1, (e, v) => {
-            console.log('startNodes n1 done');
-            distribution.local.status.spawn(n2, (e, v) => {
-                console.log('startNodes n2 done');
-                distribution.local.status.spawn(n3, (e, v) => {
-                    console.log('startNodes done');
+        nodes.forEach(node => {
+            distribution.local.status.spawn(node, (e, v) => {
+                // Handle the callback
+                cntr++;
+                if (cntr === nodes.length) {
+                    console.log('all nodes started!');
                     cb();
-                });
+                }
             });
         });
     };
@@ -51,11 +59,25 @@ beforeAll((done) => {
     distribution.node.start((server) => {
         localServer = server;
 
-        const invertedIdxConfig = { gid: 'invertedIdx' };
+        const crawlUrlConfig = { gid: 'crawlUrl' };
         startNodes(() => {
-            groupsTemplate(invertedIdxConfig).put(invertedIdxConfig, invertedIdxGroup, (e, v) => {
-                // distribution.invertedIdx.stemmer = PorterStemmer;
-                done();
+            groupsTemplate(crawlUrlConfig).put(crawlUrlConfig, crawlUrlGroup, (e, v) => {
+                const downloadTextConfig = { gid: 'downloadText' };
+                groupsTemplate(downloadTextConfig).put(downloadTextConfig, downloadTextGroup, (e, v) => {
+                    const invertedIdxConfig = { gid: 'invertedIdx' };
+                    groupsTemplate(invertedIdxConfig).
+                        put(invertedIdxConfig, invertedIdxGroup, (e, v) => {
+                            const sourceSinkConfig = { gid: 'sourceSink' };
+                            groupsTemplate(sourceSinkConfig).
+                                put(sourceSinkConfig, sourceSinkGroup, (e, v) => {
+                                    const test1Config = { gid: 'test1' };
+                                    groupsTemplate(test1Config).
+                                        put(test1Config, test1Group, (e, v) => {
+                                            done();
+                                        });
+                                });
+                        });
+                });
             });
         });
     });
@@ -64,16 +86,18 @@ beforeAll((done) => {
 
 // shut down the nodes
 afterAll((done) => {
-    let remote = { service: 'status', method: 'stop' };
-    remote.node = n1;
-    distribution.local.comm.send([], remote, (e, v) => {
-        remote.node = n2;
+    let cntr = 0;
+    const remote = { service: 'status', method: 'stop' };
+    nodes.forEach(node => {
+        remote.node = node;
         distribution.local.comm.send([], remote, (e, v) => {
-            remote.node = n3;
-            distribution.local.comm.send([], remote, (e, v) => {
+            // Handle the callback
+            cntr++;
+            if (cntr === nodes.length) {
+                console.log('all nodes stopped!');
                 localServer.close();
                 done();
-            });
+            }
         });
     });
 });
