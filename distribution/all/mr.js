@@ -73,19 +73,25 @@ const mr = function (config) {
                 const resultValue = result[resultKey];
                 //shuffle
                 global.distribution[gid].store.get(resultKey, (e, value) => {
+                  console.log('shuffle phase, resultKey: ', resultKey, 'value: ', value, 'error: ', e);
                   if (e) {
+                    console.log('creating a list!')
                     result[resultKey] = [resultValue];
                   } else {
-                    result[resultKey].push(resultValue);
+                    value.push(resultValue);
+                    result[resultKey] = value;
                   }
                   console.log('value: ', value);
+                  console.log('before shuffle put:', result[resultKey], resultKey);
+                  global.distribution[gid].store.put(result[resultKey], resultKey, (e, v) => {
+                    if (e) {
+                      callback(e, null);
+                    }
+                    // console.log('v after map store.put: ', v);
+                    callback(null, resultKey);
+                  });
                 });
-                global.distribution[gid].store.put(resultValue, resultKey, (e, resultKey) => {
-                  if (e) {
-                    callback(e, null);
-                  }
-                  callback(null, resultKey);
-                });
+
                 // callback(null, result);
               } catch (e) {
                 console.log('end processing key with ERRORR: ', key, 'value: ', value, e);
@@ -95,6 +101,7 @@ const mr = function (config) {
           });
         },
         reduce: (key, gid, r, callback) => {
+          console.log('reduce key before store.get: ', key);
           callback = callback || function () { };
           global.distribution[gid].store.get(key, (e, value) => {
             if (e) {
@@ -106,12 +113,12 @@ const mr = function (config) {
               console.log('error in try', e);
               let result = r(key, value);
               console.log('reduce result in the infrastructure: ', result);
-              global.distribution[gid].store.put(result, key, (e, resultKey) => {
+              global.distribution[gid].store.put(result, key, (e, result) => {
                 if (e) {
                   console.log('error in reduce store.put: ', e);
                   callback(e, null);
                 }
-                callback(null, resultKey);
+                callback(null, result);
               });
             } catch (e) {
               console.log('reduce error: ', e);
@@ -139,7 +146,7 @@ const mr = function (config) {
           // console.log('configuration.keys: ', configuration.keys);
           let completedRequests = 0;
           let errorsMap = {};
-          let mapResultKeys = {};
+          let mapResultKeys = new Set();
           const checkAllDoneMap = () => {
             console.log('completedRequests: ', completedRequests);
             if (completedRequests === totalRequests) {
@@ -154,13 +161,14 @@ const mr = function (config) {
                 callback(null, mapResultKeys);
                 return;
               }
-              let totalRequestsReduce = Object.keys(mapResultKeys).length;
+              let totalRequestsReduce = mapResultKeys.size;
               let completedRequestsReduce = 0;
               console.log('totalRequestsReduce: ', totalRequestsReduce,
                 'completedRequestsReduce:', completedRequestsReduce);
               let errorsReduce = [];
               let reduceResults = [];
               const checkAllDoneReduce = () => {
+                console.log('completedRequestsReduce: ', completedRequestsReduce);
                 if (completedRequestsReduce === totalRequestsReduce) {
                   console.log('reduced results: ', reduceResults);
                   callback(errorsReduce, reduceResults);
@@ -172,13 +180,15 @@ const mr = function (config) {
               } else {
                 storeGroup = context.gid;
               }
-              for (const key of Object.keys(mapResults)) {
+              console.log('mapResultKeys before reduce: ', mapResultKeys);
+              for (const key of mapResultKeys) {
                 const selectedNode = getSelectedNode(key, nodes, context);
                 let remote = {
                   service: mrServiceName,
                   method: 'reduce',
                   node: selectedNode,
                 };
+                console.log('reduce key before local comm: ', key);
                 localComm.send([key, storeGroup,
                   configuration.reduce],
                   remote, (e, reduceResult) => {
@@ -213,7 +223,7 @@ const mr = function (config) {
                 errorsMap[key] = e;
               } else {
                 console.log('mapResultKey: ', mapResultKey, e);
-                mapResultKeys[key] = mapResultKey;
+                mapResultKeys.add(mapResultKey);
               }
               completedRequests++;
               checkAllDoneMap();
