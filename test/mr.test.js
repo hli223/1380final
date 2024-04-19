@@ -1,4 +1,4 @@
-global.nodeConfig = {ip: '127.0.0.1', port: 7070};
+global.nodeConfig = {ip: '127.0.0.1', port: 8000};
 const distribution = require('../distribution');
 const id = distribution.util.id;
 
@@ -19,9 +19,9 @@ let localServer = null;
     The local node will be the orchestrator.
 */
 
-const n1 = {ip: '127.0.0.1', port: 7110};
-const n2 = {ip: '127.0.0.1', port: 7111};
-const n3 = {ip: '127.0.0.1', port: 7112};
+const n1 = {ip: '127.0.0.1', port: 8001};
+const n2 = {ip: '127.0.0.1', port: 8002};
+const n3 = {ip: '127.0.0.1', port: 8003};
 
 beforeAll((done) => {
   /* Stop the nodes if they are running */
@@ -57,7 +57,7 @@ beforeAll((done) => {
       });
     });
   });
-});
+}, 40000);
 
 afterAll((done) => {
   let remote = {service: 'status', method: 'stop'};
@@ -72,7 +72,7 @@ afterAll((done) => {
       });
     });
   });
-});
+}, 40000);
 
 function sanityCheck(mapper, reducer, dataset, expected, done) {
   let mapped = dataset.map((o) =>
