@@ -81,13 +81,17 @@ const mr = function (config) {
           callback = callback || function () { };
           global.distribution[gid].store.get(key, (e, value) => {
             if (e) {
+              console.log('error in reduce: ', e);
               callback(e, null);
             }
             try {
+              console.log('reduce key: ', key, 'value: ', value);
+              console.log('error in try', e);
               let result = r(key, value);
               console.log('reduce result in the infrastructure: ', result);
               callback(null, result);
             } catch (e) {
+              console.log('reduce error: ', e);
               callback(e, null);
             }
           });
@@ -174,10 +178,15 @@ const mr = function (config) {
                           callback(errorsDelete, reduceResults);
                         }
                       };
-
-                      reduceResults.forEach((reduceResult) => {
+                      var storeGroup = '';
+                      if (configuration.storeGroup) {
+                        storeGroup = configuration.storeGroup;
+                      } else {
+                        storeGroup = context.gid;
+                      }
+                      mapResults.forEach((reduceResult) => {
                         let key = Object.keys(reduceResult)[0];
-                        global.distribution[context.gid]
+                        global.distribution[storeGroup]
                           .store.del(key, (e, resultKey) => {
                             if (e) {
                               errorsDelete.push(e);
@@ -190,6 +199,12 @@ const mr = function (config) {
                       // callback(errorsReduce, reduceResults);
                     }
                   };
+                  var storeGroup = '';
+                  if (configuration.storeGroup) {
+                    storeGroup = configuration.storeGroup;
+                  } else {
+                    storeGroup = context.gid;
+                  }
                   for (const key of Object.keys(mapResults)) {
                     const selectedNode = getSelectedNode(key, nodes, context);
                     let remote = {
@@ -197,7 +212,7 @@ const mr = function (config) {
                       method: 'reduce',
                       node: selectedNode,
                     };
-                    localComm.send([key, context.gid,
+                    localComm.send([key, storeGroup,
                       configuration.reduce],
                       remote, (e, reduceResult) => {
                         if (e) {
@@ -225,6 +240,7 @@ const mr = function (config) {
                     if (e) {
                       storePutErrors[key] = e;
                     }
+                    console.log('shuffle store put error: ', e);
                     storePutCompletedRequests++;
                     storePutResult.push(resultKey);
                     checkAllDoneStorePut();
@@ -253,6 +269,8 @@ const mr = function (config) {
                 if (Array.isArray(mapResult)) {
                   mapResult.forEach((element) => {
                     const key = Object.keys(element)[0];
+                    console.log('before shuffle key: ', key);
+                    console.log('before shuffle element: ', element[key])
                     if (!(key in mapResults)) {
                       mapResults[key] = [element[key]];
                     } else {

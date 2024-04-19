@@ -1,0 +1,66 @@
+node:events:492
+      throw er; // Unhandled 'error' event
+      ^
+
+Error [ERR_STREAM_WRITE_AFTER_END]: write after end
+    at new NodeError (node:internal/errors:406:5)
+    at ServerResponse.end (node:_http_outgoing:1021:15)
+    at serviceCallback (/Users/lihangji/Documents/1380/1380final/distribution/local/node.js:112:15)
+    at eval (eval at deserializeFunction (/Users/lihangji/Documents/1380/1380final/distribution/util/serialization.js:518:12), <anonymous>:18:15)
+    at Object.kKGSo (/Users/lihangji/Documents/1380/1380final/distribution/local/comm.js:81:24)
+    at ClientRequest.<anonymous> (/Users/lihangji/Documents/1380/1380final/distribution/local/comm.js:125:40)
+    at ClientRequest.emit (node:events:514:28)
+    at Socket.socketErrorListener (node:_http_client:495:9)
+    at Socket.emit (node:events:514:28)
+    at emitErrorNT (node:internal/streams/destroy:151:8)
+Emitted 'error' event on ServerResponse instance at:
+    at emitErrorNt (node:_http_outgoing:857:9)
+    at process.processTicksAndRejections (node:internal/process/task_queues:83:21) {
+  code: 'ERR_STREAM_WRITE_AFTER_END'
+}
+
+Node.js v20.8.1
+node:events:492
+      throw er; // Unhandled 'error' event
+      ^
+
+Error [ERR_STREAM_WRITE_AFTER_END]: write after end
+    at new NodeError (node:internal/errors:406:5)
+    at ServerResponse.end (node:_http_outgoing:1021:15)
+    at serviceCallback (/Users/lihangji/Documents/1380/1380final/distribution/local/node.js:112:15)
+    at eval (eval at deserializeFunction (/Users/lihangji/Documents/1380/1380final/distribution/util/serialization.js:518:12), <anonymous>:18:15)
+    at Object.AXwWK (/Users/lihangji/Documents/1380/1380final/distribution/local/comm.js:76:24)
+    at Object.chtBq (/Users/lihangji/Documents/1380/1380final/distribution/local/comm.js:111:50)
+    at IncomingMessage.<anonymous> (/Users/lihangji/Documents/1380/1380final/distribution/local/comm.js:118:48)
+    at IncomingMessage.emit (node:events:526:35)
+    at endReadableNT (node:internal/streams/readable:1408:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+Emitted 'error' event on ServerResponse instance at:
+    at emitErrorNt (node:_http_outgoing:857:9)
+    at process.processTicksAndRejections (node:internal/process/task_queues:83:21) {
+  code: 'ERR_STREAM_WRITE_AFTER_END'
+}
+
+Node.js v20.8.1
+node:events:492
+      throw er; // Unhandled 'error' event
+      ^
+
+Error [ERR_STREAM_WRITE_AFTER_END]: write after end
+    at new NodeError (node:internal/errors:406:5)
+    at ServerResponse.end (node:_http_outgoing:1021:15)
+    at serviceCallback (/Users/lihangji/Documents/1380/1380final/distribution/local/node.js:112:15)
+    at eval (eval at deserializeFunction (/Users/lihangji/Documents/1380/1380final/distribution/util/serialization.js:518:12), <anonymous>:18:15)
+    at Object.AXwWK (/Users/lihangji/Documents/1380/1380final/distribution/local/comm.js:76:24)
+    at Object.chtBq (/Users/lihangji/Documents/1380/1380final/distribution/local/comm.js:111:50)
+    at IncomingMessage.<anonymous> (/Users/lihangji/Documents/1380/1380final/distribution/local/comm.js:118:48)
+    at IncomingMessage.emit (node:events:526:35)
+    at endReadableNT (node:internal/streams/readable:1408:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+Emitted 'error' event on ServerResponse instance at:
+    at emitErrorNt (node:_http_outgoing:857:9)
+    at process.processTicksAndRejections (node:internal/process/task_queues:83:21) {
+  code: 'ERR_STREAM_WRITE_AFTER_END'
+}
+
+Node.js v20.8.1

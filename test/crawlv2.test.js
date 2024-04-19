@@ -1,5 +1,5 @@
 const startPort = 8000;
-global.nodeConfig = {ip: '127.0.0.1', port: startPort};
+global.nodeConfig = { ip: '127.0.0.1', port: startPort };
 const distribution = require('../distribution');
 const id = distribution.util.id;
 const fs = require('fs');
@@ -26,8 +26,8 @@ let localServer = null;
 */
 
 const nodes = [];
-for (let i = 1; i <= 3; i++) {
-  nodes.push({ip: '127.0.0.1', port: startPort + i});
+for (let i = 1; i <= 6; i++) {
+  nodes.push({ ip: '127.0.0.1', port: startPort + i });
 }
 
 
@@ -59,33 +59,33 @@ beforeAll((done) => {
   distribution.node.start((server) => {
     localServer = server;
 
-    const crawlUrlConfig = {gid: 'crawlUrl'};
+    const crawlUrlConfig = { gid: 'crawlUrl' };
     startNodes(() => {
       groupsTemplate(crawlUrlConfig).put(crawlUrlConfig, crawlUrlGroup, (e, v) => {
-        const downloadTextConfig = {gid: 'downloadText'};
+        const downloadTextConfig = { gid: 'downloadText' };
         groupsTemplate(downloadTextConfig).put(downloadTextConfig, downloadTextGroup, (e, v) => {
-          const invertedIdxConfig = {gid: 'invertedIdx'};
+          const invertedIdxConfig = { gid: 'invertedIdx' };
           groupsTemplate(invertedIdxConfig).
-              put(invertedIdxConfig, invertedIdxGroup, (e, v) => {
-                const sourceSinkConfig = {gid: 'sourceSink'};
-                groupsTemplate(sourceSinkConfig).
-                    put(sourceSinkConfig, sourceSinkGroup, (e, v) => {
-                      const test1Config = {gid: 'test1'};
-                      groupsTemplate(test1Config).
-                          put(test1Config, test1Group, (e, v) => {
-                            done();
-                          });
+            put(invertedIdxConfig, invertedIdxGroup, (e, v) => {
+              const sourceSinkConfig = { gid: 'sourceSink' };
+              groupsTemplate(sourceSinkConfig).
+                put(sourceSinkConfig, sourceSinkGroup, (e, v) => {
+                  const test1Config = { gid: 'test1' };
+                  groupsTemplate(test1Config).
+                    put(test1Config, test1Group, (e, v) => {
+                      done();
                     });
-              });
+                });
+            });
         });
       });
     });
   });
-});
+}, 400000);
 
 afterAll((done) => {
   let cntr = 0;
-  const remote = {service: 'status', method: 'stop'};
+  const remote = { service: 'status', method: 'stop' };
   nodes.forEach(node => {
     remote.node = node;
     distribution.local.comm.send([], remote, (e, v) => {
@@ -111,12 +111,12 @@ test('(25 pts) crawler workflow', (done) => {
       // // } else if (url.slice(-1)!=='/' && !url.endsWith('.txt')) {
       // //   url = url + '/';
       // // }
-      if (url.slice(-1)!=='/' && !url.endsWith('.txt') && !url.endsWith('.html')) {
+      if (url.slice(-1) !== '/' && !url.endsWith('.txt') && !url.endsWith('.html')) {
         url += '/'
       }
     } catch (e) {
-      console.log('error in m1: '+key+' '+url+ ' ', e);
-      return {url:['error in m1: '+key+' '+url+ ' ', e]};
+      console.log('error in m1: ' + key + ' ' + url + ' ', e);
+      return { url: ['error in m1: ' + key + ' ' + url + ' ', e] };
     }
 
     let out = {};
@@ -125,7 +125,7 @@ test('(25 pts) crawler workflow', (done) => {
       const response = await global.fetch(url);
       if (!response.ok) {
         // throw new Error(`HTTP error! status: ${response.status}`);
-        return {...out, [url]: `HTTP error! status: ${response.status}`};
+        return { ...out, [url]: `HTTP error! status: ${response.status}` };
       }
       var htmlContent = await response.text();
       htmlContent = htmlContent.replace("\u00a9", "&copy;")
@@ -137,32 +137,32 @@ test('(25 pts) crawler workflow', (done) => {
       const anchors = document.querySelectorAll('a');
 
       anchors.forEach((anchor) => {
-          const href = anchor.getAttribute('href');
-          if (href) {
-            var absoluteUrl = new URL(href, url).toString();
-            // if (absoluteUrl.endsWith('/')) {
-            //   absoluteUrl = absoluteUrl.slice(0, -1);
-            // }
-            if (absoluteUrl.endsWith('index.html')) {
-              absoluteUrl = new URL(absoluteUrl+'/../').toString();
-            }
-            urls.push(absoluteUrl);
-
+        const href = anchor.getAttribute('href');
+        if (href) {
+          var absoluteUrl = new URL(href, url).toString();
+          // if (absoluteUrl.endsWith('/')) {
+          //   absoluteUrl = absoluteUrl.slice(0, -1);
+          // }
+          if (absoluteUrl.endsWith('index.html')) {
+            absoluteUrl = new URL(absoluteUrl + '/../').toString();
           }
+          urls.push(absoluteUrl);
+
+        }
       });
       out[url] = urls;
     } catch (error) {
-      console.error(url+' Fetch error: ', error);
-      out = {...out, [url]: 'Error fetching URL: '+url + ' ' + error};
+      console.error(url + ' Fetch error: ', error);
+      out = { ...out, [url]: 'Error fetching URL: ' + url + ' ' + error };
       // out = {}
     }
     return out;
   };
 
-  
 
 
-  
+
+
   var currDepth = 0;
   // var baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/books.txt'
   // var baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg';
@@ -177,7 +177,7 @@ test('(25 pts) crawler workflow', (done) => {
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/the-book-of-mormon_571/index.html'
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/the-book-of-mormon_571/'
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/4/tag/truth/index.html';
-  var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3'
+  var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/1'
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/category/books/science-fiction_16'
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/4/tag/authors/page/1'
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/2/static/book1.txt'//text cannot be downloaded
@@ -188,41 +188,41 @@ test('(25 pts) crawler workflow', (done) => {
   const visited = new Set();
   if (baseUrl.endsWith('/')) {
     baseUrl = baseUrl.slice(0, -1);
-  } 
+  }
   if (baseUrl.endsWith('index.html')) {
-    baseUrl = new URL(baseUrl+'/../').toString();
-  } 
+    baseUrl = new URL(baseUrl + '/../').toString();
+  }
   const levels = [[baseUrl]];
   console.log('baseURL is ', baseUrl);
   function crawl() {
     const levelCrawl = (urlKeys) => {
-        // console.log('start level crawl, level: ', currDepth, urlKeys);
-        if (urlKeys===undefined || urlKeys.length===0) {
-            done();
+      // console.log('start level crawl, level: ', currDepth, urlKeys);
+      if (urlKeys === undefined || urlKeys.length === 0) {
+        done();
+      }
+      distribution.crawlUrl.mr.exec({ keys: urlKeys, map: m1, reduce: null, notStore: true }, (e, v) => {
+        if (e !== null && Object.keys(e).length > 0) {
+          console.log('map reduce errorr: ', e);
+          done(e);
+          return;
         }
-        distribution.crawlUrl.mr.exec({keys: urlKeys, map: m1, reduce: null, notStore: true}, (e, v) => {
-          if (e!==null && Object.keys(e).length > 0) {
-            console.log('map reduce errorr: ', e);
-            done(e);
-            return;
+        try {
+          // console.log('mapreduce result at level: ', currDepth, v, urlKeys);
+          currDepth++;
+          const newUrls = []
+          for (let i = 0; i < Object.keys(v).length; i++) {
+            if (v[Object.keys(v)[i]].length > 0) {
+              newUrls.push(...v[Object.keys(v)[i]][0]);
+            }
           }
-          try {
-              // console.log('mapreduce result at level: ', currDepth, v, urlKeys);
-              currDepth++;
-              const newUrls = []
-              for (let i = 0; i < Object.keys(v).length; i++) {
-                if (v[Object.keys(v)[i]].length > 0) {
-                  newUrls.push(...v[Object.keys(v)[i]][0]);
-                }
-              }
-              levels.push(newUrls);
-              crawl();
-          } catch (e) {
-            console.log('error in levelcrawl: ', e);
-              done(e);
-          }
-        });
-    } 
+          levels.push(newUrls);
+          crawl();
+        } catch (e) {
+          console.log('error in levelcrawl: ', e);
+          done(e);
+        }
+      });
+    }
     // if (levels[currDepth].length === 0) {
     //   console.log('allUrls: ', visited.size);
     //   done();
@@ -235,12 +235,12 @@ test('(25 pts) crawler workflow', (done) => {
       if (url.endsWith('/')) {
         url = url.slice(0, -1);
       }
-      if (url.length>0&&!(visited.has(url) || url.length < baseUrl.length && baseUrl.includes(url)) && url.includes(baseUrl)) {
+      if (url.length > 0 && !(visited.has(url) || url.length < baseUrl.length && baseUrl.includes(url)) && url.includes(baseUrl)) {
         visited.add(url);
-        const urlKey = 'url-'+id.getID(url);
+        const urlKey = 'url-' + id.getID(url);
         urlKeys.push(urlKey);
         keyUrlsMap[urlKey] = url;
-        urlsToBeStore.push({url: url, key: urlKey});
+        urlsToBeStore.push({ url: url, key: urlKey });
       }
     });
 
@@ -263,7 +263,7 @@ test('(25 pts) crawler workflow', (done) => {
           done(e);
         }
         if (cntr === urlsToBeStore.length) {
-          console.log('urlsToBeStore store done! check urlsToBeStore', currDepth,urlsToBeStore)
+          console.log('urlsToBeStore store done! check urlsToBeStore', currDepth, urlsToBeStore)
           levelCrawl(urlKeys);
           // doMapReduce();
         }
