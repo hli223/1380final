@@ -47,26 +47,17 @@ const mr = function (config) {
   return {
     exec: (configuration, callback) => {
       mrService = {
-        map: (key, gid, m, compact, callback) => {
+        map: (key, gid, config, callback) => {
           callback = callback || function () { };
           global.distribution[gid].store.get(key, (e, value) => {
             if (e) {
               callback(e, null);
             }
             console.log('start processing key: ', key, 'value: ', value);
-            if (m.constructor.name === 'AsyncFunction') {
-              m(key, value).then((result) => {
-                if (compact) {
-                  result = compact(result);
-                }
-                console.log('end processing key: ', key, 'value: ', value);
-                callback(null, result);
-              });
-            } else {
-              try {
-                let result = m(key, value);
-                if (compact) {
-                  result = compact(result);
+            if (config.map.constructor.name === 'AsyncFunction') {
+              config.map(key, value).then((result) => {
+                if (config.compact) {
+                  result = config.compact(result);
                 }
                 console.log('end processing key: ', key, 'value: ', value);
                 const resultKey = Object.keys(result)[0];
@@ -75,22 +66,65 @@ const mr = function (config) {
                 global.distribution[gid].store.get(resultKey, (e, value) => {
                   console.log('shuffle phase, resultKey: ', resultKey, 'value: ', value, 'error: ', e);
                   if (e) {
-                    console.log('creating a list!')
-                    result[resultKey] = [resultValue];
+                    if (Array.isArray(resultValue)) {
+                      result[resultKey] = resultValue;
+                    } else {
+                      result[resultKey] = [resultValue];
+                    }
+                    console.log('creating a list!', result)
                   } else {
-                    value.push(resultValue);
+                    if (Array.isArray(resultValue)) {
+                      value.push(...resultValue);
+                    } else {
+                      value.push(resultValue);
+                    }
                     result[resultKey] = value;
+                    console.log('added to exsiting list: ', result)
                   }
                   console.log('value: ', value);
                   console.log('before shuffle put:', result[resultKey], resultKey);
                   global.distribution[gid].store.put(result[resultKey], resultKey, (e, v) => {
+                    console.log('store complete:', e, v)
                     if (e) {
                       callback(e, null);
                     }
-                    // console.log('v after map store.put: ', v);
-                    callback(null, resultKey);
+                  console.log('stored result: ', result);
+                  callback(null, resultKey);
                   });
                 });
+              });
+            } else {
+              try {
+                let result = config.map(key, value);
+                if (config.compact) {
+                  result = config.compact(result);
+                }
+                console.log('end processing key: ', key, 'value: ', value);
+                const resultKey = Object.keys(result)[0];
+                const resultValue = result[resultKey];
+                //shuffle
+                global.distribution[gid].store.get(resultKey, (e, value) => {
+                  console.log('shuffle phase, resultKey: ', resultKey, 'value: ', value, 'error: ', e);
+                  if (e) {
+                    result[resultKey] = [resultValue];
+                    console.log('creating a list!', result)
+                  } else {
+                    value.push(resultValue);
+                    result[resultKey] = value;
+                    console.log('added to exsiting list: ', result)
+                  }
+                  console.log('value: ', value);
+                  console.log('before shuffle put:', result[resultKey], resultKey);
+                  global.distribution[gid].store.put(result[resultKey], resultKey, (e, v) => {
+                    console.log('store complete:', e, v)
+                    if (e) {
+                      callback(e, null);
+                    }
+                  console.log('stored result: ', result);
+                  callback(null, resultKey);
+                  });
+                });
+
 
                 // callback(null, result);
               } catch (e) {
@@ -148,9 +182,11 @@ const mr = function (config) {
           let errorsMap = {};
           let mapResultKeys = new Set();
           const checkAllDoneMap = () => {
-            console.log('completedRequests: ', completedRequests);
+            console.log('map completedRequests: ', completedRequests);
             if (completedRequests === totalRequests) {
+              console.log('map errorsMap: ', errorsMap, Object.keys(errorsMap).length);
               if (Object.keys(errorsMap).length > 0) {
+                console.log('found errors!')
                 callback(errorsMap, null);
                 return;
               }
@@ -214,8 +250,8 @@ const mr = function (config) {
               method: 'map',
               node: selectedNode,
             };
-            let args = [key, context.gid, configuration.map,
-              configuration.compact];
+            let args = [key, context.gid,
+              configuration];
             console.log('map args: ', args);
             localComm.send(args, remote, (e, mapResultKey) => {
               if (e) {

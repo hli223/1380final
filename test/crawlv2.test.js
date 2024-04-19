@@ -177,13 +177,13 @@ test('(25 pts) crawler workflow', (done) => {
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/the-book-of-mormon_571/index.html'
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/the-book-of-mormon_571/'
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/4/tag/truth/index.html';
-  var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/1'
+  var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/2'
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/category/books/science-fiction_16'
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/4/tag/authors/page/1'
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/2/static/book1.txt'//text cannot be downloaded
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/1/level_1a/level_2a'//this one is downloadable
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/category/books_1'
-  baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/1/level_1a/'
+  // baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/1/level_1a/'
 
   const visited = new Set();
   if (baseUrl.endsWith('/')) {
@@ -200,7 +200,8 @@ test('(25 pts) crawler workflow', (done) => {
       if (urlKeys === undefined || urlKeys.length === 0) {
         done();
       }
-      distribution.crawlUrl.mr.exec({ keys: urlKeys, map: m1, reduce: null, notStore: true }, (e, v) => {
+      distribution.crawlUrl.mr.exec({ keys: urlKeys, map: m1, reduce: null, notStore: true, returnMapResult: true }, (e, v) => {
+        //v is a set
         if (e !== null && Object.keys(e).length > 0) {
           console.log('map reduce errorr: ', e);
           done(e);
@@ -210,13 +211,29 @@ test('(25 pts) crawler workflow', (done) => {
           // console.log('mapreduce result at level: ', currDepth, v, urlKeys);
           currDepth++;
           const newUrls = []
-          for (let i = 0; i < Object.keys(v).length; i++) {
-            if (v[Object.keys(v)[i]].length > 0) {
-              newUrls.push(...v[Object.keys(v)[i]][0]);
-            }
-          }
-          levels.push(newUrls);
-          crawl();
+          // for (let i = 0; i < Object.keys(v).length; i++) {
+          //   if (v[Object.keys(v)[i]].length > 0) {
+          //     newUrls.push(...v[Object.keys(v)[i]][0]);
+          //   }
+          // }
+          console.log('map reduce done!', v)
+          let cntr = 0;
+          v.forEach((mapKey) => {
+            distribution.crawlUrl.store.get(mapKey, (e, value) => {
+              
+              if (e) {
+                done(e);
+              }
+              newUrls.push(...value);
+              cntr++;
+              console.log('after map reduce, store.get value: ', value, newUrls)
+              if (cntr === v.size) {
+                levels.push(newUrls);
+                console.log('start crawl() again')
+                crawl();
+              }
+            });
+          });
         } catch (e) {
           console.log('error in levelcrawl: ', e);
           done(e);
