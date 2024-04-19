@@ -261,8 +261,14 @@ const mr = function (config) {
               method: 'map',
               node: selectedNode,
             };
+
+            const mapConfig = {
+              map: configuration.map,
+              compact: configuration.compact,
+              notStore: configuration.notStore,
+            }
             let args = [key, context.gid,
-              configuration];
+              mapConfig];
             console.log('map args: ', args);
             localComm.send(args, remote, (e, mapResultKey) => {
               if (e) {
