@@ -89,7 +89,13 @@ const mr = function (config) {
               console.log('error in try', e);
               let result = r(key, value);
               console.log('reduce result in the infrastructure: ', result);
-              callback(null, result);
+              global.distribution[gid].store.put(result, key, (e, resultKey) => {
+                if (e) {
+                  console.log('error in reduce store.put: ', e);
+                  callback(e, null);
+                }
+                callback(null, resultKey);
+              });
             } catch (e) {
               console.log('reduce error: ', e);
               callback(e, null);
@@ -162,41 +168,41 @@ const mr = function (config) {
                     if (completedRequestsReduce === totalRequestsReduce) {
                       console.log('reduced results: ', reduceResults);
 
-                      let totalRequestsDelete = Object
-                        .keys(reduceResults).length;
-                      let completedRequestsDelete = 0;
-                      console.log('totalRequestsDelete: ',
-                        totalRequestsDelete,
-                        'completedRequestsDelete:',
-                        completedRequestsDelete);
-                      let errorsDelete = [];
-                      const checkAllDoneDelete = () => {
-                        if (completedRequestsDelete == totalRequestsDelete) {
-                          console.log('delete completed! ');
-                          // global.distribution[context.gid].
-                          // mr.deleteService(mrServiceName, console.log);
-                          callback(errorsDelete, reduceResults);
-                        }
-                      };
-                      var storeGroup = '';
-                      if (configuration.storeGroup) {
-                        storeGroup = configuration.storeGroup;
-                      } else {
-                        storeGroup = context.gid;
-                      }
-                      reduceResults.forEach((reduceResult) => {
-                        let key = Object.keys(reduceResult)[0];
-                        global.distribution[storeGroup]
-                          .store.del(key, (e, resultKey) => {
-                            if (e) {
-                              errorsDelete.push(e);
-                            }
-                            completedRequestsDelete++;
-                            console.log('deleting key: ', key);
-                            checkAllDoneDelete();
-                          });
-                      });
-                      // callback(errorsReduce, reduceResults);
+                      // let totalRequestsDelete = Object
+                      //   .keys(reduceResults).length;
+                      // let completedRequestsDelete = 0;
+                      // console.log('totalRequestsDelete: ',
+                      //   totalRequestsDelete,
+                      //   'completedRequestsDelete:',
+                      //   completedRequestsDelete);
+                      // let errorsDelete = [];
+                      // const checkAllDoneDelete = () => {
+                      //   if (completedRequestsDelete == totalRequestsDelete) {
+                      //     console.log('delete completed! ');
+                      //     // global.distribution[context.gid].
+                      //     // mr.deleteService(mrServiceName, console.log);
+                      //     callback(errorsDelete, reduceResults);
+                      //   }
+                      // };
+                      // var storeGroup = '';
+                      // if (configuration.storeGroup) {
+                      //   storeGroup = configuration.storeGroup;
+                      // } else {
+                      //   storeGroup = context.gid;
+                      // }
+                      // reduceResults.forEach((reduceResult) => {
+                      //   let key = Object.keys(reduceResult)[0];
+                      //   global.distribution[storeGroup]
+                      //     .store.del(key, (e, resultKey) => {
+                      //       if (e) {
+                      //         errorsDelete.push(e);
+                      //       }
+                      //       completedRequestsDelete++;
+                      //       console.log('deleting key: ', key);
+                      //       checkAllDoneDelete();
+                      //     });
+                      // });
+                      callback(errorsReduce, reduceResults);
                     }
                   };
                   var storeGroup = '';
