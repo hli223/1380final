@@ -69,7 +69,24 @@ const mr = function (config) {
                   result = compact(result);
                 }
                 console.log('end processing key: ', key, 'value: ', value);
-                callback(null, result);
+                const resultKey = Object.keys(result)[0];
+                const resultValue = result[resultKey];
+                //shuffle
+                global.distribution[gid].store.get(resultKey, (e, value) => {
+                  if (e) {
+                    result[resultKey] = [resultValue];
+                  } else {
+                    result[resultKey].push(resultValue);
+                  }
+                  console.log('value: ', value);
+                });
+                global.distribution[gid].store.put(resultValue, resultKey, (e, resultKey) => {
+                  if (e) {
+                    callback(e, null);
+                  }
+                  callback(null, resultKey);
+                });
+                // callback(null, result);
               } catch (e) {
                 console.log('end processing key with ERRORR: ', key, 'value: ', value, e);
                 callback(e, null);
@@ -122,7 +139,7 @@ const mr = function (config) {
           // console.log('configuration.keys: ', configuration.keys);
           let completedRequests = 0;
           let errorsMap = {};
-          let mapResults = {};
+          let mapResultKeys = {};
           const checkAllDoneMap = () => {
             console.log('completedRequests: ', completedRequests);
             if (completedRequests === totalRequests) {
@@ -130,108 +147,23 @@ const mr = function (config) {
                 callback(errorsMap, null);
                 return;
               }
-              console.log('shuffled mapResults: ', mapResults);
-              if (configuration.notStore) {
-                callback(null, mapResults);
+              console.log('shuffled mapResultKeys: ', mapResultKeys);
+              if (configuration.reduce === null) {
+                // if there is no reduce,
+                // we just distributed map result store
+                callback(null, mapResultKeys);
                 return;
               }
-              let storePutCompletedRequests = 0;
-              let storePutResult = [];
-              let storePutErrors = {};
-              const checkAllDoneStorePut = () => {
-                console.log('shuffle key store not complete!',
-                  storePutCompletedRequests,
-                  Object.keys(mapResults).length);
-                if (storePutCompletedRequests ===
-                  Object.keys(mapResults).length) {
-                  console.log('shuffle key store complete!',
-                    storePutCompletedRequests,
-                    Object.keys(mapResults).length);
-                  if (Object.keys(storePutErrors).length > 0) {
-                    callback(storePutErrors, null);
-                    return;
-                  }
-                  if (configuration.reduce === null) {
-                    // if there is no reduce,
-                    // we just distributed map result store
-                    callback(null, storePutResult);
-                    return;
-                  }
-
-                  let totalRequestsReduce = Object.keys(mapResults).length;
-                  let completedRequestsReduce = 0;
-                  console.log('totalRequestsReduce: ', totalRequestsReduce,
-                    'completedRequestsReduce:', completedRequestsReduce);
-                  let errorsReduce = [];
-                  let reduceResults = [];
-                  const checkAllDoneReduce = () => {
-                    if (completedRequestsReduce === totalRequestsReduce) {
-                      console.log('reduced results: ', reduceResults);
-
-                      // let totalRequestsDelete = Object
-                      //   .keys(reduceResults).length;
-                      // let completedRequestsDelete = 0;
-                      // console.log('totalRequestsDelete: ',
-                      //   totalRequestsDelete,
-                      //   'completedRequestsDelete:',
-                      //   completedRequestsDelete);
-                      // let errorsDelete = [];
-                      // const checkAllDoneDelete = () => {
-                      //   if (completedRequestsDelete == totalRequestsDelete) {
-                      //     console.log('delete completed! ');
-                      //     // global.distribution[context.gid].
-                      //     // mr.deleteService(mrServiceName, console.log);
-                      //     callback(errorsDelete, reduceResults);
-                      //   }
-                      // };
-                      // var storeGroup = '';
-                      // if (configuration.storeGroup) {
-                      //   storeGroup = configuration.storeGroup;
-                      // } else {
-                      //   storeGroup = context.gid;
-                      // }
-                      // reduceResults.forEach((reduceResult) => {
-                      //   let key = Object.keys(reduceResult)[0];
-                      //   global.distribution[storeGroup]
-                      //     .store.del(key, (e, resultKey) => {
-                      //       if (e) {
-                      //         errorsDelete.push(e);
-                      //       }
-                      //       completedRequestsDelete++;
-                      //       console.log('deleting key: ', key);
-                      //       checkAllDoneDelete();
-                      //     });
-                      // });
-                      callback(errorsReduce, reduceResults);
-                    }
-                  };
-                  var storeGroup = '';
-                  if (configuration.storeGroup) {
-                    storeGroup = configuration.storeGroup;
-                  } else {
-                    storeGroup = context.gid;
-                  }
-                  for (const key of Object.keys(mapResults)) {
-                    const selectedNode = getSelectedNode(key, nodes, context);
-                    let remote = {
-                      service: mrServiceName,
-                      method: 'reduce',
-                      node: selectedNode,
-                    };
-                    localComm.send([key, storeGroup,
-                      configuration.reduce],
-                      remote, (e, reduceResult) => {
-                        if (e) {
-                          errorsReduce.push(e);
-                        } else {
-                          console.log('each reduceResult: ', reduceResult);
-                          reduceResults.push(reduceResult);
-                        }
-                        console.log('the final reduceResults: ', reduceResults);
-                        completedRequestsReduce++;
-                        checkAllDoneReduce();
-                      });
-                  }
+              let totalRequestsReduce = Object.keys(mapResultKeys).length;
+              let completedRequestsReduce = 0;
+              console.log('totalRequestsReduce: ', totalRequestsReduce,
+                'completedRequestsReduce:', completedRequestsReduce);
+              let errorsReduce = [];
+              let reduceResults = [];
+              const checkAllDoneReduce = () => {
+                if (completedRequestsReduce === totalRequestsReduce) {
+                  console.log('reduced results: ', reduceResults);
+                  callback(errorsReduce, reduceResults);
                 }
               };
               var storeGroup = '';
@@ -241,15 +173,24 @@ const mr = function (config) {
                 storeGroup = context.gid;
               }
               for (const key of Object.keys(mapResults)) {
-                global.distribution[storeGroup].
-                  store.put(mapResults[key], key, (e, resultKey) => {
+                const selectedNode = getSelectedNode(key, nodes, context);
+                let remote = {
+                  service: mrServiceName,
+                  method: 'reduce',
+                  node: selectedNode,
+                };
+                localComm.send([key, storeGroup,
+                  configuration.reduce],
+                  remote, (e, reduceResult) => {
                     if (e) {
-                      storePutErrors[key] = e;
+                      errorsReduce.push(e);
+                    } else {
+                      console.log('each reduceResult: ', reduceResult);
+                      reduceResults.push(reduceResult);
                     }
-                    console.log('shuffle store put error: ', e);
-                    storePutCompletedRequests++;
-                    storePutResult.push(resultKey);
-                    checkAllDoneStorePut();
+                    console.log('the final reduceResults: ', reduceResults);
+                    completedRequestsReduce++;
+                    checkAllDoneReduce();
                   });
               }
             }
@@ -266,32 +207,13 @@ const mr = function (config) {
             let args = [key, context.gid, configuration.map,
               configuration.compact];
             console.log('map args: ', args);
-            localComm.send(args, remote, (e, mapResult) => {
+            localComm.send(args, remote, (e, mapResultKey) => {
               if (e) {
                 // errors.push(e);
                 errorsMap[key] = e;
               } else {
-                console.log('mapResult: ', mapResult, e);
-                if (Array.isArray(mapResult)) {
-                  mapResult.forEach((element) => {
-                    const key = Object.keys(element)[0];
-                    console.log('before shuffle key: ', key);
-                    console.log('before shuffle element: ', element[key])
-                    if (!(key in mapResults)) {
-                      mapResults[key] = [element[key]];
-                    } else {
-                      mapResults[key].push(element[key]);
-                    }
-                  });
-                } else {
-                  for (const key of Object.keys(mapResult)) {
-                    if (!(key in mapResults)) {
-                      mapResults[key] = [mapResult[key]];
-                    } else {
-                      mapResults[key].push(mapResult[key]);
-                    }
-                  }
-                }
+                console.log('mapResultKey: ', mapResultKey, e);
+                mapResultKeys[key] = mapResultKey;
               }
               completedRequests++;
               checkAllDoneMap();
