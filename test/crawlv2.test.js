@@ -101,31 +101,27 @@ afterAll((done) => {
 });
 
 test('(25 pts) crawler workflow', (done) => {
-  let m1 = async (key, url) => {
-    if (url === undefined) {
+  let m1 = async (key, baseUrl) => {
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    if (baseUrl === undefined) {
       return {};
     }
     try {
-      // // if (url.slice(-5)==='.html') {
-      // //   url = url.slice(0, -10);
-      // // } else if (url.slice(-1)!=='/' && !url.endsWith('.txt')) {
-      // //   url = url + '/';
-      // // }
-      if (url.slice(-1) !== '/' && !url.endsWith('.txt') && !url.endsWith('.html')) {
-        url += '/'
+      if (baseUrl.slice(-1) !== '/' && !baseUrl.endsWith('.txt') && !baseUrl.endsWith('.html')) {
+        baseUrl += '/'
       }
     } catch (e) {
-      console.log('error in m1: ' + key + ' ' + url + ' ', e);
-      return { url: ['error in m1: ' + key + ' ' + url + ' ', e] };
+      console.log('error in m1: ' + key + ' ' + baseUrl + ' ', e);
+      return { url: ['error in m1: ' + key + ' ' + baseUrl + ' ', e] };
     }
 
     let out = {};
     try {
       process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
-      const response = await global.fetch(url);
+      const response = await global.fetch(baseUrl);
       if (!response.ok) {
         // throw new Error(`HTTP error! status: ${response.status}`);
-        return { ...out, [url]: `HTTP error! status: ${response.status}` };
+        return { ...out, [baseUrl]: `HTTP error! status: ${response.status}` };
       }
       var htmlContent = await response.text();
       htmlContent = htmlContent.replace("\u00a9", "&copy;")
@@ -133,27 +129,30 @@ test('(25 pts) crawler workflow', (done) => {
       const dom = new global.JSDOM(htmlContent);
       const document = dom.window.document;
 
-
+      console.log('baseUrl in map is: ', baseUrl);
       const anchors = document.querySelectorAll('a');
 
       anchors.forEach((anchor) => {
         const href = anchor.getAttribute('href');
         if (href) {
-          var absoluteUrl = new URL(href, url).toString();
+          var absoluteUrl = new URL(href, baseUrl).toString();
           // if (absoluteUrl.endsWith('/')) {
           //   absoluteUrl = absoluteUrl.slice(0, -1);
           // }
           if (absoluteUrl.endsWith('index.html')) {
             absoluteUrl = new URL(absoluteUrl + '/../').toString();
           }
-          urls.push(absoluteUrl);
+          if (!baseUrl.startsWith(absoluteUrl)) {
+            urls.push(absoluteUrl);
+          }
+
 
         }
       });
-      out[url] = urls;
+      out[baseUrl] = urls;
     } catch (error) {
-      console.error(url + ' Fetch error: ', error);
-      out = { ...out, [url]: 'Error fetching URL: ' + url + ' ' + error };
+      console.error(baseUrl + ' Fetch error: ', error);
+      out = { ...out, [url]: 'Error fetching URL: ' + baseUrl + ' ' + error };
       // out = {}
     }
     return out;
@@ -177,7 +176,8 @@ test('(25 pts) crawler workflow', (done) => {
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/the-book-of-mormon_571/index.html'
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/the-book-of-mormon_571/'
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/4/tag/truth/index.html';
-  var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/2'
+  var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3'
+  // var baseUrl = 'https://www.usenix.org/publications/proceedings'
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/category/books/science-fiction_16'
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/4/tag/authors/page/1'
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/2/static/book1.txt'//text cannot be downloaded
@@ -185,7 +185,7 @@ test('(25 pts) crawler workflow', (done) => {
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/category/books_1'
   // baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/1/level_1a/'
 
-  const visited = new Set();
+  // const visited = new Set();
   if (baseUrl.endsWith('/')) {
     baseUrl = baseUrl.slice(0, -1);
   }
@@ -244,7 +244,7 @@ test('(25 pts) crawler workflow', (done) => {
     //   console.log('allUrls: ', visited.size);
     //   done();
     // }
-    console.log('level[currDepth]: ', levels[currDepth], currDepth, 'number of links:', visited.size);
+    console.log('level[currDepth]: ', levels[currDepth], currDepth);
     let urlsToBeStore = [];
     const urlKeys = [];
     const keyUrlsMap = {}
@@ -252,21 +252,21 @@ test('(25 pts) crawler workflow', (done) => {
       if (url.endsWith('/')) {
         url = url.slice(0, -1);
       }
-      if (url.length > 0 && !(visited.has(url) || url.length < baseUrl.length && baseUrl.includes(url)) && url.includes(baseUrl)) {
-        visited.add(url);
+      // if (url.length > 0 && !(visited.has(url) || url.length < baseUrl.length && baseUrl.includes(url)) && url.includes(baseUrl)) {
+      //   visited.add(url);
         const urlKey = 'url-' + id.getID(url);
         urlKeys.push(urlKey);
         keyUrlsMap[urlKey] = url;
         urlsToBeStore.push({ url: url, key: urlKey });
-      }
+      // }
     });
 
     let cntr = 0;
     console.log('keyUrlsMap: ', keyUrlsMap)
     console.log('urlsToBeStore: ', urlsToBeStore, currDepth);
     if (urlsToBeStore.length === 0) {
-      console.log('allUrls: ', currDepth, visited.size, visited);
-      fs.writeFileSync('visited.txt', Array.from(visited).join('\n'));
+      // console.log('allUrls: ', currDepth, visited.size, visited);
+      // fs.writeFileSync('visited.txt', Array.from(visited).join('\n'));
       done();
       return;
     }
