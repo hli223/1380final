@@ -184,7 +184,7 @@ const mr = function (config) {
                       } else {
                         storeGroup = context.gid;
                       }
-                      mapResults.forEach((reduceResult) => {
+                      reduceResults.forEach((reduceResult) => {
                         let key = Object.keys(reduceResult)[0];
                         global.distribution[storeGroup]
                           .store.del(key, (e, resultKey) => {

@@ -183,7 +183,7 @@ test('(25 pts) crawler workflow', (done) => {
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/2/static/book1.txt'//text cannot be downloaded
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/1/level_1a/level_2a'//this one is downloadable
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/category/books_1'
-
+  baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/1/level_1a/'
 
   const visited = new Set();
   if (baseUrl.endsWith('/')) {
