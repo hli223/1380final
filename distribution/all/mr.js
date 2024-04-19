@@ -83,14 +83,20 @@ const mr = function (config) {
                   }
                   console.log('value: ', value);
                   console.log('before shuffle put:', result[resultKey], resultKey);
-                  global.distribution[gid].store.put(result[resultKey], resultKey, (e, v) => {
-                    console.log('store complete:', e, v)
-                    if (e) {
-                      callback(e, null);
-                    }
-                  console.log('stored result: ', result);
-                  callback(null, resultKey);
-                  });
+                  if (config.notStore) {
+                    callback(null, result[resultKey]);
+                  } else {
+                    global.distribution[gid].store.put(result[resultKey], resultKey, (e, v) => {
+                      console.log('store complete:', e, v)
+                      if (e) {
+                        callback(e, null);
+                      }
+                    console.log('stored result: ', result);
+                    callback(null, resultKey);
+                    });
+
+                  }
+
                 });
               });
             } else {
@@ -115,14 +121,19 @@ const mr = function (config) {
                   }
                   console.log('value: ', value);
                   console.log('before shuffle put:', result[resultKey], resultKey);
-                  global.distribution[gid].store.put(result[resultKey], resultKey, (e, v) => {
-                    console.log('store complete:', e, v)
-                    if (e) {
-                      callback(e, null);
-                    }
-                  console.log('stored result: ', result);
-                  callback(null, resultKey);
-                  });
+                  if (config.notStore) {
+                    callback(null, result[resultKey]);
+                  } else {
+                    global.distribution[gid].store.put(result[resultKey], resultKey, (e, v) => {
+                      console.log('store complete:', e, v)
+                      if (e) {
+                        callback(e, null);
+                      }
+                    console.log('stored result: ', result);
+                    callback(null, resultKey);
+                    });
+
+                  }
                 });
 
 

@@ -176,7 +176,7 @@ test('(25 pts) crawler workflow', (done) => {
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/the-book-of-mormon_571/index.html'
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/the-book-of-mormon_571/'
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/4/tag/truth/index.html';
-  var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3'
+  var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/1'
   // var baseUrl = 'https://www.usenix.org/publications/proceedings'
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/category/books/science-fiction_16'
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/4/tag/authors/page/1'
@@ -217,23 +217,29 @@ test('(25 pts) crawler workflow', (done) => {
           //   }
           // }
           console.log('map reduce done!', v)
-          let cntr = 0;
-          v.forEach((mapKey) => {
-            distribution.crawlUrl.store.get(mapKey, (e, value) => {
-              
-              if (e) {
-                done(e);
-              }
-              newUrls.push(...value);
-              cntr++;
-              console.log('after map reduce, store.get value: ', value, newUrls)
-              if (cntr === v.size) {
-                levels.push(newUrls);
-                console.log('start crawl() again')
-                crawl();
-              }
-            });
+          // let cntr = 0;
+          v.forEach((urls) => {
+            newUrls.push(...urls);
           });
+          levels.push(newUrls);
+          console.log('start crawl() again')
+          crawl();
+          // v.forEach((mapKey) => {
+          //   distribution.crawlUrl.store.get(mapKey, (e, value) => {
+              
+          //     if (e) {
+          //       done(e);
+          //     }
+          //     console.log('after map reduce, store.get value: ', value, e)
+          //     newUrls.push(...value);
+          //     cntr++;
+          //     if (cntr === v.size) {
+          //       levels.push(newUrls);
+          //       console.log('start crawl() again')
+          //       crawl();
+          //     }
+          //   });
+          // });
         } catch (e) {
           console.log('error in levelcrawl: ', e);
           done(e);
