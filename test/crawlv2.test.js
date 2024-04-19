@@ -159,97 +159,7 @@ test('(25 pts) crawler workflow', (done) => {
   };
 
 
-
-
-
-  var currDepth = 0;
-  // var baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/books.txt'
-  // var baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg';
-  // baseUrl = 'https://www.gutenberg.org/ebooks/'
-  // var baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3/'
-  // var baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3/?C=N;O=D'//problemetic
-  // var baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3/?C=D;O=A'
-  // var baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3/8/12380/?C=M;O=A'
-  // var baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3/7/?C=N;O=D/'
-  // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/mesaerion-the-best-science-fiction-stories-1800-1849_983/index.html';//problemetic
-  // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/category/books/default_15/';
-  // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/the-book-of-mormon_571/index.html'
-  // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/the-book-of-mormon_571/'
-  // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/4/tag/truth/index.html';
-  var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/1'
-  // var baseUrl = 'https://www.usenix.org/publications/proceedings'
-  // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/category/books/science-fiction_16'
-  // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/4/tag/authors/page/1'
-  // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/2/static/book1.txt'//text cannot be downloaded
-  // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/1/level_1a/level_2a'//this one is downloadable
-  // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/category/books_1'
-  // baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/1/level_1a/'
-
-  // const visited = new Set();
-  if (baseUrl.endsWith('/')) {
-    baseUrl = baseUrl.slice(0, -1);
-  }
-  if (baseUrl.endsWith('index.html')) {
-    baseUrl = new URL(baseUrl + '/../').toString();
-  }
-  const levels = [[baseUrl]];
-  console.log('baseURL is ', baseUrl);
   function crawl() {
-    const levelCrawl = (urlKeys) => {
-      // console.log('start level crawl, level: ', currDepth, urlKeys);
-      if (urlKeys === undefined || urlKeys.length === 0) {
-        done();
-      }
-      distribution.crawlUrl.mr.exec({ keys: urlKeys, map: m1, reduce: null, notStore: true, returnMapResult: true }, (e, v) => {
-        //v is a set
-        if (e !== null && Object.keys(e).length > 0) {
-          console.log('map reduce errorr: ', e);
-          done(e);
-          return;
-        }
-        try {
-          // console.log('mapreduce result at level: ', currDepth, v, urlKeys);
-          currDepth++;
-          const newUrls = []
-          // for (let i = 0; i < Object.keys(v).length; i++) {
-          //   if (v[Object.keys(v)[i]].length > 0) {
-          //     newUrls.push(...v[Object.keys(v)[i]][0]);
-          //   }
-          // }
-          console.log('map reduce done!', v)
-          // let cntr = 0;
-          v.forEach((urls) => {
-            newUrls.push(...urls);
-          });
-          levels.push(newUrls);
-          console.log('start crawl() again')
-          crawl();
-          // v.forEach((mapKey) => {
-          //   distribution.crawlUrl.store.get(mapKey, (e, value) => {
-              
-          //     if (e) {
-          //       done(e);
-          //     }
-          //     console.log('after map reduce, store.get value: ', value, e)
-          //     newUrls.push(...value);
-          //     cntr++;
-          //     if (cntr === v.size) {
-          //       levels.push(newUrls);
-          //       console.log('start crawl() again')
-          //       crawl();
-          //     }
-          //   });
-          // });
-        } catch (e) {
-          console.log('error in levelcrawl: ', e);
-          done(e);
-        }
-      });
-    }
-    // if (levels[currDepth].length === 0) {
-    //   console.log('allUrls: ', visited.size);
-    //   done();
-    // }
     console.log('level[currDepth]: ', levels[currDepth], currDepth);
     let urlsToBeStore = [];
     const urlKeys = [];
@@ -286,7 +196,8 @@ test('(25 pts) crawler workflow', (done) => {
           done(e);
         }
         if (cntr === urlsToBeStore.length) {
-          console.log('urlsToBeStore store done! check urlsToBeStore', currDepth, urlsToBeStore)
+          console.log('urlsToBeStore store done! check urlsToBeStore', currDepth, urlsToBeStore, urlKeys)
+          fs.writeFileSync('latest_urlKeys.json', JSON.stringify(urlKeys));
           levelCrawl(urlKeys);
           // doMapReduce();
         }
@@ -294,7 +205,94 @@ test('(25 pts) crawler workflow', (done) => {
     });
 
   }
-  crawl();
+  const levelCrawl = (urlKeys) => {
+    // console.log('start level crawl, level: ', currDepth, urlKeys);
+    if (urlKeys === undefined || urlKeys.length === 0) {
+      done();
+    }
+    distribution.crawlUrl.mr.exec({ keys: urlKeys, map: m1, reduce: null, notStore: true, returnMapResult: true }, (e, v) => {
+      //v is a set
+      if (e !== null && Object.keys(e).length > 0) {
+        console.log('map reduce errorr: ', e);
+        done(e);
+        return;
+      }
+      try {
+        currDepth++;
+        const newUrls = []
+        console.log('map reduce done!', v)
+        v.forEach((urls) => {
+          newUrls.push(...urls);
+        });
+        levels.push(newUrls);
+        console.log('start crawl() again')
+        crawl();
+      } catch (e) {
+        console.log('error in levelcrawl: ', e);
+        done(e);
+      }
+    });
+  }
+  var currDepth = 0;
+  const levels = []
+  // var baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/books.txt'
+  // var baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg';
+  // baseUrl = 'https://www.gutenberg.org/ebooks/'
+  // var baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3/'
+  // var baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3/?C=N;O=D'//problemetic
+  // var baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3/?C=D;O=A'
+  // var baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3/8/12380/?C=M;O=A'
+  // var baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3/7/?C=N;O=D/'
+  // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/mesaerion-the-best-science-fiction-stories-1800-1849_983/index.html';//problemetic
+  // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/category/books/default_15/';
+  // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/the-book-of-mormon_571/index.html'
+  // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/the-book-of-mormon_571/'
+  // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/4/tag/truth/index.html';
+  var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/1'
+  // var baseUrl = 'https://www.usenix.org/publications/proceedings'
+  // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/category/books/science-fiction_16'
+  // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/4/tag/authors/page/1'
+  // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/2/static/book1.txt'//text cannot be downloaded
+  // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/1/level_1a/level_2a'//this one is downloadable
+  // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/category/books_1'
+  // baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/1/level_1a/'
+  const crawlWithBaseUrl = () => {
+    if (baseUrl.endsWith('/')) {
+      baseUrl = baseUrl.slice(0, -1);
+    }
+    if (baseUrl.endsWith('index.html')) {
+      baseUrl = new URL(baseUrl + '/../').toString();
+    }
+    levels.push([baseUrl]);
+    console.log('baseURL is ', baseUrl);
+    crawl();
+
+  }
+  try {
+    var latestUrlKeys = require('../latest_urlkeys.json');
+    if (!latestUrlKeys || latestUrlKeys.length === 0) {//starting from scratch
+      console.log('latestUrlKeys is not defined, starting from scratch');
+      crawlWithBaseUrl();
+    } else {
+      console.log('latestUrlKeys is defined, resuming from latestUrlKeys');
+      levels.push(latestUrlKeys);
+      levelCrawl(latestUrlKeys);
+    }
+  } catch (e) {//starting from scratch
+    console.log('error in reading latest_urlkeys.json: ', e);
+    crawlWithBaseUrl();
+  }
+
+
+
+  // distribution.crawlUrl.store.get(null, (e, urlKeys) => {//resume from unfinished step
+  //   console.log('store.get at the beginning: ', e, urlKeys)
+  //   if(urlKeys.length > 0) {
+
+  //   } else {
+
+  //   }
+  // })
 
 
 }, 800000);
