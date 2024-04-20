@@ -31,7 +31,7 @@ for (let i = 1; i <= 10; i++) {
 }
 
 
-beforeAll( (done) => {
+beforeAll((done) => {
   /* Stop the nodes if they are running */
 
   nodes.forEach(node => {
@@ -49,7 +49,7 @@ beforeAll( (done) => {
     console.log('start spawning nodes...')
     const spawnPromise = global.promisify(distribution.local.status.spawn);
     for (const node of nodes) {
-        await spawnPromise(node);
+      await spawnPromise(node);
     }
     console.log('node started!')
     cb();
@@ -99,103 +99,103 @@ afterAll((done) => {
 
 test('(25 pts) crawler workflow', (done) => {
 
-    let m1 = async (gid, baseUrl) => {
-        let out = {}
-        try {
-            if (baseUrl.slice(-1) !== '/' && !baseUrl.endsWith('.txt') && !baseUrl.endsWith('.html')) {
-            baseUrl += '/'
-            }
-        } catch (e) {
-            console.log('error in m1: ' + baseUrl + ' ', e);
-            return { url: ['error in m1: ' + baseUrl + ' ', e] };
-        }
-        try {
-            process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
-            const response = await global.fetch(baseUrl);
-            if (!response.ok) {
-            return { ...out, [baseUrl]: `HTTP error! status: ${response.status}` };
-            }
-            var htmlContent = await response.text();
-            htmlContent = htmlContent.replace("\u00a9", "&copy;")
-            const dom = new global.JSDOM(htmlContent);
-            const document = dom.window.document;
-
-            console.log('baseUrl in map is: ', baseUrl, gid);
-            const anchors = document.querySelectorAll('a');
-
-            
-
-            let promises = [];
-            let urls = [];
-            anchors.forEach( (anchor) => {
-                const href = anchor.getAttribute('href');
-                if (href) {
-                    var absoluteUrl = new URL(href, baseUrl).toString();
-                    if (absoluteUrl.endsWith('index.html')) {
-                    absoluteUrl = new URL(absoluteUrl + '/../').toString();
-                    }
-                    if (!baseUrl.startsWith(absoluteUrl) 
-                    && (absoluteUrl.startsWith('https://www.usenix.org/conference/') 
-                && absoluteUrl.includes('/presentation/'))){
-                    urls.push(absoluteUrl);
-                    }
-                }
-            });
-            console.log('within user map, urls: ', urls);
-            out[baseUrl] = urls;
-            return out;
-        } catch (error) {
-            console.error(baseUrl + ' Fetch error: ', error);
-            out = { ...out, [baseUrl]: 'Error fetching URL: ' + baseUrl + ' ' + error };
-            return out
-        }
-        return out
-
-
+  let m1 = async (gid, baseUrl) => {
+    let out = {}
+    try {
+      if (baseUrl.slice(-1) !== '/' && !baseUrl.endsWith('.txt') && !baseUrl.endsWith('.html')) {
+        baseUrl += '/'
+      }
+    } catch (e) {
+      console.log('error in m1: ' + baseUrl + ' ', e);
+      return { url: ['error in m1: ' + baseUrl + ' ', e] };
     }
-    var baseUrl = 'https://www.usenix.org/publications/proceedings?page='
-    let promises = [];
-    let urlKeys = []
-    let execMr = global.promisify(distribution.crawlUrl.mr.exec)
-    let totalPages = 346;
-    for (let i = 1; i<=totalPages; i++) {
-        let url = baseUrl + i;
-        let urlKey = id.getID(url);
-        urlKeys.push(urlKey);
-        promises.push(
-            global.promisify(distribution.crawlUrl.store.put)(url, urlKey)
-        );
+    try {
+      process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
+      const response = await global.fetch(baseUrl);
+      if (!response.ok) {
+        return { ...out, [baseUrl]: `HTTP error! status: ${response.status}` };
+      }
+      var htmlContent = await response.text();
+      htmlContent = htmlContent.replace("\u00a9", "&copy;")
+      const dom = new global.JSDOM(htmlContent);
+      const document = dom.window.document;
+
+      console.log('baseUrl in map is: ', baseUrl, gid);
+      const anchors = document.querySelectorAll('a');
+
+
+
+      let promises = [];
+      let urls = [];
+      anchors.forEach((anchor) => {
+        const href = anchor.getAttribute('href');
+        if (href) {
+          var absoluteUrl = new URL(href, baseUrl).toString();
+          if (absoluteUrl.endsWith('index.html')) {
+            absoluteUrl = new URL(absoluteUrl + '/../').toString();
+          }
+          if (!baseUrl.startsWith(absoluteUrl)
+            && (absoluteUrl.startsWith('https://www.usenix.org/conference/')
+              && absoluteUrl.includes('/presentation/'))) {
+            urls.push(absoluteUrl);
+          }
+        }
+      });
+      console.log('within user map, urls: ', urls);
+      out[baseUrl] = urls;
+      return out;
+    } catch (error) {
+      console.error(baseUrl + ' Fetch error: ', error);
+      out = { ...out, [baseUrl]: 'Error fetching URL: ' + baseUrl + ' ' + error };
+      return out
     }
-    Promise.all(promises).then(async () => {
-        let batchSize = 3;
-        for (let i = 0; i < urlKeys.length; i += batchSize) {
-            if (i + batchSize > urlKeys.length) {
-                batchSize = urlKeys.length - i;
-            }
-            let batch = urlKeys.slice(i, i + batchSize);
-            try {
-                await execMr({ keys: batch, map: m1, reduce: null, notStore: true, returnMapResult: true, notShuffle: true });
-            } catch (error) {
-                console.error('Error in execMr: ', error);
-            }
-        }
-        if (urlKeys.length % batchSize !== 0) {
-            let lastBatch = urlKeys.slice(-urlKeys.length % batchSize);
-            try {
-                await execMr({ keys: lastBatch, map: m1, reduce: null, notStore: true, returnMapResult: true, notShuffle: true });
-            } catch (error) {
-                console.error('Error in execMr: ', error);
-            }
-        }
-        done();
-    }).catch((error) => {
-        done(error);
-    });
+    return out
+
+
+  }
+  var baseUrl = 'https://www.usenix.org/publications/proceedings?page='
+  let promises = [];
+  let urlKeys = []
+  let execMr = global.promisify(distribution.crawlUrl.mr.exec)
+  let totalPages = 346;
+  for (let i = 1; i <= totalPages; i++) {
+    let url = baseUrl + i;
+    let urlKey = id.getID(url);
+    urlKeys.push(urlKey);
+    promises.push(
+      global.promisify(distribution.crawlUrl.store.put)(url, urlKey)
+    );
+  }
+  Promise.all(promises).then(async () => {
+    let batchSize = 3;
+    for (let i = 0; i < urlKeys.length; i += batchSize) {
+      if (i + batchSize > urlKeys.length) {
+        batchSize = urlKeys.length - i;
+      }
+      let batch = urlKeys.slice(i, i + batchSize);
+      try {
+        await execMr({ keys: batch, map: m1, reduce: null, notStore: true, returnMapResult: true, notShuffle: true });
+      } catch (error) {
+        console.error('Error in execMr: ', error);
+      }
+    }
+    if (urlKeys.length % batchSize !== 0) {
+      let lastBatch = urlKeys.slice(-urlKeys.length % batchSize);
+      try {
+        await execMr({ keys: lastBatch, map: m1, reduce: null, notStore: true, returnMapResult: true, notShuffle: true });
+      } catch (error) {
+        console.error('Error in execMr: ', error);
+      }
+    }
+    done();
+  }).catch((error) => {
+    done(error);
+  });
 
 
 
 
-    
+
 
 
 
