@@ -26,7 +26,7 @@ let localServer = null;
 */
 
 const nodes = [];
-for (let i = 1; i <= 6; i++) {
+for (let i = 1; i <= 50; i++) {
   nodes.push({ ip: '127.0.0.1', port: startPort + i });
 }
 
@@ -45,6 +45,7 @@ beforeAll((done) => {
   let cntr = 0;
   const startNodes = (cb) => {
     nodes.forEach(node => {
+      console.log('starting node: ', node);
       distribution.local.status.spawn(node, (e, v) => {
         // Handle the callback
         cntr++;
@@ -143,6 +144,7 @@ test('(25 pts) crawler workflow', (done) => {
           // if (absoluteUrl.endsWith('/')) {
           //   absoluteUrl = absoluteUrl.slice(0, -1);
           // }
+          console.log('absoluteUrl: ', absoluteUrl);
           if (absoluteUrl.endsWith('index.html')) {
             absoluteUrl = new URL(absoluteUrl + '/../').toString();
           }
@@ -165,7 +167,7 @@ test('(25 pts) crawler workflow', (done) => {
 
   var currDepth = 0;
   // var baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/books.txt'
-  // var baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg';
+  var baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg';
   // baseUrl = 'https://www.gutenberg.org/ebooks/'
   // var baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3/'
   // var baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3/?C=N;O=D'//problemetic
@@ -177,12 +179,13 @@ test('(25 pts) crawler workflow', (done) => {
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/the-book-of-mormon_571/index.html'
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/the-book-of-mormon_571/'
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/4/tag/truth/index.html';
-  var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/1'
+  // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/1'
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/category/books/science-fiction_16'
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/4/tag/authors/page/1'
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/2/static/book1.txt'//text cannot be downloaded
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/1/level_1a/level_2a'//this one is downloadable
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/category/books_1'
+  // var baseUrl = 'https://www.usenix.org/publications/proceedings';
 
 
   const visited = new Set();
@@ -200,21 +203,31 @@ test('(25 pts) crawler workflow', (done) => {
       if (urlKeys === undefined || urlKeys.length === 0) {
         done();
       }
-      distribution.crawlUrl.mr.exec({ keys: urlKeys, map: m1, reduce: null, notStore: true }, (e, v) => {
+      distribution.crawlUrl.mr.exec({ keys: urlKeys, map: m1, reduce: null }, (e, v) => {
         if (e !== null && Object.keys(e).length > 0) {
           console.log('map reduce errorr: ', e);
           done(e);
           return;
         }
         try {
-          // console.log('mapreduce result at level: ', currDepth, v, urlKeys);
+          console.log('mapreduce result at level: ', currDepth, v, urlKeys);
           currDepth++;
           const newUrls = []
-          for (let i = 0; i < Object.keys(v).length; i++) {
-            if (v[Object.keys(v)[i]].length > 0) {
-              newUrls.push(...v[Object.keys(v)[i]][0]);
+          for (let j = 0; j < urlKeys.length; j++) {
+            let u = v[j];
+            if (u !== undefined && u !== null) {
+              for (let i = 0; i < Object.keys(u).length; i++) {
+                if (u[Object.keys(u)[i]].length > 0) {
+                  newUrls.push(...u[Object.keys(u)[i]][0]);
+                }
+              }
+            }
+            else {
+              console.log('u is undefined or null', u);
             }
           }
+
+          console.log('new urls are: ', newUrls, currDepth, visited.size);
           levels.push(newUrls);
           crawl();
         } catch (e) {
@@ -253,9 +266,11 @@ test('(25 pts) crawler workflow', (done) => {
       done();
       return;
     }
+    let newUrls = [];
     urlsToBeStore.forEach((o) => {
       let key = o.key;
       let value = o.url;
+      newUrls.push(value);
       distribution.crawlUrl.store.put(value, key, (e, v) => {
         cntr++;
         console.log('put urlsToBeStore:', value, key, e, v)
@@ -269,6 +284,7 @@ test('(25 pts) crawler workflow', (done) => {
         }
       });
     });
+    fs.appendFileSync('cur_visited.txt', newUrls.join('\n') + '\n');
 
   }
   crawl();

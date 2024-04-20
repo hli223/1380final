@@ -1,306 +1,324 @@
-const id = require('../util/id');
-const localComm = require('../local/comm');
-
-// const statusCheck = () => {
-//   console.log('start status check!');
-//   let remote = {
-//     service: 'status',
-//     method: 'get',
-//     node: {ip: '127.0.0.1', port: 7110},
-//   };
-//   localComm.send(['nid'], remote, (e, resultKey) => {
-//     console.log('status: ', resultKey, e);
-//   });
-
-//   remote = {
-//     service: 'status',
-//     method: 'get',
-//     node: {ip: '127.0.0.1', port: 7111},
-//   };
-//   localComm.send(['nid'], remote, (e, resultKey) => {
-//     console.log('status: ', resultKey, e);
-//   });
-
-//   remote = {
-//     service: 'status',
-//     method: 'get',
-//     node: {ip: '127.0.0.1', port: 7112},
-//   };
-//   localComm.send(['nid'], remote, (e, resultKey) => {
-//     console.log('status: ', resultKey, e);
-//   });
-//   console.log('end status check!');
-// };
-
-const getSelectedNode = (key, nodes, context) => {
-  const nids = Object.values(nodes).map((node) => id.getNID(node));
-  const kid = id.getID(key);
-  const selectedNid = context.hash(kid, nids);
-  return nodes[selectedNid.substring(0, 5)];
-};
-
 const mr = function (config) {
   let context = {};
   context.gid = config.gid || 'all';
-  context.hash = config.hash || id.naiveHash;
 
   return {
     exec: (configuration, callback) => {
-      mrService = {
-        map: (key, gid, m, compact, callback) => {
-          callback = callback || function () { };
-          global.distribution[gid].store.get(key, (e, value) => {
-            if (e) {
-              callback(e, null);
-            }
-            console.log('start processing key: ', key, 'value: ', value);
-            if (m.constructor.name === 'AsyncFunction') {
-              m(key, value).then((result) => {
-                if (compact) {
-                  result = compact(result);
-                }
-                console.log('end processing key: ', key, 'value: ', value);
-                callback(null, result);
-              });
-            } else {
-              try {
-                let result = m(key, value);
-                if (compact) {
-                  result = compact(result);
-                }
-                console.log('end processing key: ', key, 'value: ', value);
-                callback(null, result);
-              } catch (e) {
-                console.log('end processing key with ERRORR: ', key, 'value: ', value, e);
-                callback(e, null);
-              }
-            }
-          });
-        },
-        reduce: (key, gid, r, callback) => {
-          callback = callback || function () { };
-          global.distribution[gid].store.get(key, (e, value) => {
-            if (e) {
-              console.log('error in reduce: ', e);
-              callback(e, null);
-            }
-            try {
-              console.log('reduce key: ', key, 'value: ', value);
-              console.log('error in try', e);
-              let result = r(key, value);
-              console.log('reduce result in the infrastructure: ', result);
-              callback(null, result);
-            } catch (e) {
-              console.log('reduce error: ', e);
-              callback(e, null);
-            }
-          });
-        },
-      };
-      mrServiceName = 'mr-' + id.getSID(mrService);
-      let nodes;
-      global.distribution[context.gid].groups.get(context.gid,
-        (e, prevNodes) => {
-          console.log('e, prevNodes', e, prevNodes);
-          // statusCheck();
-          global.distribution[context.gid].routes
-            .put(mrService, mrServiceName, (e, resultKey) => {
-              console.log('Instatiation completed!', resultKey, e);
-            });
+      /* Change this with your own exciting Map Reduce code! */
+      // extract the map and reduce functions from the configuration
+      const map = configuration.map;
+      const reduce = configuration.reduce;
+      const keys = configuration.keys;
+      const compact = configuration.compact || ((x) => {
+        return x;
+      });
+      console.log('compact are ', compact);
 
+      // create a notification service and will use this service
+      // to notify the nodes in the group to run the map and reduce functions
+      // generate a random integer number
+      let mrId = Math.floor(Math.random() * 1000);
+      mrId = 'mr-' + mrId.toString();
 
-          nodes = Object.values(prevNodes)[0];
-          // statusCheck();
-          let totalRequests = configuration.keys.length;
-          console.log('totalRequests: ', totalRequests);
-          // console.log('configuration.keys: ', configuration.keys);
-          let completedRequests = 0;
-          let errorsMap = {};
-          let mapResults = {};
-          const checkAllDoneMap = () => {
-            console.log('completedRequests: ', completedRequests);
-            if (completedRequests === totalRequests) {
-              if (Object.keys(errorsMap).length > 0) {
-                callback(errorsMap, null);
-                return;
-              }
-              console.log('shuffled mapResults: ', mapResults);
-              if (configuration.notStore) {
-                callback(null, mapResults);
-                return;
-              }
-              let storePutCompletedRequests = 0;
-              let storePutResult = [];
-              let storePutErrors = {};
-              const checkAllDoneStorePut = () => {
-                console.log('shuffle key store not complete!',
-                  storePutCompletedRequests,
-                  Object.keys(mapResults).length);
-                if (storePutCompletedRequests ===
-                  Object.keys(mapResults).length) {
-                  console.log('shuffle key store complete!',
-                    storePutCompletedRequests,
-                    Object.keys(mapResults).length);
-                  if (Object.keys(storePutErrors).length > 0) {
-                    callback(storePutErrors, null);
-                    return;
-                  }
-                  if (configuration.reduce === null) {
-                    // if there is no reduce,
-                    // we just distributed map result store
-                    callback(null, storePutResult);
-                    return;
-                  }
-
-                  let totalRequestsReduce = Object.keys(mapResults).length;
-                  let completedRequestsReduce = 0;
-                  console.log('totalRequestsReduce: ', totalRequestsReduce,
-                    'completedRequestsReduce:', completedRequestsReduce);
-                  let errorsReduce = [];
-                  let reduceResults = [];
-                  const checkAllDoneReduce = () => {
-                    if (completedRequestsReduce === totalRequestsReduce) {
-                      console.log('reduced results: ', reduceResults);
-
-                      let totalRequestsDelete = Object
-                        .keys(reduceResults).length;
-                      let completedRequestsDelete = 0;
-                      console.log('totalRequestsDelete: ',
-                        totalRequestsDelete,
-                        'completedRequestsDelete:',
-                        completedRequestsDelete);
-                      let errorsDelete = [];
-                      const checkAllDoneDelete = () => {
-                        if (completedRequestsDelete == totalRequestsDelete) {
-                          console.log('delete completed! ');
-                          // global.distribution[context.gid].
-                          // mr.deleteService(mrServiceName, console.log);
-                          callback(errorsDelete, reduceResults);
-                        }
-                      };
-                      var storeGroup = '';
-                      if (configuration.storeGroup) {
-                        storeGroup = configuration.storeGroup;
-                      } else {
-                        storeGroup = context.gid;
-                      }
-                      mapResults.forEach((reduceResult) => {
-                        let key = Object.keys(reduceResult)[0];
-                        global.distribution[storeGroup]
-                          .store.del(key, (e, resultKey) => {
+      // wrape up the map function
+      let mapWrapper = function (keys, map, gid, compact, cb) {
+        console.log('map input keys are: ', keys);
+        let newKeys = [];
+        let count = 0;
+        // let res = [];
+        for (let i = 0; i < keys.length; i++) {
+          global.distribution.local.store.get({ gid: gid, key: keys[i] },
+            (e, v) => {
+              // if the key exists in the current node
+              if (e === null) {
+                console.log('find: ', keys[i], v);
+                let out = null;
+                if (map.constructor.name === 'AsyncFunction') {
+                  map(keys[i], v).then((result) => {
+                    out = result;
+                    console.log('promise result is: ', out);
+                    if (Array.isArray(out)) {
+                      let cur = out.length;
+                      for (let j = 0; j < cur; j++) {
+                        let newKey = Object.keys(out[j])[0];
+                        let randomNumber = Math.floor(Math.random() * 100000);
+                        newKey += randomNumber;
+                        newKeys.push(newKey);
+                        // res.push(out[j]);
+                        global.distribution.local.store.put(out[j],
+                          newKey,
+                          (e, v) => {
                             if (e) {
-                              errorsDelete.push(e);
+                              console.log('error in put: ', e);
+                              cb(e, null);
                             }
-                            completedRequestsDelete++;
-                            console.log('deleting key: ', key);
-                            checkAllDoneDelete();
+                            cur--;
+                            if (cur === 0) {
+                              count++;
+                            }
+                            console.log('put: ', keys[i],
+                              out[j], ' count: ', count);
+                            if (count === keys.length) {
+                              cb(null, newKeys);
+                            }
                           });
-                      });
-                      // callback(errorsReduce, reduceResults);
-                    }
-                  };
-                  var storeGroup = '';
-                  if (configuration.storeGroup) {
-                    storeGroup = configuration.storeGroup;
-                  } else {
-                    storeGroup = context.gid;
-                  }
-                  for (const key of Object.keys(mapResults)) {
-                    const selectedNode = getSelectedNode(key, nodes, context);
-                    let remote = {
-                      service: mrServiceName,
-                      method: 'reduce',
-                      node: selectedNode,
-                    };
-                    localComm.send([key, storeGroup,
-                      configuration.reduce],
-                      remote, (e, reduceResult) => {
-                        if (e) {
-                          errorsReduce.push(e);
-                        } else {
-                          console.log('each reduceResult: ', reduceResult);
-                          reduceResults.push(reduceResult);
+                      }
+                    } else {
+                      let newKey = Object.keys(out)[0];
+                      let randomNumber = Math.floor(Math.random() * 100000);
+                      newKey += randomNumber;
+                      newKeys.push(newKey);
+                      // res.push(out);
+                      global.distribution.local.store.put(out, newKey, (e, v) => {
+                        count++;
+                        console.log('put: ', keys[i], out, ' count: ', count);
+                        if (count === keys.length) {
+                          cb(null, newKeys);
                         }
-                        console.log('the final reduceResults: ', reduceResults);
-                        completedRequestsReduce++;
-                        checkAllDoneReduce();
                       });
+                    }
+                  });
+                }
+                else {
+                  out = map(keys[i], v);
+                  out = compact(out);
+                  console.log('out is ', out);
+                  // console.log(i, out);
+                  if (Array.isArray(out)) {
+                    let cur = out.length;
+                    for (let j = 0; j < cur; j++) {
+                      let newKey = Object.keys(out[j])[0];
+                      let randomNumber = Math.floor(Math.random() * 100000);
+                      newKey += randomNumber;
+                      newKeys.push(newKey);
+                      // res.push(out[j]);
+                      global.distribution.local.store.put(out[j],
+                        newKey,
+                        (e, v) => {
+                          cur--;
+                          if (cur === 0) {
+                            count++;
+                          }
+                          console.log('put: ', keys[i],
+                            out[j], ' count: ', count);
+                          if (count === keys.length) {
+                            cb(null, newKeys);
+                          }
+                        });
+                    }
+                  } else {
+                    let newKey = Object.keys(out)[0];
+                    let randomNumber = Math.floor(Math.random() * 100000);
+                    newKey += randomNumber;
+                    newKeys.push(newKey);
+                    // res.push(out);
+                    global.distribution.local.store.put(out, newKey, (e, v) => {
+                      count++;
+                      console.log('put: ', keys[i], out, ' count: ', count);
+                      if (count === keys.length) {
+                        cb(null, newKeys);
+                      }
+                    });
                   }
                 }
-              };
-              var storeGroup = '';
-              if (configuration.storeGroup) {
-                storeGroup = configuration.storeGroup;
+
               } else {
-                storeGroup = context.gid;
+                count++;
+                console.log('count: ', count, 'can not find: ', keys[i]);
+                if (count === keys.length) {
+                  cb(null, newKeys);
+                }
               }
-              for (const key of Object.keys(mapResults)) {
-                global.distribution[storeGroup].
-                  store.put(mapResults[key], key, (e, resultKey) => {
-                    if (e) {
-                      storePutErrors[key] = e;
-                    }
-                    console.log('shuffle store put error: ', e);
-                    storePutCompletedRequests++;
-                    storePutResult.push(resultKey);
-                    checkAllDoneStorePut();
-                  });
+            });
+        }
+      };
+
+      // wrap up the reduce function
+      let reduceWrapper = function (keys, reduce, cb) {
+        // use an list to store the result cause the current node might be
+        // responsible for multiple keys
+        if (reduce === null) {
+          reduce = (key, values) => {
+            let res = {};
+            res[key] = values;
+            return res;
+          }
+        }
+        let res = [];
+        let dict = {};
+        let count = 0;
+        console.log('reduce input keys are: ', keys);
+        for (let i = 0; i < keys.length; i++) {
+          global.distribution.local.store.get(keys[i], (e, v) => {
+            // if the key exist in the current node
+            if (e === null) {
+              console.log('reduce find it ', keys[i], v);
+              let key = Object.keys(v)[0];
+              if (key in dict) {
+                dict[key].push(v[key]);
+              } else {
+                dict[key] = [v[key]];
+              }
+              // res.push(reduce(key, [v[key], v[key]]));
+              count++;
+              // console.log(res);
+              if (count === keys.length) {
+                for (let key in dict) {
+                  if (dict.hasOwnProperty(key)) {
+                    res.push(reduce(key, dict[key]));
+                  }
+                }
+                console.log('reduce result is: ', res);
+                cb(null, res);
+              }
+            } else {
+              count++;
+              if (count === keys.length) {
+                for (let key in dict) {
+                  if (dict.hasOwnProperty(key)) {
+                    res.push(reduce(key, dict[key]));
+                  }
+                }
+                console.log(res);
+                cb(null, res);
               }
             }
-          };
-          console.log('Start mapping phase!');
-          for (const key of configuration.keys) {
-            console.log('calling map on key: ', key);
-            const selectedNode = getSelectedNode(key, nodes, context);
-            let remote = {
-              service: mrServiceName,
-              method: 'map',
-              node: selectedNode,
-            };
-            let args = [key, context.gid, configuration.map,
-              configuration.compact];
-            console.log('map args: ', args);
-            localComm.send(args, remote, (e, mapResult) => {
-              if (e) {
-                // errors.push(e);
-                errorsMap[key] = e;
-              } else {
-                console.log('mapResult: ', mapResult, e);
-                if (Array.isArray(mapResult)) {
-                  mapResult.forEach((element) => {
-                    const key = Object.keys(element)[0];
-                    console.log('before shuffle key: ', key);
-                    console.log('before shuffle element: ', element[key])
-                    if (!(key in mapResults)) {
-                      mapResults[key] = [element[key]];
-                    } else {
-                      mapResults[key].push(element[key]);
-                    }
-                  });
-                } else {
-                  for (const key of Object.keys(mapResult)) {
-                    if (!(key in mapResults)) {
-                      mapResults[key] = [mapResult[key]];
-                    } else {
-                      mapResults[key].push(mapResult[key]);
-                    }
+          });
+        }
+      };
+
+      // shuffle
+      let shuffle = function (keys, gid, cb) {
+        let count = 0;
+        res = [];
+        global.distribution.local.groups.get(gid, (e, value) => {
+          let id2Node = {};
+          let tempKeys = Object.keys(value);
+          for (let i = 0; i < tempKeys.length; i++) {
+            id2Node[global.distribution.util.id.getID(value[tempKeys[i]])] =
+              value[tempKeys[i]];
+          }
+          // console.log('group members are ', value);
+          // console.log('group members are ', Object.keys(id2Node));
+          // console.log('group members are ', id2Node);
+          for (let i = 0; i < keys.length; i++) {
+            global.distribution.local.store.get(keys[i], (e, content) => {
+              // if the key exist in the current node
+              if (e === null) {
+                let randomNumber = Math.floor(Math.random() * 100000);
+                let key = global.distribution.util.id.getID(
+                  content + randomNumber);
+                res.push(key);
+                let realKey = Object.keys(content)[0];
+                console.log('find it ', keys[i], content);
+                console.log('real key is ', realKey);
+                console.log('key is ', key);
+                let targetId = global.distribution.util.id.consistentHash(
+                  global.distribution.util.id.getID(realKey),
+                  Object.keys(id2Node));
+                let targetNode = id2Node[targetId];
+                console.log('send to node is ', targetNode.port, realKey);
+                let message = [content, key];
+                let remote = {
+                  service: 'store',
+                  method: 'put',
+                  node: targetNode,
+                };
+                global.distribution.local.comm.send(message, remote, (e, v) => {
+                  count++;
+                  console.log(i, 'shuffle store ', realKey, content);
+
+                  if (count === keys.length) {
+                    cb(null, res);
                   }
+                });
+              } else {
+                count++;
+                if (count === keys.length) {
+                  cb(null, res);
                 }
               }
-              completedRequests++;
-              checkAllDoneMap();
             });
           }
         });
-    },
-    deleteService: (serviceName, callback) => {
-      console.log('deleting service: ', serviceName);
-      let remote = { service: 'mr', method: 'deleteService' };
-      global.distribution[context.gid].comm.send([serviceName]
-        , remote, (e, v) => {
-          console.log('delete services:::', e, v);
-          callback(e, v);
-        });
+      };
+
+      // use routes to create endpoints for the map and reduce functions at the
+      // nodes in the group
+      let service = { map: mapWrapper, reduce: reduceWrapper, shuffle: shuffle };
+
+      // setup phase
+      global.distribution[context.gid].routes.put(service, mrId, (e, v) => {
+        // map phase
+        console.log('map');
+        let mapMessage = [keys, map, context.gid, compact];
+        let mapRemote = { service: mrId, method: 'map' };
+        global.distribution[context.gid].comm.send(
+          mapMessage,
+          mapRemote,
+          (e, mapV) => {
+            // shuffle phase
+            if (e !== null && Object.keys(e).length > 0) {
+              console.log('error in map phase');
+              console.log(e);
+              callback(e, null);
+              return;
+            }
+            shuffleKeys = [];
+            ks = Object.keys(mapV);
+            for (let i = 0; i < ks.length; i++) {
+              shuffleKeys = shuffleKeys.concat(mapV[ks[i]]);
+            }
+
+            console.log('shuffle');
+            let shuffleMessage = [shuffleKeys, context.gid];
+            let shuffleRemote = { service: mrId, method: 'shuffle' };
+            global.distribution[context.gid].comm.send(
+              shuffleMessage,
+              shuffleRemote,
+              (e, nv) => {
+                newK = [];
+                ks = Object.keys(nv);
+                for (let i = 0; i < ks.length; i++) {
+                  newK = newK.concat(nv[ks[i]]);
+                }
+                if (e !== null && Object.keys(e).length > 0) {
+                  console.log('error in shuffle phase');
+                  callback(e, null);
+                  return;
+                }
+                console.log('new keys are ', newK);
+                // reduce phase
+                console.log('reduce');
+                let reduceMessage = [newK, reduce];
+                let reduceRemote = { service: mrId, method: 'reduce' };
+                global.distribution[context.gid].comm.send(reduceMessage,
+                  reduceRemote, (e, value) => {
+                    // completion phase
+                    if (e !== null && Object.keys(e).length > 0) {
+                      console.log('error in reduce phase');
+                      callback(e, null);
+                      return;
+                    }
+                    console.log('reduce result returned is: ', value);
+                    let finalRes = [];
+                    for (let key in value) {
+                      if (value.hasOwnProperty(key)) {
+                        finalRes = finalRes.concat(value[key]);
+                      }
+                    }
+                    console.log('final result is: ', finalRes);
+                    for (let i = 0; i < finalRes.length; i++) {
+                      for (let j = 0; j < Object.keys(finalRes[i]).length; j++) {
+                        let key = Object.keys(finalRes[i])[j];
+                        console.log('final results are ', key, finalRes[i][key]);
+                      }
+                    }
+                    callback(null, finalRes);
+                  });
+              });
+          });
+      });
     },
   };
 };
