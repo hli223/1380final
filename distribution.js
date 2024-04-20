@@ -79,6 +79,8 @@ const { PorterStemmer } = require('natural');
 global.stemmer = PorterStemmer;
 module.exports = global.distribution;
 global.fetch = require('node-fetch');
+global.promisify = require('./distribution/util/promisify');
+
 
 /* The following code is run when distribution.js is run directly */
 if (require.main === module) {

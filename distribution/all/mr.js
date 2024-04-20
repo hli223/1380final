@@ -55,14 +55,34 @@ const mr = function (config) {
             }
             console.log('start processing key: ', key, 'value: ', value);
             if (config.map.constructor.name === 'AsyncFunction') {
-              config.map(key, value).then((result) => {
+              console.log('async map function!')
+              config.map(gid, value).then((result) => {
                 if (config.compact) {
                   result = config.compact(result);
                 }
+                console.log('end result: ', result)
                 console.log('end processing key: ', key, 'value: ', value);
                 const resultKey = Object.keys(result)[0];
                 const resultValue = result[resultKey];
                 //shuffle
+                let promises = [];
+                if (config.notShuffle) { 
+                  console.log('not shuffling!')
+                  resultValue.forEach((url) => {
+                    promises.push(
+                      global.promisify(global.distribution[gid].store.put)(url, global.distribution.util.id.getID(url))
+                    );
+                  });
+                  Promise.all(promises)
+                    .then((v) => {
+                      callback(null, resultKey);
+                    })
+                    .catch((e) => {
+                      callback(e, null);
+                    });
+                  return;
+                }
+
                 global.distribution[gid].store.get(resultKey, (e, value) => {
                   console.log('shuffle phase, resultKey: ', resultKey, 'value: ', value, 'error: ', e);
                   if (e) {
@@ -205,7 +225,8 @@ const mr = function (config) {
               if (configuration.reduce === null) {
                 // if there is no reduce,
                 // we just distributed map result store
-                callback(null, mapResultKeys);
+                // callback(null, mapResultKeys);
+                callback(null, 'map phase done');
                 return;
               }
               let totalRequestsReduce = mapResultKeys.size;
@@ -266,6 +287,7 @@ const mr = function (config) {
               map: configuration.map,
               compact: configuration.compact,
               notStore: configuration.notStore,
+              notShuffle: configuration.notShuffle,
             }
             let args = [key, context.gid,
               mapConfig];
