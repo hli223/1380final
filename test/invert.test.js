@@ -293,4 +293,5 @@ test('(25 pts) Inverted index wordflow', (done) => {
     //     });
     // });
     doMapReduce();
-}, 4000000);
+}, 800000);
+

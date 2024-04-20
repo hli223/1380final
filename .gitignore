@@ -3,3 +3,7 @@ submission.zip
 submission/javascript/src/main
 store
 distribution/local/storeFiles
+err.txt
+log.txt
+visited.txt
+latest_urlKeys.json
