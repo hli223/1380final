@@ -2,6 +2,7 @@ const startPort = 8000;
 global.nodeConfig = { ip: '127.0.0.1', port: startPort };
 const distribution = require('../distribution');
 const id = distribution.util.id;
+const promisify = require('../distribution/util/promisify');
 const fs = require('fs');
 
 const groupsTemplate = require('../distribution/all/groups');
@@ -31,7 +32,7 @@ for (let i = 1; i <= 6; i++) {
 }
 
 
-beforeAll((done) => {
+beforeAll( (done) => {
   /* Stop the nodes if they are running */
 
   nodes.forEach(node => {
@@ -43,17 +44,16 @@ beforeAll((done) => {
   });
 
   let cntr = 0;
-  const startNodes = (cb) => {
-    nodes.forEach(node => {
-      distribution.local.status.spawn(node, (e, v) => {
-        // Handle the callback
-        cntr++;
-        if (cntr === nodes.length) {
-          console.log('all nodes started!');
-          cb();
-        }
-      });
-    });
+
+
+  const startNodes = async (cb) => {
+    console.log('start spawning nodes...')
+    const spawnPromise = promisify(distribution.local.status.spawn);
+    for (const node of nodes) {
+        await spawnPromise(node);
+    }
+    console.log('node started!')
+    cb();
   };
 
   distribution.node.start((server) => {
@@ -84,21 +84,19 @@ beforeAll((done) => {
 }, 400000);
 
 afterAll((done) => {
-  let cntr = 0;
   const remote = { service: 'status', method: 'stop' };
-  nodes.forEach(node => {
+
+  const stopNodes = promisify(distribution.local.comm.send);
+
+  Promise.all(nodes.map(node => {
     remote.node = node;
-    distribution.local.comm.send([], remote, (e, v) => {
-      // Handle the callback
-      cntr++;
-      if (cntr === nodes.length) {
-        console.log('all nodes stopped!');
-        localServer.close();
-        done();
-      }
-    });
+    return stopNodes([], remote);
+  })).then(() => {
+    console.log('all nodes stopped!');
+    localServer.close();
+    done();
   });
-});
+}, 400000);
 
 test('(25 pts) crawler workflow', (done) => {
   let m1 = async (key, baseUrl) => {
@@ -142,7 +140,9 @@ test('(25 pts) crawler workflow', (done) => {
           if (absoluteUrl.endsWith('index.html')) {
             absoluteUrl = new URL(absoluteUrl + '/../').toString();
           }
-          if (!baseUrl.startsWith(absoluteUrl)) {
+          if (!baseUrl.startsWith(absoluteUrl) 
+          && (absoluteUrl.startsWith('https://www.usenix.org/conference/') 
+        && absoluteUrl.includes('/presentation/')) || absoluteUrl.startsWith('https://www.usenix.org/publications/proceedings?page=')) {
             urls.push(absoluteUrl);
           }
 
@@ -159,12 +159,12 @@ test('(25 pts) crawler workflow', (done) => {
   };
 
 
-  function crawl() {
-    console.log('level[currDepth]: ', levels[currDepth], currDepth);
+  function crawl(urlsInCurrentLevel) {
+    console.log('level[currDepth]: ', urlsInCurrentLevel, currDepth);
     let urlsToBeStore = [];
     const urlKeys = [];
     const keyUrlsMap = {}
-    levels[currDepth].forEach((url) => {
+    urlsInCurrentLevel.forEach((url) => {
       if (url.endsWith('/')) {
         url = url.slice(0, -1);
       }
@@ -189,19 +189,19 @@ test('(25 pts) crawler workflow', (done) => {
     urlsToBeStore.forEach((o) => {
       let key = o.key;
       let value = o.url;
-      distribution.crawlUrl.store.put(value, key, (e, v) => {
-        cntr++;
-        console.log('put urlsToBeStore:', value, key, e, v)
-        if (e) {
+      promisify(distribution.crawlUrl.store.put)(value, key)
+        .then((v) => {
+          cntr++;
+          console.log('put urlsToBeStore:', value, key, v)
+          if (cntr === urlsToBeStore.length) {
+            console.log('urlsToBeStore store done! check urlsToBeStore', currDepth, urlsToBeStore, urlKeys)
+            fs.writeFileSync('latest_urlKeys.json', JSON.stringify(urlKeys));
+            levelCrawl(urlKeys);
+          }
+        })
+        .catch((e) => {
           done(e);
-        }
-        if (cntr === urlsToBeStore.length) {
-          console.log('urlsToBeStore store done! check urlsToBeStore', currDepth, urlsToBeStore, urlKeys)
-          fs.writeFileSync('latest_urlKeys.json', JSON.stringify(urlKeys));
-          levelCrawl(urlKeys);
-          // doMapReduce();
-        }
-      });
+        });
     });
 
   }
@@ -210,31 +210,40 @@ test('(25 pts) crawler workflow', (done) => {
     if (urlKeys === undefined || urlKeys.length === 0) {
       done();
     }
-    distribution.crawlUrl.mr.exec({ keys: urlKeys, map: m1, reduce: null, notStore: true, returnMapResult: true }, (e, v) => {
-      //v is a set
-      if (e !== null && Object.keys(e).length > 0) {
-        console.log('map reduce errorr: ', e);
-        done(e);
-        return;
-      }
-      try {
-        currDepth++;
-        const newUrls = []
-        console.log('map reduce done!', v)
+    promisify(distribution.crawlUrl.mr.exec)({ keys: urlKeys, map: m1, reduce: null, notStore: true, returnMapResult: true })
+      .then((v) => {
+        //v is a set
+        if (v instanceof Error || (v && Object.keys(v).length > 0)) {
+          console.log('map reduce errorr: ', v);
+          done(v);
+          return;
+        }
+        let totalElements = 0;
         v.forEach((urls) => {
-          newUrls.push(...urls);
+          totalElements += urls.length;
         });
-        levels.push(newUrls);
-        console.log('start crawl() again')
-        crawl();
-      } catch (e) {
-        console.log('error in levelcrawl: ', e);
+        console.log('Total elements in v: ', totalElements);
+        try {
+          currDepth++;
+          const newUrls = []
+          console.log('map reduce done!', v)
+          v.forEach((urls) => {
+            newUrls.push(...urls);
+          });
+          // levels.push(newUrls);
+          console.log('start crawl() again')
+          crawl(newUrls);
+        } catch (e) {
+          console.log('error in levelcrawl: ', e);
+          done(e);
+        }
+      })
+      .catch((e) => {
         done(e);
-      }
-    });
+      });
   }
   var currDepth = 0;
-  const levels = []
+  // const levels = []
   // var baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/books.txt'
   // var baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg';
   // baseUrl = 'https://www.gutenberg.org/ebooks/'
@@ -248,8 +257,8 @@ test('(25 pts) crawler workflow', (done) => {
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/the-book-of-mormon_571/index.html'
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/the-book-of-mormon_571/'
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/4/tag/truth/index.html';
-  var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3'
-  // var baseUrl = 'https://www.usenix.org/publications/proceedings'
+  // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/1'
+  var baseUrl = 'https://www.usenix.org/publications/proceedings'
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/category/books/science-fiction_16'
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/4/tag/authors/page/1'
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/2/static/book1.txt'//text cannot be downloaded
@@ -263,9 +272,9 @@ test('(25 pts) crawler workflow', (done) => {
     if (baseUrl.endsWith('index.html')) {
       baseUrl = new URL(baseUrl + '/../').toString();
     }
-    levels.push([baseUrl]);
+    // levels.push([baseUrl]);
     console.log('baseURL is ', baseUrl);
-    crawl();
+    crawl([baseUrl]);
 
   }
   try {
@@ -275,24 +284,22 @@ test('(25 pts) crawler workflow', (done) => {
       crawlWithBaseUrl();
     } else {
       console.log('latestUrlKeys is defined, resuming from latestUrlKeys');
-      levels.push(latestUrlKeys);
-      levelCrawl(latestUrlKeys);
+      // levels.push(latestUrlKeys);
+      const batchSize = 10;
+      if (latestUrlKeys.length > batchSize) {
+        for (let i = 0; i < latestUrlKeys.length; i += batchSize) {
+          const batch = latestUrlKeys.slice(i, i + batchSize);
+          levelCrawl(batch);
+        }
+      } else {
+        levelCrawl(latestUrlKeys);
+      }
+      // levelCrawl(latestUrlKeys);
     }
   } catch (e) {//starting from scratch
     console.log('error in reading latest_urlkeys.json: ', e);
     crawlWithBaseUrl();
   }
-
-
-
-  // distribution.crawlUrl.store.get(null, (e, urlKeys) => {//resume from unfinished step
-  //   console.log('store.get at the beginning: ', e, urlKeys)
-  //   if(urlKeys.length > 0) {
-
-  //   } else {
-
-  //   }
-  // })
 
 
 }, 800000);
