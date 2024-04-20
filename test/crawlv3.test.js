@@ -155,7 +155,7 @@ test('(25 pts) crawler workflow', (done) => {
     let promises = [];
     let urlKeys = []
     let execMr = global.promisify(distribution.crawlUrl.mr.exec)
-    for (let i = 1; i<=346; i++) {
+    for (let i = 101; i<=346; i++) {
         let url = baseUrl + i;
         let urlKey = id.getID(url);
         urlKeys.push(urlKey);

@@ -134,9 +134,6 @@ test('(25 pts) crawler workflow', (done) => {
         const href = anchor.getAttribute('href');
         if (href) {
           var absoluteUrl = new URL(href, baseUrl).toString();
-          // if (absoluteUrl.endsWith('/')) {
-          //   absoluteUrl = absoluteUrl.slice(0, -1);
-          // }
           if (absoluteUrl.endsWith('index.html')) {
             absoluteUrl = new URL(absoluteUrl + '/../').toString();
           }
