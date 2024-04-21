@@ -130,7 +130,7 @@ const mr = function (config) {
                   console.log('shuffle phase, resultKey: ', resultKey, 'value: ', value, 'error: ', e);
                   if (e) {
                     result[resultKey] = [resultValue];
-                    console.log('creating a list!', result)
+                    console.log('creating a list!')
                   } else {
                     value.push(resultValue);
                     result[resultKey] = value;

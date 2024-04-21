@@ -26,7 +26,7 @@ let localServer = null;
 */
 
 const nodes = [];
-for (let i = 1; i <= 3; i++) {
+for (let i = 1; i <= 10; i++) {
   nodes.push({ ip: '127.0.0.1', port: startPort + i });
 }
 
@@ -123,6 +123,7 @@ test('(25 pts) crawler workflow', (done) => {
             console.log('baseUrl in map is: ', baseUrl, gid);
             const anchors = document.querySelectorAll('a');
 
+            
 
             let promises = [];
             let urls = [];
@@ -155,7 +156,7 @@ test('(25 pts) crawler workflow', (done) => {
     let promises = [];
     let urlKeys = []
     let execMr = global.promisify(distribution.crawlUrl.mr.exec)
-    for (let i = 101; i<=346; i++) {
+    for (let i = 1; i<=100; i++) {
         let url = baseUrl + i;
         let urlKey = id.getID(url);
         urlKeys.push(urlKey);

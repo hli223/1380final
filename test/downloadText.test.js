@@ -119,7 +119,10 @@ test('(25 pts) downloadText workflow', (done) => {
       htmlContent = htmlContent.replace("\u00a9", "&copy;")
       // htmlContent = htmlContent.replace(/\u201C/g, ' ');
       // htmlContent = htmlContent.replace(/\u201D/g, ' ');
-      htmlContent = htmlContent.replace(/[^a-zA-Z0-9\s]/g, ' ');
+      const dom = new global.JSDOM(htmlContent);
+      htmlContent = dom.window.document.body.textContent;
+      let lines = htmlContent.split('\n');
+      htmlContent = lines.join(' ').replace(/\s{2,}/g, ' ').slice(0, 10);
       out[contentKey] = { url: url, htmlContent: htmlContent};
 
     } catch (e) {
@@ -130,46 +133,33 @@ test('(25 pts) downloadText workflow', (done) => {
   };
 
 
-  const downloadText = (cb) => {
-    distribution.crawlUrl.store.get(null, (e, urlKeys) => {
-      if (Object.keys(e).length > 0) {
-        console.log('errors fetching urlKeys', e);
-        done();
-      }
+  const downloadText = async (cb) => {
+    let urlKeys;
+    try {
+      urlKeys = await global.promisify(distribution.crawlUrl.store.get)(null);
       console.log('Retrieved all url keys, number of keys: ', urlKeys.length);
+    } catch (e) {
+      console.error('Error fetching urlKeys', e);
+      done(e);
+    }
 
-      let execMr = global.promisify(distribution.crawlUrl.mr.exec)
-      let promises = urlKeys.slice(0,300).map(urlKey => execMr({ keys: [urlKey], map: m1, reduce: null, storeGroup: 'downloadText' }))
-      Promise.all(promises).then(results => {
-        console.log('downloadText success!', results);
-        done();
-      }).catch(err => {
+    let execMr = global.promisify(distribution.crawlUrl.mr.exec)
+    for (let urlKey of urlKeys) {
+      try {
+        await execMr({ keys: [urlKey], map: m1, reduce: null, storeGroup: 'downloadText' });
+      } catch (err) {
         console.error('downloadText errorr: ', err);
         done(err);
-      });
+      }
+    }
 
-
-      // let batchSize = 5;
-      // let totalLength = 1000;
-      // for (let i = 0; i < totalLength; i += batchSize) {
-      //   let batch = urlKeys.slice(i, i + batchSize);
-      //   distribution.crawlUrl.mr.exec({ keys: batch, map: m1, reduce: null, storeGroup: 'downloadText' }, (e, v) => {
-      //     if (e !== null && Object.keys(e).length > 0) {
-      //       console.log('downloadText errorr: ', e);
-      //       done(e);
-      //       return;
-      //     }
-      //     console.log('download Text success!', v);
-      //     if (i + batchSize >= totalLength) {
-      //       done();
-      //     }
-      //   });
-      // }
-
-
-    });
   };
-  downloadText();
+  downloadText().then(() => {
+    done();
+  }).catch(err => {
+    console.error('Error in downloadText: ', err);
+    done(err);
+  });
 
 }, 50000000);
 
