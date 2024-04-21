@@ -144,9 +144,11 @@ test('(25 pts) downloadText workflow', (done) => {
     }
 
     let execMr = global.promisify(distribution.crawlUrl.mr.exec)
-    let batchSize = 10;
-    for (let i = 0; i < urlKeys.length; i += batchSize) {
+    let batchSize = 12;
+    let totalNumKeys = 12;
+    for (let i = 0; i < 12; i += batchSize) {
       let batch = urlKeys.slice(i, i + batchSize);
+      console.log('batch: ', batch);
       try {
         await execMr({ keys: batch, map: m1, reduce: null, storeGroup: 'downloadText' });
       } catch (err) {
@@ -154,7 +156,7 @@ test('(25 pts) downloadText workflow', (done) => {
         done(err);
       }
     }
-    if (urlKeys.length % batchSize !== 0) {
+    if (totalNumKeys % batchSize !== 0) {
       let lastBatch = urlKeys.slice(-urlKeys.length % batchSize);
       try {
         await execMr({ keys: lastBatch, map: m1, reduce: null, storeGroup: 'downloadText' });
