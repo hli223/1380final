@@ -144,7 +144,7 @@ test('(25 pts) downloadText workflow', (done) => {
     }
 
     let execMr = global.promisify(distribution.crawlUrl.mr.exec)
-    for (let urlKey of urlKeys.slice(0, 10)) {
+    for (let urlKey of urlKeys.slice(0, 200)) {
       try {
         await execMr({ keys: [urlKey], map: m1, reduce: null, storeGroup: 'downloadText' });
       } catch (err) {
