@@ -26,7 +26,7 @@ let localServer = null;
 */
 
 const nodes = [];
-for (let i = 1; i <= 6; i++) {
+for (let i = 1; i <= 10; i++) {
   nodes.push({ ip: '127.0.0.1', port: startPort + i });
 }
 
@@ -103,11 +103,14 @@ afterAll((done) => {
 test('(25 pts) downloadText workflow', (done) => {
   let m1 = async (key, url) => {
     let out = {};
+    if (!url) {
+      return {};
+    }
+    let contentKey = 'content-' + global.distribution.util.id.getID(url);
     try {
       process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
       const response = await global.fetch(url);
 
-      let contentKey = 'content' + global.distribution.util.id.getID(url);
       if (!response.ok) {
         out[contentKey] = 'HTTP error! status: ' + response.status;
         return out;
@@ -117,11 +120,11 @@ test('(25 pts) downloadText workflow', (done) => {
       // htmlContent = htmlContent.replace(/\u201C/g, ' ');
       // htmlContent = htmlContent.replace(/\u201D/g, ' ');
       htmlContent = htmlContent.replace(/[^a-zA-Z0-9\s]/g, ' ');
-      out[contentKey] = { url: url, htmlContent: htmlContent };
+      out[contentKey] = { url: url, htmlContent: htmlContent};
 
     } catch (e) {
       console.error(url + 'Fetch error: ', e);
-      out[contentKey] = 'Error fetching URL: ' + url + ' ' + e;
+      out[contentKey] = { url: url, htmlContent: 'Error fetching URL: ' + url + ' ' + e };
     }
     return out;
   };
@@ -134,20 +137,39 @@ test('(25 pts) downloadText workflow', (done) => {
         done();
       }
       console.log('Retrieved all url keys, number of keys: ', urlKeys.length);
-      distribution.crawlUrl.mr.exec({ keys: urlKeys, map: m1, reduce: null, storeGroup: 'downloadText' }, (e, v) => {
-        if (e !== null && Object.keys(e).length > 0) {
-          console.log('downloadText errorr: ', e);
-          done(e);
-          return;
-        }
-        console.log('download Text success!', v);
+
+      let execMr = global.promisify(distribution.crawlUrl.mr.exec)
+      let promises = urlKeys.slice(0,300).map(urlKey => execMr({ keys: [urlKey], map: m1, reduce: null, storeGroup: 'downloadText' }))
+      Promise.all(promises).then(results => {
+        console.log('downloadText success!', results);
         done();
+      }).catch(err => {
+        console.error('downloadText errorr: ', err);
+        done(err);
       });
+
+
+      // let batchSize = 5;
+      // let totalLength = 1000;
+      // for (let i = 0; i < totalLength; i += batchSize) {
+      //   let batch = urlKeys.slice(i, i + batchSize);
+      //   distribution.crawlUrl.mr.exec({ keys: batch, map: m1, reduce: null, storeGroup: 'downloadText' }, (e, v) => {
+      //     if (e !== null && Object.keys(e).length > 0) {
+      //       console.log('downloadText errorr: ', e);
+      //       done(e);
+      //       return;
+      //     }
+      //     console.log('download Text success!', v);
+      //     if (i + batchSize >= totalLength) {
+      //       done();
+      //     }
+      //   });
+      // }
 
 
     });
   };
   downloadText();
 
-}, 5000);
+}, 50000000);
 

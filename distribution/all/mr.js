@@ -60,7 +60,6 @@ const mr = function (config) {
                 if (config.compact) {
                   result = config.compact(result);
                 }
-                console.log('end result: ', result)
                 console.log('end processing key: ', key, 'value: ', value);
                 const resultKey = Object.keys(result)[0];
                 const resultValue = result[resultKey];
@@ -82,9 +81,10 @@ const mr = function (config) {
                     });
                   return;
                 }
-
-                global.distribution[gid].store.get(resultKey, (e, value) => {
-                  console.log('shuffle phase, resultKey: ', resultKey, 'value: ', value, 'error: ', e);
+                let storeGroup = config.storeGroup || gid;
+                console.log('storeGroup: ', storeGroup);
+                global.distribution[storeGroup].store.get(resultKey, (e, value) => {
+                  console.log('shuffle phase, resultKey: ');
                   if (e) {
                     if (Array.isArray(resultValue)) {
                       result[resultKey] = resultValue;
@@ -101,18 +101,15 @@ const mr = function (config) {
                     result[resultKey] = value;
                     console.log('added to exsiting list: ', result)
                   }
-                  console.log('value: ', value);
-                  console.log('before shuffle put:', result[resultKey], resultKey);
                   if (config.notStore) {
                     callback(null, result[resultKey]);
                   } else {
-                    global.distribution[gid].store.put(result[resultKey], resultKey, (e, v) => {
-                      console.log('store complete:', e, v)
+                    global.distribution[storeGroup].store.put(result[resultKey], resultKey, (e, v) => {
+                      console.log('store complete:', e, v.length)
                       if (e) {
                         callback(e, null);
                       }
-                    console.log('stored result: ', result);
-                    callback(null, resultKey);
+                      callback(null, []);
                     });
 
                   }
@@ -288,6 +285,7 @@ const mr = function (config) {
               compact: configuration.compact,
               notStore: configuration.notStore,
               notShuffle: configuration.notShuffle,
+              storeGroup: configuration.storeGroup,
             }
             let args = [key, context.gid,
               mapConfig];
