@@ -59,8 +59,6 @@ const mr = function (config) {
               throw e;
             }
             console.log('start processing key: ', key, 'value: ', value);
-
-
             if (config.map.constructor.name === 'AsyncFunction') {
               let result;
               try {
@@ -111,18 +109,20 @@ const mr = function (config) {
                 }
                 console.log('creating a list!', result)
               }
-              console.log('shuffle phase, resultKey: ');
 
               if (config.notStore) {
                 return result[resultKey];
               } else {
-                try {
-                  let v = await global.promisify(global.distribution[storeGroup].store.put)(result[resultKey], resultKey);
-                  console.log('store complete:', v.length);
-                  return [];
-                } catch (e) {
-                  throw e;
-                }
+
+                global.distribution[storeGroup].store.put(result[resultKey], resultKey, (e, v) => {
+                  if (e) {
+                    throw e;
+                  } else {
+                    console.log('store complete:', v.length);
+                    console.log('store complete:', v);
+                    return 'done';
+                  }
+                });
 
               }
 

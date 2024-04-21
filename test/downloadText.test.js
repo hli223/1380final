@@ -122,7 +122,7 @@ test('(25 pts) downloadText workflow', (done) => {
       const dom = new global.JSDOM(htmlContent);
       htmlContent = dom.window.document.body.textContent;
       let lines = htmlContent.split('\n');
-      htmlContent = lines.join(' ').replace(/\s{2,}/g, ' ').slice(0, 10);
+      htmlContent = lines.join(' ').replace(/\s{2,}/g, ' ').replace(/[^a-zA-Z0-9]/g, ' ');
       out[contentKey] = { url: url, htmlContent: htmlContent};
 
     } catch (e) {
@@ -148,7 +148,7 @@ test('(25 pts) downloadText workflow', (done) => {
       try {
         await execMr({ keys: [urlKey], map: m1, reduce: null, storeGroup: 'downloadText' });
       } catch (err) {
-        console.error('downloadText errorr: ', err);
+        console.error('downloadText errorr: ', err.stack);
         done(err);
       }
     }
@@ -161,5 +161,5 @@ test('(25 pts) downloadText workflow', (done) => {
     done(err);
   });
 
-}, 50000000);
+}, 5000000);
 
