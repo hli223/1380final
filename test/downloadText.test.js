@@ -154,6 +154,15 @@ test('(25 pts) downloadText workflow', (done) => {
         done(err);
       }
     }
+    if (urlKeys.length % batchSize !== 0) {
+      let lastBatch = urlKeys.slice(-urlKeys.length % batchSize);
+      try {
+        await execMr({ keys: lastBatch, map: m1, reduce: null, storeGroup: 'downloadText' });
+      } catch (err) {
+        console.error('downloadText errorr: ', err.stack);
+        done(err);
+      }
+    }
 
   };
   downloadText().then(() => {
