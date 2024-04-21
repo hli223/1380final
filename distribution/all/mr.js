@@ -49,73 +49,85 @@ const mr = function (config) {
       mrService = {
         map: (key, gid, config, callback) => {
           callback = callback || function () { };
-          global.distribution[gid].store.get(key, (e, value) => {
-            if (e) {
-              callback(e, null);
+          const callMap = async () => {
+            
+            let value;
+            try {
+              value = await promisify(global.distribution[gid].store.get)(key);
+            } catch (e) {
+              console.error('Error getting value from store: ', e);
+              throw e;
             }
             console.log('start processing key: ', key, 'value: ', value);
+
+
             if (config.map.constructor.name === 'AsyncFunction') {
-              console.log('async map function!')
-              config.map(gid, value).then((result) => {
-                if (config.compact) {
-                  result = config.compact(result);
-                }
-                console.log('end processing key: ', key, 'value: ', value);
-                const resultKey = Object.keys(result)[0];
-                const resultValue = result[resultKey];
-                //shuffle
-                let promises = [];
-                if (config.notShuffle) { 
-                  console.log('not shuffling!')
-                  resultValue.forEach((url) => {
-                    promises.push(
-                      global.promisify(global.distribution[gid].store.put)(url, global.distribution.util.id.getID(url))
-                    );
-                  });
-                  Promise.all(promises)
-                    .then((v) => {
-                      callback(null, resultKey);
-                    })
-                    .catch((e) => {
-                      callback(e, null);
-                    });
-                  return;
-                }
-                let storeGroup = config.storeGroup || gid;
-                console.log('storeGroup: ', storeGroup);
-                global.distribution[storeGroup].store.get(resultKey, (e, value) => {
-                  console.log('shuffle phase, resultKey: ');
-                  if (e) {
-                    if (Array.isArray(resultValue)) {
-                      result[resultKey] = resultValue;
-                    } else {
-                      result[resultKey] = [resultValue];
-                    }
-                    console.log('creating a list!', result)
-                  } else {
-                    if (Array.isArray(resultValue)) {
-                      value.push(...resultValue);
-                    } else {
-                      value.push(resultValue);
-                    }
-                    result[resultKey] = value;
-                    console.log('added to exsiting list: ', result)
-                  }
-                  if (config.notStore) {
-                    callback(null, result[resultKey]);
-                  } else {
-                    global.distribution[storeGroup].store.put(result[resultKey], resultKey, (e, v) => {
-                      console.log('store complete:', e, v.length)
-                      if (e) {
-                        callback(e, null);
-                      }
-                      callback(null, []);
-                    });
-
-                  }
-
+              let result;
+              try {
+                result = await config.map(gid, value);
+              } catch (e) {
+                console.error('Error in map function: ', e);
+                throw e;
+              }
+              if (config.compact) {
+                result = config.compact(result);
+              }
+              console.log('end processing key: ', key, 'value: ', value);
+              const resultKey = Object.keys(result)[0];
+              const resultValue = result[resultKey];
+              let promises = [];
+              if (config.notShuffle) { 
+                console.log('not shuffling!')
+                resultValue.forEach((url) => {
+                  promises.push(
+                    global.promisify(global.distribution[gid].store.put)(url, global.distribution.util.id.getID(url))
+                  );
                 });
-              });
+                Promise.all(promises)
+                  .then((v) => {
+                    return resultKey;
+                  })
+                  .catch((e) => {
+                    throw e;
+                  });
+                return;
+              }
+              let storeGroup = config.storeGroup || gid;
+              console.log('storeGroup: ', storeGroup);
+              try {
+                let value = await promisify(global.distribution[storeGroup].store.get)(resultKey);
+                if (Array.isArray(resultValue)) {
+                  value.push(...resultValue);
+                } else {
+                  value.push(resultValue);
+                }
+                result[resultKey] = value;
+                console.log('added to exsiting list: ', result)
+              } catch (e) {
+                if (Array.isArray(resultValue)) {
+                  result[resultKey] = resultValue;
+                } else {
+                  result[resultKey] = [resultValue];
+                }
+                console.log('creating a list!', result)
+              }
+              console.log('shuffle phase, resultKey: ');
+
+              if (config.notStore) {
+                return result[resultKey];
+              } else {
+                try {
+                  let v = await global.promisify(global.distribution[storeGroup].store.put)(result[resultKey], resultKey);
+                  console.log('store complete:', v.length);
+                  return [];
+                } catch (e) {
+                  throw e;
+                }
+
+              }
+
+
+
             } else {
               try {
                 let result = config.map(key, value);
@@ -139,28 +151,34 @@ const mr = function (config) {
                   console.log('value: ', value);
                   console.log('before shuffle put:', result[resultKey], resultKey);
                   if (config.notStore) {
-                    callback(null, result[resultKey]);
+                    return result[resultKey];
                   } else {
                     global.distribution[gid].store.put(result[resultKey], resultKey, (e, v) => {
                       console.log('store complete:', e, v)
                       if (e) {
-                        callback(e, null);
+                        throw e;
                       }
                     console.log('stored result: ', result);
-                    callback(null, resultKey);
+                    return resultKey;  
                     });
 
                   }
                 });
-
-
-                // callback(null, result);
               } catch (e) {
                 console.log('end processing key with ERRORR: ', key, 'value: ', value, e);
-                callback(e, null);
+                throw e;
               }
             }
+
+          }
+          callMap().then((result) => {
+            console.log('map success', result);
+            callback(null, result);
+          }).catch((e) => {
+            callback(e, null);
           });
+
+
         },
         reduce: (key, gid, r, callback) => {
           console.log('reduce key before store.get: ', key);
