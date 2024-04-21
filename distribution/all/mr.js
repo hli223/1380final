@@ -1,3 +1,5 @@
+
+
 const mr = function (config) {
   let context = {};
   context.gid = config.gid || 'all';
@@ -43,13 +45,14 @@ const mr = function (config) {
                         let newKey = Object.keys(out[j])[0];
                         let randomNumber = Math.floor(Math.random() * 100000);
                         newKey += randomNumber;
+                        newKey = global.distribution.util.id.getID(newKey);
                         newKeys.push(newKey);
                         // res.push(out[j]);
                         global.distribution.local.store.put(out[j],
                           newKey,
                           (e, v) => {
-                            if (e) {
-                              console.log('error in put: ', e);
+                            if (e !== null && Object.keys(e).length > 0) {
+                              console.log('error in map put: ', e);
                               cb(e, null);
                             }
                             cur--;
@@ -67,11 +70,16 @@ const mr = function (config) {
                       let newKey = Object.keys(out)[0];
                       let randomNumber = Math.floor(Math.random() * 100000);
                       newKey += randomNumber;
+                      newKey = global.distribution.util.id.getID(newKey);
                       newKeys.push(newKey);
                       // res.push(out);
                       global.distribution.local.store.put(out, newKey, (e, v) => {
+                        if (e !== null && Object.keys(e).length > 0) {
+                          console.log('error in map put: ', e);
+                          cb(e, null);
+                        }
                         count++;
-                        console.log('put: ', keys[i], out, ' count: ', count);
+                        console.log('put: ', keys[i], out, ' count: ', count, 'new key is: ', newKey);
                         if (count === keys.length) {
                           cb(null, newKeys);
                         }
@@ -114,7 +122,7 @@ const mr = function (config) {
                     // res.push(out);
                     global.distribution.local.store.put(out, newKey, (e, v) => {
                       count++;
-                      console.log('put: ', keys[i], out, ' count: ', count);
+                      console.log('put: ', keys[i], out, ' count: ', count, 'new key is: ', newKey);
                       if (count === keys.length) {
                         cb(null, newKeys);
                       }
@@ -189,6 +197,7 @@ const mr = function (config) {
 
       // shuffle
       let shuffle = function (keys, gid, cb) {
+        console.log('shuffle keys are ', keys);
         let count = 0;
         res = [];
         global.distribution.local.groups.get(gid, (e, value) => {
@@ -202,8 +211,10 @@ const mr = function (config) {
           // console.log('group members are ', Object.keys(id2Node));
           // console.log('group members are ', id2Node);
           for (let i = 0; i < keys.length; i++) {
+            console.log('shuffle key is ', keys[i])
             global.distribution.local.store.get(keys[i], (e, content) => {
               // if the key exist in the current node
+              console.log('shuffle get ', keys[i], content, e)
               if (e === null) {
                 let randomNumber = Math.floor(Math.random() * 100000);
                 let key = global.distribution.util.id.getID(
@@ -264,12 +275,13 @@ const mr = function (config) {
               callback(e, null);
               return;
             }
+            console.log('map result returned is: ', mapV);
             shuffleKeys = [];
             ks = Object.keys(mapV);
             for (let i = 0; i < ks.length; i++) {
               shuffleKeys = shuffleKeys.concat(mapV[ks[i]]);
             }
-
+            console.log('shuffle keys are ', shuffleKeys);
             console.log('shuffle');
             let shuffleMessage = [shuffleKeys, context.gid];
             let shuffleRemote = { service: mrId, method: 'shuffle' };
@@ -277,6 +289,7 @@ const mr = function (config) {
               shuffleMessage,
               shuffleRemote,
               (e, nv) => {
+                console.log('shuffle result returned is: ', nv);
                 newK = [];
                 ks = Object.keys(nv);
                 for (let i = 0; i < ks.length; i++) {

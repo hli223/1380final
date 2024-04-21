@@ -26,7 +26,7 @@ let localServer = null;
 */
 
 const nodes = [];
-for (let i = 1; i <= 50; i++) {
+for (let i = 1; i <= 30; i++) {
   nodes.push({ ip: '127.0.0.1', port: startPort + i });
 }
 
@@ -145,10 +145,10 @@ test('(25 pts) crawler workflow', (done) => {
           //   absoluteUrl = absoluteUrl.slice(0, -1);
           // }
           console.log('absoluteUrl: ', absoluteUrl);
-          if (absoluteUrl.endsWith('index.html')) {
-            absoluteUrl = new URL(absoluteUrl + '/../').toString();
+          if (((absoluteUrl.startsWith('https://www.usenix.org/conference/')
+            && absoluteUrl.includes('/presentation/'))) || absoluteUrl.includes('page')) {
+            urls.push(absoluteUrl);
           }
-          urls.push(absoluteUrl);
 
         }
       });
@@ -167,7 +167,7 @@ test('(25 pts) crawler workflow', (done) => {
 
   var currDepth = 0;
   // var baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/books.txt'
-  var baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg';
+  // var baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg';
   // baseUrl = 'https://www.gutenberg.org/ebooks/'
   // var baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3/'
   // var baseUrl = 'https://atlas.cs.brown.edu/data/gutenberg/1/2/3/?C=N;O=D'//problemetic
@@ -185,7 +185,7 @@ test('(25 pts) crawler workflow', (done) => {
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/2/static/book1.txt'//text cannot be downloaded
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/1/level_1a/level_2a'//this one is downloadable
   // var baseUrl = 'https://cs.brown.edu/courses/csci1380/sandbox/3/catalogue/category/books_1'
-  // var baseUrl = 'https://www.usenix.org/publications/proceedings';
+  var baseUrl = 'https://www.usenix.org/publications/proceedings'
 
 
   const visited = new Set();
@@ -248,7 +248,7 @@ test('(25 pts) crawler workflow', (done) => {
       if (url.endsWith('/')) {
         url = url.slice(0, -1);
       }
-      if (url.length > 0 && !(visited.has(url) || url.length < baseUrl.length && baseUrl.includes(url)) && url.includes(baseUrl)) {
+      if (url.length > 0 && !(visited.has(url))) {
         visited.add(url);
         const urlKey = 'url-' + id.getID(url);
         urlKeys.push(urlKey);
