@@ -51,7 +51,6 @@ const mr = function (config) {
           callback = callback || function () { };
           console.log('map keys: ', keys);
           const callMap = async (key) => {
-            
             let value;
             try {
               value = await promisify(global.distribution[gid].store.get)(key);
@@ -60,14 +59,20 @@ const mr = function (config) {
               throw e;
             }
             console.log('start processing key: ', key, 'value: ', value);
+            let result;
             if (config.map.constructor.name === 'AsyncFunction') {
-              let result;
               try {
                 result = await config.map(gid, value);
               } catch (e) {
                 console.error('Error in map function: ', e);
                 throw e;
               }
+            } else {
+              result = config.map(key, value);
+              if (config.compact) {
+                result = config.compact(result);
+              }
+            }
               if (config.compact) {
                 result = config.compact(result);
               }
@@ -124,50 +129,6 @@ const mr = function (config) {
                 }
 
               }
-
-
-
-            } else {
-              try {
-                let result = config.map(key, value);
-                if (config.compact) {
-                  result = config.compact(result);
-                }
-                console.log('end processing key: ', key, 'value: ', value);
-                const resultKey = Object.keys(result)[0];
-                const resultValue = result[resultKey];
-                //shuffle
-                global.distribution[gid].store.get(resultKey, (e, value) => {
-                  console.log('shuffle phase, resultKey: ', resultKey, 'value: ', value, 'error: ', e);
-                  if (e) {
-                    result[resultKey] = [resultValue];
-                    console.log('creating a list!')
-                  } else {
-                    value.push(resultValue);
-                    result[resultKey] = value;
-                    console.log('added to exsiting list: ', result)
-                  }
-                  console.log('value: ', value);
-                  console.log('before shuffle put:', result[resultKey], resultKey);
-                  if (config.notStore) {
-                    return result[resultKey];
-                  } else {
-                    global.distribution[gid].store.put(result[resultKey], resultKey, (e, v) => {
-                      console.log('store complete:', e, v)
-                      if (e) {
-                        throw e;
-                      }
-                    console.log('stored result: ', result);
-                    return resultKey;  
-                    });
-
-                  }
-                });
-              } catch (e) {
-                console.log('end processing key with ERRORR: ', key, 'value: ', value, e);
-                throw e;
-              }
-            }
 
           }
 
