@@ -47,10 +47,10 @@ const mr = function (config) {
   return {
     exec: (configuration, callback) => {
       mrService = {
-        map: (key, gid, config, callback) => {
+        map: (keys, gid, config, callback) => {
           callback = callback || function () { };
-          console.log('map keys: ', key);
-          const callMap = async () => {
+          console.log('map keys: ', keys);
+          const callMap = async (key) => {
             
             let value;
             try {
@@ -114,16 +114,14 @@ const mr = function (config) {
               if (config.notStore) {
                 return result[resultKey];
               } else {
-
-                global.distribution[storeGroup].store.put(result[resultKey], resultKey, (e, v) => {
-                  if (e) {
-                    throw e;
-                  } else {
-                    console.log('store complete:', v.length);
-                    console.log('store complete:', v);
-                    return 'done';
-                  }
-                });
+                try {
+                  const v = await global.promisify(global.distribution[storeGroup].store.put)(result[resultKey], resultKey);
+                  console.log('store complete:', v.length);
+                  console.log('store complete:', v);
+                  return 'done';
+                } catch (e) {
+                  throw e;
+                }
 
               }
 
@@ -172,12 +170,15 @@ const mr = function (config) {
             }
 
           }
-          callMap().then((result) => {
-            console.log('map success', result);
-            callback(null, result);
-          }).catch((e) => {
-            callback(e, null);
-          });
+
+          Promise.all(keys.map(key => callMap(key)))
+            .then((results) => {
+              console.log('map success', results);
+              callback(null, results);
+            })
+            .catch((e) => {
+              callback(e, null);
+            });
 
 
         },
@@ -342,19 +343,6 @@ const mr = function (config) {
           console.log('map args: ', args);
           
           mapPromises.push(global.promisify(localComm.send)(args, remote));
-
-
-          // localComm.send(args, remote, (e, mapResultKey) => {
-          //   if (e) {
-          //     // errors.push(e);
-          //     errorsMap[key] = e;
-          //   } else {
-          //     console.log('mapResultKey: ', mapResultKey, e);
-          //     mapResultKeys.add(mapResultKey);
-          //   }
-          //   completedRequests++;
-          //   checkAllDoneMap();
-          // });
         }
         try {
           let results = await Promise.all(mapPromises);
@@ -363,6 +351,9 @@ const mr = function (config) {
           console.log('map error: ', e);
           throw e;
         }
+
+
+
 
       }
 
