@@ -1,36 +1,6 @@
 const id = require('../util/id');
 const localComm = require('../local/comm');
 
-// const statusCheck = () => {
-//   console.log('start status check!');
-//   let remote = {
-//     service: 'status',
-//     method: 'get',
-//     node: {ip: '127.0.0.1', port: 7110},
-//   };
-//   localComm.send(['nid'], remote, (e, resultKey) => {
-//     console.log('status: ', resultKey, e);
-//   });
-
-//   remote = {
-//     service: 'status',
-//     method: 'get',
-//     node: {ip: '127.0.0.1', port: 7111},
-//   };
-//   localComm.send(['nid'], remote, (e, resultKey) => {
-//     console.log('status: ', resultKey, e);
-//   });
-
-//   remote = {
-//     service: 'status',
-//     method: 'get',
-//     node: {ip: '127.0.0.1', port: 7112},
-//   };
-//   localComm.send(['nid'], remote, (e, resultKey) => {
-//     console.log('status: ', resultKey, e);
-//   });
-//   console.log('end status check!');
-// };
 
 const getSelectedNode = (key, nodes, context) => {
   const nids = Object.values(nodes).map((node) => id.getNID(node));
@@ -77,27 +47,24 @@ const mr = function (config) {
                 result = config.compact(result);
               }
               console.log('end processing key: ', key, 'value: ', value);
+              let storeGroup = config.storeGroup || gid;
+              console.log('storeGroup: ', storeGroup);
               const resultKey = Object.keys(result)[0];
               const resultValue = result[resultKey];
+              console.log('resultValue: ', resultValue);
               let promises = [];
               if (config.notShuffle) { 
                 console.log('not shuffling!')
-                resultValue.forEach((url) => {
-                  promises.push(
-                    global.promisify(global.distribution[gid].store.put)(url, global.distribution.util.id.getID(url))
-                  );
-                });
-                Promise.all(promises)
-                  .then((v) => {
-                    return resultKey;
-                  })
-                  .catch((e) => {
+                for (const url of resultValue) {
+                  try {
+                    await global.promisify(global.distribution[gid].store.put)(url, global.distribution.util.id.getID(url));
+                  } catch (e) {
                     throw e;
-                  });
-                return;
+                  }
+                }
+                return resultKey;
               }
-              let storeGroup = config.storeGroup || gid;
-              console.log('storeGroup: ', storeGroup);
+
               try {
                 let value = await promisify(global.distribution[storeGroup].store.get)(resultKey);
                 if (Array.isArray(resultValue)) {
@@ -324,8 +291,6 @@ const mr = function (config) {
       }).catch((e) => {
         callback(e, null);
       });
-      // statusCheck();
- 
 
     },
     deleteService: (serviceName, callback) => {

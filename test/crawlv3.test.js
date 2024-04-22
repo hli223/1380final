@@ -141,6 +141,7 @@ test('(25 pts) crawler workflow', (done) => {
                     }
                 }
             });
+            console.log('within user map, urls: ', urls);
             out[baseUrl] = urls;
             return out;
         } catch (error) {
@@ -168,6 +169,9 @@ test('(25 pts) crawler workflow', (done) => {
     Promise.all(promises).then(async () => {
         let batchSize = 3;
         for (let i = 0; i < urlKeys.length; i += batchSize) {
+            if (i + batchSize > urlKeys.length) {
+                batchSize = urlKeys.length - i;
+            }
             let batch = urlKeys.slice(i, i + batchSize);
             try {
                 await execMr({ keys: batch, map: m1, reduce: null, notStore: true, returnMapResult: true, notShuffle: true });
