@@ -26,7 +26,7 @@ let localServer = null;
 */
 
 const nodes = [];
-for (let i = 1; i <= 6; i++) {
+for (let i = 1; i <= 10; i++) {
   nodes.push({ ip: '127.0.0.1', port: startPort + i });
 }
 
@@ -103,11 +103,14 @@ afterAll((done) => {
 test('(25 pts) downloadText workflow', (done) => {
   let m1 = async (key, url) => {
     let out = {};
+    if (!url) {
+      return {};
+    }
+    let contentKey = 'content-' + global.distribution.util.id.getID(url);
     try {
       process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
       const response = await global.fetch(url);
 
-      let contentKey = 'content' + global.distribution.util.id.getID(url);
       if (!response.ok) {
         out[contentKey] = 'HTTP error! status: ' + response.status;
         return out;
@@ -116,38 +119,64 @@ test('(25 pts) downloadText workflow', (done) => {
       htmlContent = htmlContent.replace("\u00a9", "&copy;")
       // htmlContent = htmlContent.replace(/\u201C/g, ' ');
       // htmlContent = htmlContent.replace(/\u201D/g, ' ');
-      htmlContent = htmlContent.replace(/[^a-zA-Z0-9\s]/g, ' ');
-      out[contentKey] = { url: url, htmlContent: htmlContent };
+      const dom = new global.JSDOM(htmlContent);
+      htmlContent = dom.window.document.body.textContent;
+      let lines = htmlContent.split('\n');
+      htmlContent = lines.join(' ').replace(/\s{2,}/g, ' ').replace(/[^a-zA-Z0-9]/g, ' ');
+      out[contentKey] = { url: url, htmlContent: htmlContent};
 
     } catch (e) {
       console.error(url + 'Fetch error: ', e);
-      out[contentKey] = 'Error fetching URL: ' + url + ' ' + e;
+      out[contentKey] = { url: url, htmlContent: 'Error fetching URL: ' + url + ' ' + e };
     }
     return out;
   };
 
 
-  const downloadText = (cb) => {
-    distribution.crawlUrl.store.get(null, (e, urlKeys) => {
-      if (Object.keys(e).length > 0) {
-        console.log('errors fetching urlKeys', e);
-        done();
-      }
+  const downloadText = async (cb) => {
+    let urlKeys;
+    try {
+      urlKeys = await global.promisify(distribution.crawlUrl.store.get)(null);
       console.log('Retrieved all url keys, number of keys: ', urlKeys.length);
-      distribution.crawlUrl.mr.exec({ keys: urlKeys, map: m1, reduce: null, storeGroup: 'downloadText' }, (e, v) => {
-        if (e !== null && Object.keys(e).length > 0) {
-          console.log('downloadText errorr: ', e);
-          done(e);
-          return;
-        }
-        console.log('download Text success!', v);
-        done();
-      });
+    } catch (e) {
+      console.error('Error fetching urlKeys', e);
+      done(e);
+    }
 
+    let execMr = global.promisify(distribution.crawlUrl.mr.exec)
+    let batchSize = 10;
+    let totalNumKeys = 12;
+    for (let i = 0; i < totalNumKeys; i += batchSize) {
+      if (i + batchSize > totalNumKeys) {
+        batchSize = totalNumKeys - i;
+      }
+      let batch = urlKeys.slice(i, i + batchSize);
+      console.log('batch: ', batch, i, i + batchSize, totalNumKeys);
+      try {
+        await execMr({ keys: batch, map: m1, reduce: null, storeGroup: 'downloadText' });
+      } catch (err) {
+        console.error('downloadText errorr: ', err.stack);
+        done(err);
+      }
+    }
+    if (totalNumKeys % batchSize !== 0) {
+      let lastBatch = urlKeys.slice(-totalNumKeys % batchSize);
+      console.log('lastBatch: ', lastBatch, totalNumKeys % batchSize);
+      try {
+        await execMr({ keys: lastBatch, map: m1, reduce: null, storeGroup: 'downloadText' });
+      } catch (err) {
+        console.error('downloadText errorr: ', err.stack);
+        done(err);
+      }
+    }
 
-    });
   };
-  downloadText();
+  downloadText().then(() => {
+    done();
+  }).catch(err => {
+    console.error('Error in downloadText: ', err);
+    done(err);
+  });
 
-}, 5000);
+}, 5000000);
 

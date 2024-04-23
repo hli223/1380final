@@ -26,7 +26,7 @@ let localServer = null;
 */
 
 const nodes = [];
-for (let i = 1; i <= 3; i++) {
+for (let i = 1; i <= 10; i++) {
   nodes.push({ ip: '127.0.0.1', port: startPort + i });
 }
 
@@ -123,6 +123,7 @@ test('(25 pts) crawler workflow', (done) => {
             console.log('baseUrl in map is: ', baseUrl, gid);
             const anchors = document.querySelectorAll('a');
 
+            
 
             let promises = [];
             let urls = [];
@@ -140,6 +141,7 @@ test('(25 pts) crawler workflow', (done) => {
                     }
                 }
             });
+            console.log('within user map, urls: ', urls);
             out[baseUrl] = urls;
             return out;
         } catch (error) {
@@ -155,7 +157,8 @@ test('(25 pts) crawler workflow', (done) => {
     let promises = [];
     let urlKeys = []
     let execMr = global.promisify(distribution.crawlUrl.mr.exec)
-    for (let i = 101; i<=346; i++) {
+    let totalPages = 346;
+    for (let i = 1; i<=totalPages; i++) {
         let url = baseUrl + i;
         let urlKey = id.getID(url);
         urlKeys.push(urlKey);
@@ -164,9 +167,22 @@ test('(25 pts) crawler workflow', (done) => {
         );
     }
     Promise.all(promises).then(async () => {
-        for (let urlKey of urlKeys) {
+        let batchSize = 3;
+        for (let i = 0; i < urlKeys.length; i += batchSize) {
+            if (i + batchSize > urlKeys.length) {
+                batchSize = urlKeys.length - i;
+            }
+            let batch = urlKeys.slice(i, i + batchSize);
             try {
-                await execMr({ keys: [urlKey], map: m1, reduce: null, notStore: true, returnMapResult: true, notShuffle: true });
+                await execMr({ keys: batch, map: m1, reduce: null, notStore: true, returnMapResult: true, notShuffle: true });
+            } catch (error) {
+                console.error('Error in execMr: ', error);
+            }
+        }
+        if (urlKeys.length % batchSize !== 0) {
+            let lastBatch = urlKeys.slice(-urlKeys.length % batchSize);
+            try {
+                await execMr({ keys: lastBatch, map: m1, reduce: null, notStore: true, returnMapResult: true, notShuffle: true });
             } catch (error) {
                 console.error('Error in execMr: ', error);
             }
