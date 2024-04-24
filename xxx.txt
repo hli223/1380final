@@ -1,0 +1,166 @@
+ Failed: Object {
+      "01ed7d90aa22f029eaa03dd5923853fc38d02cbbcd811c028668a73bdb5bdc7dhttps://atlas.cs.brown.edu/data/gutenberg/1/2/3/1/12314/12314-8.txt": [Error: Error: socket hang up],
+      "030c6f01c20de535c70908d010a1ea3a6c6f78220024b03c69ce587a51334ee7https://atlas.cs.brown.edu/data/gutenberg/1/2/3/9/12395/12395-8.txt": [Error: File /home/1380final/store/s-ebbfb/ncdc-MDMwYzZmMDFjMjBkZTUzNWM3MDkwOGQwMTBhMWVhM2E2YzZmNzgyMjAwMjRiMDNjNjljZTU4N2E1MTMzNGVlN2h0dHBzOi8vYXRsYXMuY3MuYnJvd24uZWR1L2RhdGEvZ3V0ZW5iZXJnLzEvMi8zLzkvMTIzOTUvMTIzOTUtOC50eHQ= not found for group
+    ncdc],
+      "031af5430fc088987eeb7a61cee7bcfda136120b983ee7ba3399c15d94953f97https://atlas.cs.brown.edu/data/gutenberg/1/2/3/8/12383/12383-8.txt": [Error: Error: socket hang up],
+      "049759d6a2b51809b471fc29e8bbefb0292ab03267a280f1e7bee1a87fd4e6abhttps://atlas.cs.brown.edu/data/gutenberg/1/2/3/2/12325/12325.txt": [Error: Error: socket hang up],
+      "06f5bcb04086349f928db975e150824a25779184c6bc506f671198cb431627d4https://atlas.cs.brown.edu/data/gutenberg/1/2/3/9/12395/?C=D;O=A": [Error: File /home/1380final/store/s-ebbfb/ncdc-MDZmNWJjYjA0MDg2MzQ5ZjkyOGRiOTc1ZTE1MDgyNGEyNTc3OTE4NGM2YmM1MDZmNjcxMTk4Y2I0MzE2MjdkNGh0dHBzOi8vYXRsYXMuY3MuYnJvd24uZWR1L2RhdGEvZ3V0ZW5iZXJnLzEvMi8zLzkvMTIzOTUvP0M9RDtPPUE= not found for group
+    ncdc],
+      "09cfe575e56484b94085dfceb0fe283a565d07128ae21aaccc614cec7cb77fffhttps://atlas.cs.brown.edu/data/gutenberg/1/2/3/9/12398/?C=M;O=A": [Error: File /home/1380final/store/s-d3406/ncdc-MDljZmU1NzVlNTY0ODRiOTQwODVkZmNlYjBmZTI4M2E1NjVkMDcxMjhhZTIxYWFjY2M2MTRjZWM3Y2I3N2ZmZmh0dHBzOi8vYXRsYXMuY3MuYnJvd24uZWR1L2RhdGEvZ3V0ZW5iZXJnLzEvMi8zLzkvMTIzOTgvP0M9TTtPPUE= not found for group
+    ncdc],
+      "0d84f2a107ecaf2a2e60a05d3868823b47ef070cd5f0b64ffa57b5b5d329bd37https://atlas.cs.brown.edu/data/gutenberg/1/2/3/7/12370/?C=N;O=D": [Error: Error: socket hang up],
+      "15a040bc2a5f4e7ee6fecb24acd3250f2e74a056ec3ac7043302c0d2c7f6d140https://atlas.cs.brown.edu/data/gutenberg/1/2/3/8/12383/?C=D;O=A": [Error: Error: socket hang up],
+      "1a332b754505f97b4b5c3a09400a3356affe08d439f05428c8fed107af9797dehttps://atlas.cs.brown.edu/data/gutenberg/1/2/3/8/12384/?C=M;O=A": [Error: Error: socket hang up],
+      "28249836de6a71c48b7fed2553ec57db56f80acbd1909ba5273c1974a313416ehttps://atlas.cs.brown.edu/data/gutenberg/1/2/3/8/12384/?C=S;O=A": [Error: Error: socket hang up],
+      "2a56a054b4d157e42e6a13d29d9b5fe6bd17304bf262797905830c55f94a5be0https://atlas.cs.brown.edu/data/gutenberg/1/2/3/6/12366/12366-8.txt": [Error: Error: socket hang up],
+      "2b155d73acf5d1cc27612970eb0aeb2d3919e696f3c746d567b0726e9b254a0bhttps://atlas.cs.brown.edu/data/gutenberg/1/2/3/7/12370/?C=S;O=A": [Error: Error: socket hang up],
+      "2de775d7530becf603f39204b7b3bcf6c4db9d9042a17f33c88d7b6f005b9dbehttps://atlas.cs.brown.edu/data/gutenberg/1/2/3/6/12363/12363.txt": [Error: Error: socket hang up],
+      "2f8a52d8e6e17310ec701ae91402889dfa13e869fc1ebe5dba297eb3492fb389https://atlas.cs.brown.edu/data/gutenberg/1/2/3/5/12352/12352-8.txt": [Error: File /home/1380final/store/s-ebbfb/ncdc-MmY4YTUyZDhlNmUxNzMxMGVjNzAxYWU5MTQwMjg4OWRmYTEzZTg2OWZjMWViZTVkYmEyOTdlYjM0OTJmYjM4OWh0dHBzOi8vYXRsYXMuY3MuYnJvd24uZWR1L2RhdGEvZ3V0ZW5iZXJnLzEvMi8zLzUvMTIzNTIvMTIzNTItOC50eHQ= not found for group
+    ncdc],
+      "2fbedd44b5ed3b2d003f6082e5b7a48d4059baaa5c5205e0c0d9a747b7791ecbhttps://atlas.cs.brown.edu/data/gutenberg/1/2/3/3/12330/?C=S;O=A": [Error: Error: socket hang up],
+      "31a587fc012d965d3feb411a8b3fd4da154fa59f435a0e73fbbccd34f36797aehttps://atlas.cs.brown.edu/data/gutenberg/1/2/3/9/12399/?C=N;O=D": [Error: File /home/1380final/store/s-ebbfb/ncdc-MzFhNTg3ZmMwMTJkOTY1ZDNmZWI0MTFhOGIzZmQ0ZGExNTRmYTU5ZjQzNWEwZTczZmJiY2NkMzRmMzY3OTdhZWh0dHBzOi8vYXRsYXMuY3MuYnJvd24uZWR1L2RhdGEvZ3V0ZW5iZXJnLzEvMi8zLzkvMTIzOTkvP0M9TjtPPUQ= not found for group
+    ncdc],
+      "31b906891cbd04c299bfe690edaa4091fd82c2fdecb2ae98f0450659b04c5c7bhttps://atlas.cs.brown.edu/data/gutenberg/1/2/3/6/12363/12363-8.txt": [Error: Error: socket hang up],
+      "320572124e287f29c6b5fb3599936073ea02aa13d781d5e7b833521650bff024https://atlas.cs.brown.edu/data/gutenberg/1/2/3/8/12381/?C=N;O=D": [Error: Error: socket hang up],
+      "352bc65e17755b74e00814c773a98e915a65a68ea1f6c445fbdd01f0df2d201ehttps://atlas.cs.brown.edu/data/gutenberg/1/2/3/9/12393/?C=S;O=A": [Error: File /home/1380final/store/s-ebbfb/ncdc-MzUyYmM2NWUxNzc1NWI3NGUwMDgxNGM3NzNhOThlOTE1YTY1YTY4ZWExZjZjNDQ1ZmJkZDAxZjBkZjJkMjAxZWh0dHBzOi8vYXRsYXMuY3MuYnJvd24uZWR1L2RhdGEvZ3V0ZW5iZXJnLzEvMi8zLzkvMTIzOTMvP0M9UztPPUE= not found for group
+    ncdc],
+      "3657f7aa9eac840fd3a60fe60e27a20c14995e75ed29e93fa538a21a4839614fhttps://atlas.cs.brown.edu/data/gutenberg/1/2/3/8/12381/?C=D;O=A": [Error: Error: socket hang up],
+      "36a7ebe80e470dc6c61330e93daf0a661e65e222444c8441d4a95fd205a779abhttps://atlas.cs.brown.edu/data/gutenberg/1/2/3/9/12395/?C=N;O=D": [Error: File /home/1380final/store/s-d3406/ncdc-MzZhN2ViZTgwZTQ3MGRjNmM2MTMzMGU5M2RhZjBhNjYxZTY1ZTIyMjQ0NGM4NDQxZDRhOTVmZDIwNWE3NzlhYmh0dHBzOi8vYXRsYXMuY3MuYnJvd24uZWR1L2RhdGEvZ3V0ZW5iZXJnLzEvMi8zLzkvMTIzOTUvP0M9TjtPPUQ= not found for group
+    ncdc],
+      "3b685d38ca59a2b1b6cae0ee33ed56b847c807edc073af1b0d4e020fd8d1d008https://atlas.cs.brown.edu/data/gutenberg/1/2/3/4/12347/?C=D;O=A": [Error: File /home/1380final/store/s-ebbfb/ncdc-M2I2ODVkMzhjYTU5YTJiMWI2Y2FlMGVlMzNlZDU2Yjg0N2M4MDdlZGMwNzNhZjFiMGQ0ZTAyMGZkOGQxZDAwOGh0dHBzOi8vYXRsYXMuY3MuYnJvd24uZWR1L2RhdGEvZ3V0ZW5iZXJnLzEvMi8zLzQvMTIzNDcvP0M9RDtPPUE= not found for group
+    ncdc],
+      "3c1797773967c5074937419c386c0bf71d2cfe0de828c6baeaed3c4788930d3fhttps://atlas.cs.brown.edu/data/gutenberg/1/2/3/5/12352/?C=D;O=A": [Error: File /home/1380final/store/s-d3406/ncdc-M2MxNzk3NzczOTY3YzUwNzQ5Mzc0MTljMzg2YzBiZjcxZDJjZmUwZGU4MjhjNmJhZWFlZDNjNDc4ODkzMGQzZmh0dHBzOi8vYXRsYXMuY3MuYnJvd24uZWR1L2RhdGEvZ3V0ZW5iZXJnLzEvMi8zLzUvMTIzNTIvP0M9RDtPPUE= not found for group
+    ncdc],
+      "3f7be1f4d9178433976e29aeefe805e78c5f9adc6dd35a1148a52a19312f9209https://atlas.cs.brown.edu/data/gutenberg/1/2/3/2/12329/?C=S;O=A": [Error: Error: socket hang up],
+      "428a5d40adec857d2e3bf073c5204c4ad70d1e7127cc802472cc3d2324455eechttps://atlas.cs.brown.edu/data/gutenberg/1/2/3/8/12386/?C=D;O=A": [Error: Error: socket hang up],
+      "4b055780ead59d90b2c2b2540b71cea0e182d9f92ab90362f37c1b079fb0c70ehttps://atlas.cs.brown.edu/data/gutenberg/1/2/3/6/12361/?C=S;O=A": [Error: Error: socket hang up],
+      "4e5f5517b4db0a5669b608e32407ca9f8f41e5e7862f609eafa3f8a2924f2001https://atlas.cs.brown.edu/data/gutenberg/1/2/3/7/12378/?C=S;O=A": [Error: Error: socket hang up],
+      "50fc8818b5a468a2ed0f72c7bb9856d8c1e3a20b039e82d899d2427eea657804https://atlas.cs.brown.edu/data/gutenberg/1/2/3/9/12399/?C=S;O=A": [Error: File /home/1380final/store/s-ebbfb/ncdc-NTBmYzg4MThiNWE0NjhhMmVkMGY3MmM3YmI5ODU2ZDhjMWUzYTIwYjAzOWU4MmQ4OTlkMjQyN2VlYTY1NzgwNGh0dHBzOi8vYXRsYXMuY3MuYnJvd24uZWR1L2RhdGEvZ3V0ZW5iZXJnLzEvMi8zLzkvMTIzOTkvP0M9UztPPUE= not found for group
+    ncdc],
+      "523209fc8115919e55b46efe4d8e33c521ac8338c9cb49314cff2fb11d686e51https://atlas.cs.brown.edu/data/gutenberg/1/2/3/1/12318/?C=D;O=A": [Error: Error: socket hang up],
+      "52660c1b421617788bbc1b3e7b6826356e5386c7d90d24e90212b8b474d619c0https://atlas.cs.brown.edu/data/gutenberg/1/2/3/9/12393/12393-8.txt": [Error: File /home/1380final/store/s-ebbfb/ncdc-NTI2NjBjMWI0MjE2MTc3ODhiYmMxYjNlN2I2ODI2MzU2ZTUzODZjN2Q5MGQyNGU5MDIxMmI4YjQ3NGQ2MTljMGh0dHBzOi8vYXRsYXMuY3MuYnJvd24uZWR1L2RhdGEvZ3V0ZW5iZXJnLzEvMi8zLzkvMTIzOTMvMTIzOTMtOC50eHQ= not found for group
+    ncdc],
+      "5bad58a68473ec6b8eb071677f762ab73424a7315556329f27bfaf7fa71adbf6https://atlas.cs.brown.edu/data/gutenberg/1/2/3/5/12352/?C=M;O=A": [Error: File /home/1380final/store/s-d3406/ncdc-NWJhZDU4YTY4NDczZWM2YjhlYjA3MTY3N2Y3NjJhYjczNDI0YTczMTU1NTYzMjlmMjdiZmFmN2ZhNzFhZGJmNmh0dHBzOi8vYXRsYXMuY3MuYnJvd24uZWR1L2RhdGEvZ3V0ZW5iZXJnLzEvMi8zLzUvMTIzNTIvP0M9TTtPPUE= not found for group
+    ncdc],
+      "5bc8c69a4084b43877b2d559e46736d8a6515e7acef40eb7455a94ef3899558ehttps://atlas.cs.brown.edu/data/gutenberg/1/2/3/8/12382/12382-8.txt": [Error: Error: socket hang up],
+      "5f7dc6a2a6a98a50ecb4f35a942a25af2d851436aa040a00de71596ca4fcef8chttps://atlas.cs.brown.edu/data/gutenberg/1/2/3/3/12336/?C=S;O=A": [Error: Error: socket hang up],
+      "6b196f27b132ed8c37a9a4d8d738cb15ccd67252ef81a517b64b9066aeb29831https://atlas.cs.brown.edu/data/gutenberg/1/2/3/7/12371/?C=M;O=A": [Error: Error: socket hang up],
+      "6ba7190255555ab03e216d3f8e1a13b9d430bb95f34cbac60e142a78e46f6f87https://atlas.cs.brown.edu/data/gutenberg/1/2/3/1/12312/12312.txt": [Error: Error: socket hang up],
+      "701d70db4505d8fdb0c086f0415834b6f620f5c95eeffe756fc1a9765ce57966https://atlas.cs.brown.edu/data/gutenberg/1/2/3/8/12384/12384-0.txt": [Error: Error: socket hang up],
+      "70e1af861976c838970e1d6702d25f664ff8cfb3e5cfb93b43305ede5b04e0dfhttps://atlas.cs.brown.edu/data/gutenberg/1/2/3/2/?C=S;O=D": [Error: Error: socket hang up],
+      "78175df53526fdfebf12649077c4596e387240f552c1d188db7314dbb7ede611https://atlas.cs.brown.edu/data/gutenberg/1/2/3/6/12366/12366.txt": [Error: Error: socket hang up],
+      "78e9d2b6d1540693035c95cbea7c009160fbbd4880237fae684d5cdad3cb2603https://atlas.cs.brown.edu/data/gutenberg/1/2/3/0/?C=S;O=D": [Error: File /home/1380final/store/s-d3406/ncdc-NzhlOWQyYjZkMTU0MDY5MzAzNWM5NWNiZWE3YzAwOTE2MGZiYmQ0ODgwMjM3ZmFlNjg0ZDVjZGFkM2NiMjYwM2h0dHBzOi8vYXRsYXMuY3MuYnJvd24uZWR1L2RhdGEvZ3V0ZW5iZXJnLzEvMi8zLzAvP0M9UztPPUQ= not found for group
+    ncdc],
+      "7d1e0d8170537f948019c0dfa5ab7578d7d80d4fcd060b0e1788fbb0e009e3a1https://atlas.cs.brown.edu/data/gutenberg/1/2/3/4/12347/?C=S;O=A": [Error: File /home/1380final/store/s-d3406/ncdc-N2QxZTBkODE3MDUzN2Y5NDgwMTljMGRmYTVhYjc1NzhkN2Q4MGQ0ZmNkMDYwYjBlMTc4OGZiYjBlMDA5ZTNhMWh0dHBzOi8vYXRsYXMuY3MuYnJvd24uZWR1L2RhdGEvZ3V0ZW5iZXJnLzEvMi8zLzQvMTIzNDcvP0M9UztPPUE= not found for group
+    ncdc],
+      "7eb4ab516137856b582dc8345d25397d9548ce817a9c17e21be5a23285799fb8https://atlas.cs.brown.edu/data/gutenberg/1/2/3/6/12363/?C=M;O=A": [Error: Error: socket hang up],
+      "824f55dfc0d478eb3ee79198acc64337001ef7dba8debd833453d55fa39c5925https://atlas.cs.brown.edu/data/gutenberg/1/2/3/8/12383/?C=S;O=A": [Error: Error: socket hang up],
+      "8342de54ba8220a00d22e0b2c7a6fb3b8676b82152c3bc108583bb640129c833https://atlas.cs.brown.edu/data/gutenberg/1/2/3/8/12382/?C=N;O=D": [Error: Error: socket hang up],
+      "8525e851f70eecb96b89364d26762c7e4a06a8441346863fe97c562095d703f1https://atlas.cs.brown.edu/data/gutenberg/1/2/3/8/12384/?C=D;O=A": [Error: Error: socket hang up],
+      "8694952a75ce369536d6e8edcd7c706d7055f4f517c5b3bcbc6a80b42083cf72https://atlas.cs.brown.edu/data/gutenberg/1/2/3/8/12386/?C=N;O=D": [Error: Error: socket hang up],
+      "86b63bd86be2292cbc5c61c80c09d26665fbaa8b0280d2813117a723294e187bhttps://atlas.cs.brown.edu/data/gutenberg/1/2/3/7/12371/?C=N;O=D": [Error: Error: socket hang up],
+      "87aa57e79bdcfa4b10ac4262dc552dd850f16a04494be209cf554cc9743038adhttps://atlas.cs.brown.edu/data/gutenberg/1/2/3/9/12399/?C=D;O=A": [Error: File /home/1380final/store/s-d3406/ncdc-ODdhYTU3ZTc5YmRjZmE0YjEwYWM0MjYyZGM1NTJkZDg1MGYxNmEwNDQ5NGJlMjA5Y2Y1NTRjYzk3NDMwMzhhZGh0dHBzOi8vYXRsYXMuY3MuYnJvd24uZWR1L2RhdGEvZ3V0ZW5iZXJnLzEvMi8zLzkvMTIzOTkvP0M9RDtPPUE= not found for group
+    ncdc],
+      "87e805048f02af3c886fd97d3e0255c9862bae7d45587cc0e43f22ab4b39b71ahttps://atlas.cs.brown.edu/data/gutenberg/1/2/3/1/12318/?C=N;O=D": [Error: Error: socket hang up],
+      "88fa0810c460a7c62db6b3420402fb45485552506d7bc8c0a0d64153c939285fhttps://atlas.cs.brown.edu/data/gutenberg/1/2/3/8/12389/?C=N;O=D": [Error: Error: socket hang up],
+      "8c0245b23f835ce23c0b8bec033d909fdfeaf3ea7a70b32e266bd45184c0b526https://atlas.cs.brown.edu/data/gutenberg/1/2/3/5/12352/?C=N;O=D": [Error: File /home/1380final/store/s-d3406/ncdc-OGMwMjQ1YjIzZjgzNWNlMjNjMGI4YmVjMDMzZDkwOWZkZmVhZjNlYTdhNzBiMzJlMjY2YmQ0NTE4NGMwYjUyNmh0dHBzOi8vYXRsYXMuY3MuYnJvd24uZWR1L2RhdGEvZ3V0ZW5iZXJnLzEvMi8zLzUvMTIzNTIvP0M9TjtPPUQ= not found for group
+    ncdc],
+      "8e483612ab7ef2e2f7542ccb7069f23c6be41db7201a77aa4b2fed5027132e6fhttps://atlas.cs.brown.edu/data/gutenberg/1/2/3/5/12352/12352.txt": [Error: File /home/1380final/store/s-d3406/ncdc-OGU0ODM2MTJhYjdlZjJlMmY3NTQyY2NiNzA2OWYyM2M2YmU0MWRiNzIwMWE3N2FhNGIyZmVkNTAyNzEzMmU2Zmh0dHBzOi8vYXRsYXMuY3MuYnJvd24uZWR1L2RhdGEvZ3V0ZW5iZXJnLzEvMi8zLzUvMTIzNTIvMTIzNTIudHh0 not found for group
+    ncdc],
+      "8e740b63f20ee287efef1233e40cf88d11cacf0c5cc5254abc4ea8b21c5020fehttps://atlas.cs.brown.edu/data/gutenberg/1/2/3/2/12325/?C=S;O=A": [Error: Error: socket hang up],
+      "9465062396a621303c38b96ad9bc36d436d2824f9f9efa0c35e60d1bca61acfchttps://atlas.cs.brown.edu/data/gutenberg/1/2/3/8/12381/12381.txt": [Error: Error: socket hang up],
+      "951941d03f942fb6099e35ea7d8fb2bc539617c540819201934733df8296540chttps://atlas.cs.brown.edu/data/gutenberg/1/2/3/0/12309/12309-8.txt": [Error: File /home/1380final/store/s-d3406/ncdc-OTUxOTQxZDAzZjk0MmZiNjA5OWUzNWVhN2Q4ZmIyYmM1Mzk2MTdjNTQwODE5MjAxOTM0NzMzZGY4Mjk2NTQwY2h0dHBzOi8vYXRsYXMuY3MuYnJvd24uZWR1L2RhdGEvZ3V0ZW5iZXJnLzEvMi8zLzAvMTIzMDkvMTIzMDktOC50eHQ= not found for group
+    ncdc],
+      "993fad4307f5a9eb0adf1bd74e1b897c39d4ac2e74170ca1ef1f3468851762cfhttps://atlas.cs.brown.edu/data/gutenberg/1/2/3/8/12386/?C=S;O=A": [Error: Error: socket hang up],
+      "9a9dfb215f568166023090b363c1806212ba1c27bde9a2fc77d80ae3a4ee6176https://atlas.cs.brown.edu/data/gutenberg/1/2/3/8/12384/old/": [Error: Error: socket hang up],
+      "9c02b8e11b9469abd4e3878b281be94434e8c25d515309dd06d5fdbc68a9dd72https://atlas.cs.brown.edu/data/gutenberg/1/2/3/6/12368/12368.txt": [Error: Error: socket hang up],
+      "9c1891443d4dd8d1cccbba544b9db4ca39978b0ea048e596bc815b914d785533https://atlas.cs.brown.edu/data/gutenberg/1/2/3/3/12330/?C=D;O=A": [Error: Error: socket hang up],
+      "9ceb526e3d5480efacd002669ab59568163e959a68c9daed9ba8adc067b64218https://atlas.cs.brown.edu/data/gutenberg/1/2/3/2/12324/?C=N;O=D": [Error: Error: socket hang up],
+      "a3fa4f6878c635eafdd6d44f635d7de221857867b1aae3dfd74100ed04684190https://atlas.cs.brown.edu/data/gutenberg/1/2/3/3/12336/?C=D;O=A": [Error: Error: socket hang up],
+      "a52134776dc543ff2a6a545a05f9cdb8a7881a84049165074af0560d4b67509chttps://atlas.cs.brown.edu/data/gutenberg/1/2/3/9/12398/old/": [Error: File /home/1380final/store/s-d3406/ncdc-YTUyMTM0Nzc2ZGM1NDNmZjJhNmE1NDVhMDVmOWNkYjhhNzg4MWE4NDA0OTE2NTA3NGFmMDU2MGQ0YjY3NTA5Y2h0dHBzOi8vYXRsYXMuY3MuYnJvd24uZWR1L2RhdGEvZ3V0ZW5iZXJnLzEvMi8zLzkvMTIzOTgvb2xkLw== not found for group
+    ncdc],
+      "a594d9934aecd4f39b6b2556de5c3608d7902b78fdb8b1f2d900b2d79d5c990fhttps://atlas.cs.brown.edu/data/gutenberg/1/2/3/3/12330/old/": [Error: Error: socket hang up],
+      "a9039c6ebd7fa32bede737c4636804e6ecf5c732aa626b5cdd840a3a2bbed0a5https://atlas.cs.brown.edu/data/gutenberg/1/2/3/8/12380/12380.txt": [Error: Error: socket hang up],
+      "ac6384b664df909f92e6efb0d0888fe86ab0c8f9a406fa4e9476bf26b142c0fdhttps://atlas.cs.brown.edu/data/gutenberg/1/2/3/4/12347/12347.txt": [Error: File /home/1380final/store/s-d3406/ncdc-YWM2Mzg0YjY2NGRmOTA5ZjkyZTZlZmIwZDA4ODhmZTg2YWIwYzhmOWE0MDZmYTRlOTQ3NmJmMjZiMTQyYzBmZGh0dHBzOi8vYXRsYXMuY3MuYnJvd24uZWR1L2RhdGEvZ3V0ZW5iZXJnLzEvMi8zLzQvMTIzNDcvMTIzNDcudHh0 not found for group
+    ncdc],
+      "ae5d946a4a3ca45e7a67771669ae1462cb90b17c1744d1a3fb30d4216b2e1f49https://atlas.cs.brown.edu/data/gutenberg/1/2/3/3/12336/12336-8.txt": [Error: Error: socket hang up],
+      "af91f11588204c245b52de811af21bae4852b618a72a1b2988fbe2934f0ad732https://atlas.cs.brown.edu/data/gutenberg/1/2/3/9/12398/?C=D;O=A": [Error: File /home/1380final/store/s-d3406/ncdc-YWY5MWYxMTU4ODIwNGMyNDViNTJkZTgxMWFmMjFiYWU0ODUyYjYxOGE3MmExYjI5ODhmYmUyOTM0ZjBhZDczMmh0dHBzOi8vYXRsYXMuY3MuYnJvd24uZWR1L2RhdGEvZ3V0ZW5iZXJnLzEvMi8zLzkvMTIzOTgvP0M9RDtPPUE= not found for group
+    ncdc],
+      "b588545e22e1c5b4bf1cbe0f635b49567ce13155d72d0a59a5fb5ec6865e0d9ahttps://atlas.cs.brown.edu/data/gutenberg/1/2/3/2/12325/?C=M;O=A": [Error: Error: socket hang up],
+      "b58aa87e437cfdbecec8327c09d9d0a20258e480eff77d702af92742acfe05behttps://atlas.cs.brown.edu/data/gutenberg/1/2/3/9/12399/12399.txt": [Error: File /home/1380final/store/s-ebbfb/ncdc-YjU4YWE4N2U0MzdjZmRiZWNlYzgzMjdjMDlkOWQwYTIwMjU4ZTQ4MGVmZjc3ZDcwMmFmOTI3NDJhY2ZlMDViZWh0dHBzOi8vYXRsYXMuY3MuYnJvd24uZWR1L2RhdGEvZ3V0ZW5iZXJnLzEvMi8zLzkvMTIzOTkvMTIzOTkudHh0 not found for group
+    ncdc],
+      "b6695900dccce3c4b97118f1a00478c02645a14b76a68f19ad6678c3354db2f1https://atlas.cs.brown.edu/data/gutenberg/1/2/3/3/12336/?C=N;O=D": [Error: Error: socket hang up],
+      "b6cfc3bcd8c17eecdf295db7a1d67d65127fdc862bfb114cbe581de303f2bb96https://atlas.cs.brown.edu/data/gutenberg/1/2/3/0/12309/?C=M;O=A": [Error: File /home/1380final/store/s-ebbfb/ncdc-YjZjZmMzYmNkOGMxN2VlY2RmMjk1ZGI3YTFkNjdkNjUxMjdmZGM4NjJiZmIxMTRjYmU1ODFkZTMwM2YyYmI5Nmh0dHBzOi8vYXRsYXMuY3MuYnJvd24uZWR1L2RhdGEvZ3V0ZW5iZXJnLzEvMi8zLzAvMTIzMDkvP0M9TTtPPUE= not found for group
+    ncdc],
+      "b9a583f9de9911ccfb0bd119060920ccbac9f951606abbec6ab4689dcadcf469https://atlas.cs.brown.edu/data/gutenberg/1/2/3/1/12312/?C=M;O=A": [Error: Error: socket hang up],
+      "ba150fb835a2f5f4a29d6995fffb9c1b4b0add1b276c1ea206875a67dc75fb22https://atlas.cs.brown.edu/data/gutenberg/1/2/3/1/12314/?C=M;O=A": [Error: Error: socket hang up],
+      "ba5b09298fb09a224061224bac3ea819530fb9e111b72c825bf33ea687ef11efhttps://atlas.cs.brown.edu/data/gutenberg/1/2/3/9/12395/?C=S;O=A": [Error: File /home/1380final/store/s-d3406/ncdc-YmE1YjA5Mjk4ZmIwOWEyMjQwNjEyMjRiYWMzZWE4MTk1MzBmYjllMTExYjcyYzgyNWJmMzNlYTY4N2VmMTFlZmh0dHBzOi8vYXRsYXMuY3MuYnJvd24uZWR1L2RhdGEvZ3V0ZW5iZXJnLzEvMi8zLzkvMTIzOTUvP0M9UztPPUE= not found for group
+    ncdc],
+      "bb0713f611b01bca6ea2860b9e79196914eccc5978f7ad0c5befc7245455bea5https://atlas.cs.brown.edu/data/gutenberg/1/2/3/9/12395/12395.txt": [Error: File /home/1380final/store/s-ebbfb/ncdc-YmIwNzEzZjYxMWIwMWJjYTZlYTI4NjBiOWU3OTE5NjkxNGVjY2M1OTc4ZjdhZDBjNWJlZmM3MjQ1NDU1YmVhNWh0dHBzOi8vYXRsYXMuY3MuYnJvd24uZWR1L2RhdGEvZ3V0ZW5iZXJnLzEvMi8zLzkvMTIzOTUvMTIzOTUudHh0 not found for group
+    ncdc],
+      "bb60297198d9f2f840bb96e1225500feaddf938391f0b223b4a2945b361a5ef1https://atlas.cs.brown.edu/data/gutenberg/1/2/3/7/12378/?C=M;O=A": [Error: Error: socket hang up],
+      "bb8e6128d4d70fcbd8cb1acd9b954b85eead04e46a63a1327eaea05efc9a1512https://atlas.cs.brown.edu/data/gutenberg/1/2/3/0/12309/?C=D;O=A": [Error: File /home/1380final/store/s-d3406/ncdc-YmI4ZTYxMjhkNGQ3MGZjYmQ4Y2IxYWNkOWI5NTRiODVlZWFkMDRlNDZhNjNhMTMyN2VhZWEwNWVmYzlhMTUxMmh0dHBzOi8vYXRsYXMuY3MuYnJvd24uZWR1L2RhdGEvZ3V0ZW5iZXJnLzEvMi8zLzAvMTIzMDkvP0M9RDtPPUE= not found for group
+    ncdc],
+      "bf3ae6e1eaf6f229a23edf8447cfb5bb016da908cb7ba595f41fd5a487ce7802https://atlas.cs.brown.edu/data/gutenberg/1/2/3/8/12382/?C=S;O=A": [Error: Error: socket hang up],
+      "c15c1e8583698094b35911fdb0b66586544054cf6771d55e217f40d0ad3049a7https://atlas.cs.brown.edu/data/gutenberg/1/2/3/4/12347/?C=N;O=D": [Error: File /home/1380final/store/s-ebbfb/ncdc-YzE1YzFlODU4MzY5ODA5NGIzNTkxMWZkYjBiNjY1ODY1NDQwNTRjZjY3NzFkNTVlMjE3ZjQwZDBhZDMwNDlhN2h0dHBzOi8vYXRsYXMuY3MuYnJvd24uZWR1L2RhdGEvZ3V0ZW5iZXJnLzEvMi8zLzQvMTIzNDcvP0M9TjtPPUQ= not found for group
+    ncdc],
+      "c4a67c72de03c835c3fbc9b21dde0021d9927420706f36b77d72cfcc98410a69https://atlas.cs.brown.edu/data/gutenberg/1/2/3/8/12383/?C=M;O=A": [Error: Error: socket hang up],
+      "c542c80c3ab7690862fcaf6cc93181913be3102c06900f33a011526ac8e01090https://atlas.cs.brown.edu/data/gutenberg/1/2/3/9/12398/12398-0.txt": [Error: File /home/1380final/store/s-ebbfb/ncdc-YzU0MmM4MGMzYWI3NjkwODYyZmNhZjZjYzkzMTgxOTEzYmUzMTAyYzA2OTAwZjMzYTAxMTUyNmFjOGUwMTA5MGh0dHBzOi8vYXRsYXMuY3MuYnJvd24uZWR1L2RhdGEvZ3V0ZW5iZXJnLzEvMi8zLzkvMTIzOTgvMTIzOTgtMC50eHQ= not found for group
+    ncdc],
+      "c68def7842a1ac971e9fb214c4ac022dd370fadf867fc2f13798f8e8af365263https://atlas.cs.brown.edu/data/gutenberg/1/2/3/3/12336/12336.txt": [Error: Error: socket hang up],
+      "c774e2e9b4d318770f0f1c02547156c6b646e2c058a3875d41ef96f50f492e90https://atlas.cs.brown.edu/data/gutenberg/1/2/3/0/12309/?C=S;O=A": [Error: File /home/1380final/store/s-d3406/ncdc-Yzc3NGUyZTliNGQzMTg3NzBmMGYxYzAyNTQ3MTU2YzZiNjQ2ZTJjMDU4YTM4NzVkNDFlZjk2ZjUwZjQ5MmU5MGh0dHBzOi8vYXRsYXMuY3MuYnJvd24uZWR1L2RhdGEvZ3V0ZW5iZXJnLzEvMi8zLzAvMTIzMDkvP0M9UztPPUE= not found for group
+    ncdc],
+      "c80a040932ba1b32bfb8d2ef5559e202652fc2fb1c008aea390b5c863102e891https://atlas.cs.brown.edu/data/gutenberg/1/2/3/3/?C=D;O=D": [Error: Error: socket hang up],
+      "c9030274e62f8b05512ca7fa8e06ca22723b6bbbbf61bd97036ce7a64cd2887dhttps://atlas.cs.brown.edu/data/gutenberg/1/2/3/2/12324/?C=D;O=A": [Error: Error: socket hang up],
+      "ca14553160f3b27ba5025af0afa455abb7c899e2d8a4dc76eaf19b7dc2e603a7https://atlas.cs.brown.edu/data/gutenberg/1/2/3/2/12329/?C=N;O=D": [Error: Error: socket hang up],
+      "cade9aaf42a364c09f800669d5cc23f3702a820fa521d59c253d385dc97ab545https://atlas.cs.brown.edu/data/gutenberg/1/2/3/6/12360/12360.txt": [Error: Error: socket hang up],
+      "d1f131718a87527b0e5fb2cf13defb3ef7242cf58b9a0f5eee0c7b58f2789240https://atlas.cs.brown.edu/data/gutenberg/1/2/3/8/12383/?C=N;O=D": [Error: Error: socket hang up],
+      "d2e399143972aff8b6860ac7da9e2eaef0a23b72d55b13a8dbe5bdc29eef3638https://atlas.cs.brown.edu/data/gutenberg/1/2/3/7/12370/?C=M;O=A": [Error: Error: socket hang up],
+      "d56627ea7044d405dc3bd4f1813ac3f7207a4314a89b9df70f868f870b5c3ffchttps://atlas.cs.brown.edu/data/gutenberg/1/2/3/6/12361/?C=M;O=A": [Error: Error: socket hang up],
+      "d69219f8b867ac5e2a80556532712eec780b734a9494b5ebe36f530383aa61d7https://atlas.cs.brown.edu/data/gutenberg/1/2/3/8/12381/?C=S;O=A": [Error: Error: socket hang up],
+      "d84cbd6c5e25725e042f8033634db4127458a823e2e63383b3dfbbfd39b91ddahttps://atlas.cs.brown.edu/data/gutenberg/1/2/3/8/12381/?C=M;O=A": [Error: Error: socket hang up],
+      "d935bbfcdcf16f64725573e9b0af2bccce7295b721bea172cf7287abe9b38eedhttps://atlas.cs.brown.edu/data/gutenberg/1/2/3/7/12371/?C=S;O=A": [Error: Error: socket hang up],
+      "da22e40725a2ecafc527b23eb7586c8ef904b9133ae9c65efcb1c87f16e781a6https://atlas.cs.brown.edu/data/gutenberg/1/2/3/0/12309/?C=N;O=D": [Error: File /home/1380final/store/s-ebbfb/ncdc-ZGEyMmU0MDcyNWEyZWNhZmM1MjdiMjNlYjc1ODZjOGVmOTA0YjkxMzNhZTljNjVlZmNiMWM4N2YxNmU3ODFhNmh0dHBzOi8vYXRsYXMuY3MuYnJvd24uZWR1L2RhdGEvZ3V0ZW5iZXJnLzEvMi8zLzAvMTIzMDkvP0M9TjtPPUQ= not found for group
+    ncdc],
+      "dba88f375a94021e731d1c2bbb0947db73b90f8c22d60e522ade8f31a3db4bfchttps://atlas.cs.brown.edu/data/gutenberg/1/2/3/8/12380/?C=M;O=A": [Error: Error: socket hang up],
+      "df2d60164525913ecb6f14703eeed76b1bdd888d6a004132cfc2ebb740baccc4https://atlas.cs.brown.edu/data/gutenberg/1/2/3/8/12382/?C=M;O=A": [Error: Error: socket hang up],
+      "dfa11955fed6cb6764bf4a492de311ea3fcd26caab27c112370c25c0bca25170https://atlas.cs.brown.edu/data/gutenberg/1/2/3/3/12330/12330-0.txt": [Error: Error: socket hang up],
+      "e1d0361ffbf5022165bee440da756dd256143c6e07fcaac2f3fb80400cc936bchttps://atlas.cs.brown.edu/data/gutenberg/1/2/3/8/12380/?C=S;O=A": [Error: Error: socket hang up],
+      "e38abca62e36625ed6b43e99002417185c64009d54d692552530ae7d7e98388ehttps://atlas.cs.brown.edu/data/gutenberg/1/2/3/2/12329/12329.txt": [Error: Error: socket hang up],
+      "e9787836f1a1c7d802ee230bb64a430aa99c15d770dbd56ee0f1de7f56cd4b03https://atlas.cs.brown.edu/data/gutenberg/1/2/3/9/12393/?C=D;O=A": [Error: File /home/1380final/store/s-ebbfb/ncdc-ZTk3ODc4MzZmMWExYzdkODAyZWUyMzBiYjY0YTQzMGFhOTljMTVkNzcwZGJkNTZlZTBmMWRlN2Y1NmNkNGIwM2h0dHBzOi8vYXRsYXMuY3MuYnJvd24uZWR1L2RhdGEvZ3V0ZW5iZXJnLzEvMi8zLzkvMTIzOTMvP0M9RDtPPUE= not found for group
+    ncdc],
+      "ea55d540a70676a93829fc184cc7e8a53e3b2d1833c9232f2a7cb21dd9188897https://atlas.cs.brown.edu/data/gutenberg/1/2/3/2/12328/12328-8.txt": [Error: Error: socket hang up],
+      "ebcb6c65a4ea1f8f329f46db9946440562a0f1280d35c7d5e88c9c22db912a30https://atlas.cs.brown.edu/data/gutenberg/1/2/3/9/12393/?C=N;O=D": [Error: File /home/1380final/store/s-ebbfb/ncdc-ZWJjYjZjNjVhNGVhMWY4ZjMyOWY0NmRiOTk0NjQ0MDU2MmEwZjEyODBkMzVjN2Q1ZTg4YzljMjJkYjkxMmEzMGh0dHBzOi8vYXRsYXMuY3MuYnJvd24uZWR1L2RhdGEvZ3V0ZW5iZXJnLzEvMi8zLzkvMTIzOTMvP0M9TjtPPUQ= not found for group
+    ncdc],
+      "ebdb5c93c386df93ff37c5ed2b3b5d7c264de3ae6567ea37c4bf5421b79af745https://atlas.cs.brown.edu/data/gutenberg/1/2/3/9/12399/?C=M;O=A": [Error: File /home/1380final/store/s-ebbfb/ncdc-ZWJkYjVjOTNjMzg2ZGY5M2ZmMzdjNWVkMmIzYjVkN2MyNjRkZTNhZTY1NjdlYTM3YzRiZjU0MjFiNzlhZjc0NWh0dHBzOi8vYXRsYXMuY3MuYnJvd24uZWR1L2RhdGEvZ3V0ZW5iZXJnLzEvMi8zLzkvMTIzOTkvP0M9TTtPPUE= not found for group
+    ncdc],
+      "ec687fdd63d3a6967688c2bda4410e583759c3b2deaa4528993454b91de3f781https://atlas.cs.brown.edu/data/gutenberg/1/2/3/0/12309/12309.txt": [Error: File /home/1380final/store/s-ebbfb/ncdc-ZWM2ODdmZGQ2M2QzYTY5Njc2ODhjMmJkYTQ0MTBlNTgzNzU5YzNiMmRlYWE0NTI4OTkzNDU0YjkxZGUzZjc4MWh0dHBzOi8vYXRsYXMuY3MuYnJvd24uZWR1L2RhdGEvZ3V0ZW5iZXJnLzEvMi8zLzAvMTIzMDkvMTIzMDkudHh0 not found for group
+    ncdc],
+      "f03a1d321a8094985b33d5b47ec26b5d4e9fe02e1f43d52aacde9682cee5b636https://atlas.cs.brown.edu/data/gutenberg/1/2/3/8/12383/12383.txt": [Error: Error: socket hang up],
+      "f2849f841b7cd90f37118a7ab754d4337ae3ef9ec1fdd196a92d1ba6383afcf5https://atlas.cs.brown.edu/data/gutenberg/1/2/3/1/12312/?C=N;O=D": [Error: Error: socket hang up],
+      "f37f2728307215750415d1fbcc176b1dfa1ecade9012c35dd1849b06c9797f88https://atlas.cs.brown.edu/data/gutenberg/1/2/3/7/12378/?C=D;O=A": [Error: Error: socket hang up],
+      "f758ddcf2cff9fae982cdce0828dd95363da9ebf6d8bd51c412e9f2025775c04https://atlas.cs.brown.edu/data/gutenberg/1/2/3/6/12366/?C=N;O=D": [Error: Error: socket hang up],
+      "f7c281fb275e91a4d0fc13f88935a620e860d4befcc860bee5c7912653574223https://atlas.cs.brown.edu/data/gutenberg/1/2/3/8/12386/?C=M;O=A": [Error: Error: socket hang up],
+      "f8189f2b4e9cfccd592dd6287ec33c5f8605a434bee6b3a2944f8cd84a3aaa79https://atlas.cs.brown.edu/data/gutenberg/1/2/3/8/12384/?C=N;O=D": [Error: Error: socket hang up],
+      "fa2b5c572b449e0ecb40b88e0a695261757b7a548faae1b0db892305c64c95f8https://atlas.cs.brown.edu/data/gutenberg/1/2/3/5/12352/?C=S;O=A": [Error: File /home/1380final/store/s-d3406/ncdc-ZmEyYjVjNTcyYjQ0OWUwZWNiNDBiODhlMGE2OTUyNjE3NTdiN2E1NDhmYWFlMWIwZGI4OTIzMDVjNjRjOTVmOGh0dHBzOi8vYXRsYXMuY3MuYnJvd24uZWR1L2RhdGEvZ3V0ZW5iZXJnLzEvMi8zLzUvMTIzNTIvP0M9UztPPUE= not found for group
+    ncdc],
+      "fc8fccbfda91fd0a423096194ae0a5394d768282247c1b0b4e2b2be5261c7c8dhttps://atlas.cs.brown.edu/data/gutenberg/1/2/3/8/12382/?C=D;O=A": [Error: Error: socket hang up],
+      "fc97b346d6549e6c825ec2670460434f2a1ca9c816d671d87de386f94335b48ahttps://atlas.cs.brown.edu/data/gutenberg/1/2/3/4/12347/?C=M;O=A": [Error: File /home/1380final/store/s-d3406/ncdc-ZmM5N2IzNDZkNjU0OWU2YzgyNWVjMjY3MDQ2MDQzNGYyYTFjYTljODE2ZDY3MWQ4N2RlMzg2Zjk0MzM1YjQ4YWh0dHBzOi8vYXRsYXMuY3MuYnJvd24uZWR1L2RhdGEvZ3V0ZW5iZXJnLzEvMi8zLzQvMTIzNDcvP0M9TTtPPUE= not found for group
+    ncdc],
+      "fd5d7ef95e89432330f8625ccb73d31d1524d90debeb238f49ec4e57ba82e9edhttps://atlas.cs.brown.edu/data/gutenberg/1/2/3/8/12386/12386.txt": [Error: Error: socket hang up],
+    }
+
+      176 |           if (e!==null && Object.keys(e).length > 0) {
+      177 |             console.log('map reduce errorr: ', e);
+    > 178 |             done(e);
+          |             ^
+      179 |             return;
+      180 |           }
+      181 |           try {
+
+      at callback (test/crawlv2.test.js:178:13)
+      at checkAllDoneMap (distribution/all/mr.js:116:17)
+      at _0x96beb5 (distribution/all/mr.js:256:15)
+      at Object.AXwWK (distribution/local/comm.js:76:24)
+      at Object.chtBq (distribution/local/comm.js:111:50)
+      at IncomingMessage.<anonymous> (distribution/local/comm.js:118:48)
