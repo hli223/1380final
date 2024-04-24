@@ -123,7 +123,7 @@ test('(25 pts) downloadText workflow', (done) => {
       htmlContent = dom.window.document.body.textContent;
       let lines = htmlContent.split('\n');
       htmlContent = lines.join(' ').replace(/\s{2,}/g, ' ').replace(/[^a-zA-Z0-9]/g, ' ');
-      out[contentKey] = { url: url, htmlContent: htmlContent};
+      out[contentKey] = { url: url, htmlContent: htmlContent };
 
     } catch (e) {
       console.error(url + 'Fetch error: ', e);
@@ -145,7 +145,7 @@ test('(25 pts) downloadText workflow', (done) => {
 
     let execMr = global.promisify(distribution.crawlUrl.mr.exec)
     let batchSize = 10;
-    let totalNumKeys = 12;
+    let totalNumKeys = urlKeys.length;
     for (let i = 0; i < totalNumKeys; i += batchSize) {
       if (i + batchSize > totalNumKeys) {
         batchSize = totalNumKeys - i;

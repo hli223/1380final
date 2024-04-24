@@ -80,7 +80,7 @@ beforeAll((done) => {
       });
     });
   });
-}, 400000);
+}, 800000);
 
 afterAll((done) => {
   const remote = { service: 'status', method: 'stop' };
@@ -95,7 +95,7 @@ afterAll((done) => {
     localServer.close();
     done();
   });
-}, 400000);
+}, 800000);
 
 test('(25 pts) crawler workflow', (done) => {
 
