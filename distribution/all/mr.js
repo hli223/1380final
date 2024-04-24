@@ -20,7 +20,7 @@ const mr = function (config) {
         map: (keys, gid, config, callback) => {
           callback = callback || function () { };
           console.log('map keys: ', keys);
-          const callMap = async (key) => {
+          const callMap = async (key) => {//return resultKey
             let value;
             try {
               value = await promisify(global.distribution[gid].store.get)(key);
@@ -85,12 +85,12 @@ const mr = function (config) {
 
               if (config.notStore) {
                 return result[resultKey];
-              } else {
+              } else {//shuffle
                 try {
                   const v = await global.promisify(global.distribution[storeGroup].store.put)(result[resultKey], resultKey);
                   console.log('store complete:', v.length);
                   console.log('store complete:', v);
-                  return 'done';
+                  return resultKey;
                 } catch (e) {
                   throw e;
                 }
@@ -232,19 +232,24 @@ const mr = function (config) {
         console.log('Start mapping phase!, number of keys: ', configuration.keys.length);
 
         //splitting data into shards
-        let keySublists = [];
-        if (configuration.keys.length < numNodes) {
-          keySublists = configuration.keys.map(key => [key]);
-        } else {
-          let keysPerNode = Math.ceil(configuration.keys.length / numNodes);
-          for (let i = 0; i < configuration.keys.length; i += keysPerNode) {
-            keySublists.push(configuration.keys.slice(i, i + keysPerNode));
+        const splitDataKeysIntoShards = (keys) => {
+          let keySublists = [];
+          if (keys.length < numNodes) {
+            keySublists = keys.map(key => [key]);
+          } else {
+            let keysPerNode = Math.ceil(keys.length / numNodes);
+            for (let i = 0; i < keys.length; i += keysPerNode) {
+              keySublists.push(keys.slice(i, i + keysPerNode));
+            }
+            if (keys.length % keysPerNode !== 0) {
+              let lastBatch = keys.slice(-keys.length % keysPerNode);
+              keySublists.push(lastBatch);
+            }
           }
-          if (configuration.keys.length % keysPerNode !== 0) {
-            let lastBatch = configuration.keys.slice(-configuration.keys.length % keysPerNode);
-            keySublists.push(lastBatch);
-          }
+          return keySublists;
         }
+        let keySublists = splitDataKeysIntoShards(configuration.keys);
+
         console.log('length of keySublists: ', keySublists.length, 'number of elements in keySublists: ', keySublists.reduce((total, sublist) => total + sublist.length, 0));
 
         let mapPromises = [];
@@ -273,12 +278,21 @@ const mr = function (config) {
           mapPromises.push(global.promisify(localComm.send)(args, remote));
         }
         try {
-          let results = await Promise.all(mapPromises);
-          console.log('map results: ', results);
+          let resultKeys = await Promise.all(mapPromises);
+          console.log('map results: ', resultKeys);
+          resultKeys = resultKeys.flat();
+          console.log('flat map results: ', resultKeys);
+
+
+
+
+
+
         } catch (e) {
           console.log('map error: ', e);
           throw e;
         }
+
 
 
 
