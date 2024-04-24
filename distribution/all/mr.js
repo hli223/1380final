@@ -250,7 +250,7 @@ const mr = function (config) {
         }
         let keySublists = splitDataKeysIntoShards(configuration.keys);
 
-        console.log('length of keySublists: ', keySublists.length, 'number of elements in keySublists: ', keySublists.reduce((total, sublist) => total + sublist.length, 0));
+        console.log('Map: length of keySublists: ', keySublists.length, 'number of elements in keySublists: ', keySublists.reduce((total, sublist) => total + sublist.length, 0));
 
         let mapPromises = [];
 
@@ -282,6 +282,17 @@ const mr = function (config) {
           console.log('map results: ', resultKeys);
           resultKeys = resultKeys.flat();
           console.log('flat map results: ', resultKeys);
+          if (configuration.reduce===null) {
+            return resultKeys;
+          }
+          keySublists = splitDataKeysIntoShards(resultKeys);
+          console.log('Redudce: length of keySublists: ', keySublists.length, 'number of elements in keySublists: ', keySublists.reduce((total, sublist) => total + sublist.length, 0));
+
+          let reducePromises = [];
+          for (let i = 0; i < keySublists.length; i++) {
+            const keySublist = keySublists[i];
+          }
+
 
 
 
