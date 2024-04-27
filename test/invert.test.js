@@ -26,7 +26,7 @@ let localServer = null;
 */
 
 const nodes = [];
-for (let i = 1; i <= 10; i++) {
+for (let i = 1; i <= 2; i++) {
     nodes.push({ ip: '127.0.0.1', port: startPort + i });
 }
 
@@ -117,22 +117,29 @@ test('(25 pts) Inverted index wordflow', (done) => {
         console.log('content type', typeof content);
         let terms = content.match(/\w+/g) || [];
         // stem each term
-        terms = terms.map((term) => global.stemmer.stem(term));
-        console.log('stemmer is: ', global.stemmer);
-        console.log('stemmer result is: ', terms);
-        let out = [];
+        terms = terms.map((term) => global.stemmer.stem(term)).slice(0, 10);
+        // console.log('stemmer is: ', global.stemmer);
+        // console.log('stemmer result is: ', terms);
+        let out = {};
+        //{word: url}
+        //{word:[url]}
         terms.forEach((term) => {
             let termKey = term.toLowerCase();
             // let termKey = global.stemmer.stem(term.toLowerCase());
-            let mapping = {};
-            mapping[termKey] = url;
-            out.push(mapping);
+            // let mapping = {};
+            // mapping[termKey] = url;
+            if (!out[termKey]) {
+                out[termKey] = [url];
+            } else {
+                out[termKey].push(url);
+            }
+            // out.push(mapping);
         });
-        console.log('the result of map function', out);
         return out;
     };
 
     let r1 = (term, listOfDocIdArray) => {
+        //listOfDocIdArray = [url1, url2, ...]
         // term: string, the term to be reduced
         // listOfDocIdArray: an array containing the doc ids that contain the term
         // output: {term: [{docId1: cnt1}, {docId2: cnt2}, ...]}
@@ -154,7 +161,11 @@ test('(25 pts) Inverted index wordflow', (done) => {
             mapping[v[0]] = v[1];
             return mapping;
         });
+        console.log('the result of sorting', docIds);
         out[term] = docIds;
+        //out[term] = {actualUrl1: count, actualUrl2: count,....}
+
+        //out = {term1:[{actualUrl1: count}, {actualUrl2: count}, ...]} sort by number of occurences in descending order
         console.log('the result of reduce function', out);
         return out;
     };
@@ -170,8 +181,8 @@ test('(25 pts) Inverted index wordflow', (done) => {
         }
 
         let execMr = global.promisify(distribution.downloadText.mr.exec)
-        let batchSize = 10;
-        let totalNumKeys = urlKeys.length;
+        let batchSize = 1;
+        let totalNumKeys = 1;//urlKeys.length
         for (let i = 0; i < totalNumKeys; i += batchSize) {
             if (i + batchSize > totalNumKeys) {
                 batchSize = totalNumKeys - i;
