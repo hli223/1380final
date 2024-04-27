@@ -110,31 +110,65 @@ const mr = function (config) {
 
 
         },
-        reduce: (key, gid, r, callback) => {
-          console.log('reduce key before store.get: ', key);
+        reduce: (keys, gid, config, callback) => {
+          console.log('reduce keys before store.get: ', keys);
           callback = callback || function () { };
-          global.distribution[gid].store.get(key, (e, value) => {
-            if (e) {
-              console.log('error in reduce: ', e);
-              callback(e, null);
-            }
+          const callReduce = async (key) => {//return resultKey
+            let value;
             try {
-              console.log('reduce key: ', key, 'value: ', value);
-              console.log('error in try', e);
-              let result = r(key, value);
-              console.log('reduce result in the infrastructure: ', result);
-              global.distribution[gid].store.put(result, key, (e, result) => {
-                if (e) {
-                  console.log('error in reduce store.put: ', e);
-                  callback(e, null);
-                }
-                callback(null, result);
-              });
+              value = await promisify(global.distribution[gid].store.get)(key);
             } catch (e) {
-              console.log('reduce error: ', e);
-              callback(e, null);
+              console.error('Error getting value from store: ', e);
+              throw e;
             }
-          });
+
+            let result;
+            result = config.reduce(key, value);
+            let storeGroup = config.storeGroup || gid;
+            const resultKey = Object.keys(result)[0];
+            const resultValue = result[resultKey];
+            try {
+              const v = await promisify(global.distribution[storeGroup].store.put)(resultValue, resultKey);
+              console.log('reduce store complete: ', v);
+              return resultKey;
+            } catch (e) {
+              throw e;
+            }
+
+          }
+
+          Promise.all(keys.map(key => callReduce(key)))
+            .then((results) => {
+              console.log('reduce success', results);
+              callback(null, results);
+            })
+            .catch((e) => {
+              callback(e, null);
+            });
+
+
+          // global.distribution[gid].store.get(key, (e, value) => {
+          //   if (e) {
+          //     console.log('error in reduce: ', e);
+          //     callback(e, null);
+          //   }
+          //   try {
+          //     console.log('reduce key: ', key, 'value: ', value);
+          //     console.log('error in try', e);
+          //     let result = config.reduce(key, value);
+          //     console.log('reduce result in the infrastructure: ', result);
+          //     global.distribution[gid].store.put(result, key, (e, result) => {
+          //       if (e) {
+          //         console.log('error in reduce store.put: ', e);
+          //         callback(e, null);
+          //       }
+          //       callback(null, result);
+          //     });
+          //   } catch (e) {
+          //     console.log('reduce error: ', e);
+          //     callback(e, null);
+          //   }
+          // });
         },
       };
       mrServiceName = 'mr-' + id.getSID(mrService);
@@ -291,13 +325,32 @@ const mr = function (config) {
           let reducePromises = [];
           for (let i = 0; i < keySublists.length; i++) {
             const keySublist = keySublists[i];
+            console.log('calling reduce on keys: ', keySublist);
+            const selectedNode = nodes[Object.keys(nodes)[i]];
+            let remote = {
+              service: mrServiceName,
+              method: 'reduce',
+              node: selectedNode,
+            };
+            const reduceConfig = {
+              reduce: configuration.reduce,
+              storeGroup: configuration.storeGroup,
+            }
+            let args = [keySublist, context.gid, reduceConfig];
+            console.log('reduce args: ', args);
+            reducePromises.push(global.promisify(localComm.send)(args, remote));
           }
 
-
-
-
-
-
+          try {
+            let resultKeys = await Promise.all(reducePromises);
+            console.log('reduce results: ', resultKeys);
+            resultKeys = resultKeys.flat();
+            console.log('flat reduce results: ', resultKeys);
+            return resultKeys;
+          } catch (e) {
+            console.log('reduce error: ', e);
+            throw e;
+          }
 
         } catch (e) {
           console.log('map error: ', e);
