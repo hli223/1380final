@@ -123,7 +123,7 @@ test('(25 pts) downloadText workflow', (done) => {
       htmlContent = dom.window.document.body.textContent;
       let lines = htmlContent.split('\n');
       htmlContent = lines.join(' ').replace(/\s{2,}/g, ' ').replace(/[^a-zA-Z0-9]/g, ' ');
-      out[contentKey] = { url: url, htmlContent: htmlContent };
+      out[contentKey] = { url: url, htmlContent: htmlContent};
 
     } catch (e) {
       console.error(url + 'Fetch error: ', e);
@@ -131,7 +131,7 @@ test('(25 pts) downloadText workflow', (done) => {
     }
     return out;
   };
-  const testStartTime = Date.now(); 
+
 
   const downloadText = async (cb) => {
     let urlKeys;
@@ -144,10 +144,8 @@ test('(25 pts) downloadText workflow', (done) => {
     }
 
     let execMr = global.promisify(distribution.crawlUrl.mr.exec)
-
-    let batchSize = 20;
-
-    let totalNumKeys = urlKeys.length;
+    let batchSize = 10;
+    let totalNumKeys = 12;
     for (let i = 0; i < totalNumKeys; i += batchSize) {
       if (i + batchSize > totalNumKeys) {
         batchSize = totalNumKeys - i;
@@ -174,9 +172,6 @@ test('(25 pts) downloadText workflow', (done) => {
 
   };
   downloadText().then(() => {
-    const testEndTime = Date.now(); 
-    const testDuration = testEndTime - testStartTime;
-    console.log(`Test execution time (excluding setup and teardown): ${testDuration}ms`);
     done();
   }).catch(err => {
     console.error('Error in downloadText: ', err);

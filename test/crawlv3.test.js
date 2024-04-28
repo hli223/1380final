@@ -24,9 +24,6 @@ let localServer = null;
 /*
     The local node will be the orchestrator.
 */
-// const numNodes = parseInt(process.argv[5]);
-// process.stderr.write('numNodes: ' + numNodes+'\n');
-// console.log('numNodes: ' + numNodes+'\n');
 
 const nodes = [];
 for (let i = 1; i <= 10; i++) {
@@ -156,12 +153,11 @@ test('(25 pts) crawler workflow', (done) => {
 
 
     }
-    const testStartTime = Date.now(); // Start timing here
     var baseUrl = 'https://www.usenix.org/publications/proceedings?page='
     let promises = [];
     let urlKeys = []
     let execMr = global.promisify(distribution.crawlUrl.mr.exec)
-    let totalPages = 346;//346
+    let totalPages = 346;
     for (let i = 1; i<=totalPages; i++) {
         let url = baseUrl + i;
         let urlKey = id.getID(url);
@@ -171,10 +167,10 @@ test('(25 pts) crawler workflow', (done) => {
         );
     }
     Promise.all(promises).then(async () => {
-        let batchSize = 20;
-        for (let i = 0; i < totalPages; i += batchSize) {
-            if (i + batchSize > totalPages) {
-                batchSize = totalPages - i;
+        let batchSize = 3;
+        for (let i = 0; i < urlKeys.length; i += batchSize) {
+            if (i + batchSize > urlKeys.length) {
+                batchSize = urlKeys.length - i;
             }
             let batch = urlKeys.slice(i, i + batchSize);
             try {
@@ -183,17 +179,14 @@ test('(25 pts) crawler workflow', (done) => {
                 console.error('Error in execMr: ', error);
             }
         }
-        if (totalPages % batchSize !== 0) {
-            let lastBatch = urlKeys.slice(-totalPages % batchSize);
+        if (urlKeys.length % batchSize !== 0) {
+            let lastBatch = urlKeys.slice(-urlKeys.length % batchSize);
             try {
                 await execMr({ keys: lastBatch, map: m1, reduce: null, notStore: true, returnMapResult: true, notShuffle: true });
             } catch (error) {
                 console.error('Error in execMr: ', error);
             }
         }
-      const testEndTime = Date.now(); // End timing here
-      const testDuration = testEndTime - testStartTime;
-      console.log(`Test execution time (excluding setup and teardown): ${testDuration}ms`);
         done();
     }).catch((error) => {
         done(error);
