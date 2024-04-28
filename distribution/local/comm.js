@@ -115,6 +115,7 @@ comm['send'] = function (_0x2df79d, _0xa3cc8f, _0x2e5ebe) {
             _0x464773['on'](_0x2000b7(0x182), function (_0x4bf7b5) {
                 _0x275145 += _0x4bf7b5;
             }), _0x464773['on'](_0x3a060c['lYSyY'], function () {
+                // console.log('deserialize at local comm!', _0x275145, _0x2df79d, _0xa3cc8f, _0x2e5ebe);
                 _0x2e5ebe && _0x5300f3['chtBq'](_0x2e5ebe, ...serialization['deserialize'](_0x275145));
             }), _0x464773['on'](_0x3a060c[_0x2000b7(0x175)], function (_0x7c3a77) {
                 const _0x1183b6 = _0x2000b7;

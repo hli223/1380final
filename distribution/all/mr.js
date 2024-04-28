@@ -65,58 +65,78 @@ const mr = function (config) {
                 }
                 return resultKey;
               }
-              //shuffle
-              console.log('start shuffle!', result, Object.keys(result))
-              for (const resultKey of Object.keys(result)) {
-                let resultValue = result[resultKey];
-                console.log('shuffle resultKey: ', resultKey);
-                try {
-                  let value = await promisify(global.distribution[storeGroup].store.get)(resultKey);
-                  if (Array.isArray(resultValue)) {
-                    value.push(...resultValue);
-                  } else {
-                    value.push(resultValue);
-                  }
-                  result[resultKey] = value;
-                  console.log('added to exsiting list: ', result)
-                } catch (e) {
-                  if (Array.isArray(resultValue)) {
-                    result[resultKey] = resultValue;
-                  } else {
-                    result[resultKey] = [resultValue];
-                  }
-                  console.log('creating a list!', resultKey)
-                }
-              }
-              console.log('end shuffle result: ', result);
-
               if (config.notStore) {
                 return result[resultKey];
-              } else {//shuffle
-                if (Object.keys(result).length === 1) {
-                  try {
-                    console.log('map result is: ', result);
-                    const v = await global.promisify(global.distribution[storeGroup].store.put)(result[resultKey], resultKey);
-                    console.log('store complete:', v.length);
-                    console.log('store complete:', v);
-                    return Object.keys(result)[0];
-                  } catch (e) {
-                    throw e;
-                  }
-                } else {
-                  for (const resultKey of Object.keys(result)) {
-                    try {
-                      const v = await global.promisify(global.distribution[storeGroup].store.put)(result[resultKey], resultKey);
-                      console.log('store complete:', resultKey);
-                    } catch (e) {
-                      throw e;
-                    }
-                  }
-                  return Object.keys(result);
-                }
-
-
               }
+              //shuffle
+              // console.log('start shuffle!', result, Object.keys(result))
+              for (const resultKey of Object.keys(result)) {
+              //   let resultValue = result[resultKey];
+              //   console.log('shuffle resultKey: ', resultKey);
+              //   try {
+              //     //add random wait time to avoid race condition
+              //     // await new Promise(resolve => setTimeout(resolve, Math.floor(Math.random() * 100)));
+              //     let value = await promisify(global.distribution[storeGroup].mem.get)(resultKey);
+              //     console.log('before add: ', resultKey, value);
+              //     console.log('value to be added: ', resultValue);
+              //     if (Array.isArray(resultValue)) {
+              //       value.push(...resultValue);
+              //     } else {
+              //       value.push(resultValue);
+              //     }
+              //     result[resultKey] = value;
+              //     console.log('added to exsiting list: ', resultKey, result[resultKey]);
+
+              //   } catch (e) {//no key existed
+              //     console.log('error in shuffle! mem.get', e);
+              //     if (Array.isArray(resultValue)) {
+              //       result[resultKey] = resultValue;
+              //     } else {
+              //       result[resultKey] = [resultValue];
+              //     }
+              //     console.log('creating a list!', resultKey);
+              //   }
+                 //store to mem immediately
+                try {
+                  console.log('store to mem!', resultKey, result[resultKey]);
+                  const v = await global.promisify(global.distribution[storeGroup].mem.put)(result[resultKey], resultKey);
+                  console.log('store mem complete:', resultKey);
+                } catch (e) {
+                  console.log('error in store to mem!', e);
+                  throw e;
+                }
+              }
+              return Object.keys(result);
+              // console.log('end shuffle result: ', result);
+
+              // if (config.notStore) {
+              //   return result[resultKey];
+              // } else {//shuffle
+              //   if (Object.keys(result).length === 1) {
+              //     try {
+              //       console.log('map result is: ', result);
+              //       const v = await global.promisify(global.distribution[storeGroup].store.put)(result[resultKey], resultKey);
+              //       console.log('store complete:', v.length);
+              //       console.log('store complete:', v);
+              //       return Object.keys(result)[0];
+              //     } catch (e) {
+              //       throw e;
+              //     }
+              //   } else {
+                  
+              //     for (const resultKey of Object.keys(result)) {
+              //       try {
+              //         const v = await global.promisify(global.distribution[storeGroup].mem.put)(result[resultKey], resultKey);
+              //         console.log('store complete:', resultKey);
+              //       } catch (e) {
+              //         throw e;
+              //       }
+              //     }
+              //     return Object.keys(result);
+              //   }
+
+
+              // }
 
           }
 
@@ -138,9 +158,9 @@ const mr = function (config) {
           const callReduce = async (key) => {//return resultKey
             let value;
             try {
-              value = await promisify(global.distribution[storeGroup].store.get)(key);
+              value = await promisify(global.distribution[storeGroup].mem.get)(key);
             } catch (e) {
-              console.error('Error getting value from store: ', e);
+              console.error('Error getting value from mem: ', e);
               throw e;
             }
 
@@ -223,7 +243,7 @@ const mr = function (config) {
           // console.log('configuration.keys: ', configuration.keys);
         let completedRequests = 0;
         let errorsMap = {};
-        let mapResultKeys = new Set();
+        // let mapResultKeys = new Set();
         const checkAllDoneMap = () => {
           console.log('map completedRequests: ', completedRequests);
           if (completedRequests === totalRequests) {
@@ -295,18 +315,15 @@ const mr = function (config) {
           } else {
             let keysPerNode = Math.ceil(keys.length / numNodes);
             for (let i = 0; i < keys.length; i += keysPerNode) {
-              keySublists.push(keys.slice(i, i + keysPerNode));
+              keySublists.push(keys.slice(i, Math.min(i + keysPerNode, keys.length)));
             }
-            if (keys.length % keysPerNode !== 0) {
-              let lastBatch = keys.slice(-keys.length % keysPerNode);
-              keySublists.push(lastBatch);
-            }
+
           }
           return keySublists;
         }
         let keySublists = splitDataKeysIntoShards(configuration.keys);
 
-        console.log('Map: length of keySublists: ', keySublists.length, 'number of elements in keySublists: ', keySublists.reduce((total, sublist) => total + sublist.length, 0));
+        console.log('Map: length of keySublists: ', keySublists.length, 'number of elements in keySublists: ', keySublists.reduce((total, sublist) => total + sublist.length, 0), 'number of keys: ', configuration.keys.length);
 
         let mapPromises = [];
 
@@ -336,13 +353,13 @@ const mr = function (config) {
         try {
           let resultKeys = await Promise.all(mapPromises);
           console.log('map results: ', resultKeys);
-          resultKeys = resultKeys.flat(Infinity).slice(0, 10);
+          resultKeys = resultKeys.flat(Infinity);
           console.log('flat map results: ', resultKeys);
           if (configuration.reduce===null) {
             return resultKeys;
           }
           keySublists = splitDataKeysIntoShards(resultKeys);
-          console.log('Redudce: length of keySublists: ', keySublists.length, 'number of elements in keySublists: ', keySublists.reduce((total, sublist) => total + sublist.length, 0));
+          console.log('Reduce: length of keySublists: ', keySublists.length, 'number of elements in keySublists: ', keySublists.reduce((total, sublist) => total + sublist.length, 0), 'number of keys: ', resultKeys.length);
 
           let reducePromises = [];
           for (let i = 0; i < keySublists.length; i++) {
@@ -360,13 +377,14 @@ const mr = function (config) {
             }
             let args = [keySublist, context.gid, reduceConfig];
             console.log('reduce args: ', args);
+            console.log('reduce node: ', selectedNode);
             reducePromises.push(global.promisify(localComm.send)(args, remote));
           }
 
           try {
             let resultKeys = await Promise.all(reducePromises);
             console.log('reduce results: ', resultKeys);
-            resultKeys = resultKeys.flat();
+            resultKeys = resultKeys.flat(Infinity);
             console.log('flat reduce results: ', resultKeys);
             return resultKeys;
           } catch (e) {
