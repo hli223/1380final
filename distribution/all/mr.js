@@ -169,8 +169,23 @@ const mr = function (config) {
             
             const resultKey = Object.keys(result)[0];
             const resultValue = result[resultKey];
+
+
+            //store append to store final output
             try {
-              const v = await promisify(global.distribution[storeGroup].store.put)(resultValue, resultKey);
+              let existingValue;
+              try {
+                existingValue = await promisify(global.distribution[storeGroup].mem.get)(resultKey);
+              } catch (e) {
+                existingValue = null; // Key does not exist, handle as null
+              }
+              let newValue;
+              if (existingValue && Array.isArray(existingValue) && typeof existingValue[0] === 'object') { //if type if string, then that is still the data resulted from last subsystem
+                newValue = existingValue.concat(resultValue);
+              } else {
+                newValue = resultValue;
+              }
+              const v = await promisify(global.distribution[storeGroup].store.put)(newValue, resultKey);
               console.log('reduce store complete: ', v);
               return resultKey;
             } catch (e) {
