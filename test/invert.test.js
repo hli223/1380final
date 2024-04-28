@@ -161,14 +161,13 @@ test('(25 pts) Inverted index wordflow', (done) => {
         });
         console.log('the result of counting', docIds);
         // then sort the docIds by the number of occurrences in descending order
-        docIds = Object.entries(docIds).sort((a, b) => b[1] - a[1]).map((v) => {
+        docIds = Object.entries(docIds).map((v) => {
             let mapping = {};
             mapping[v[0]] = v[1];
             return mapping;
         });
-        console.log('the result of sorting', docIds);
+        console.log('the result of format convert:', docIds);
         out[term] = docIds;
-        //out[term] = {actualUrl1: count, actualUrl2: count,....}
 
         //out = {term1:[{actualUrl1: count}, {actualUrl2: count}, ...]} sort by number of occurences in descending order
         console.log('the result of reduce function', out);
