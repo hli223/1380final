@@ -19,18 +19,24 @@ mem.get = function(key, callback) {
   callback(new Error(`Failed to get: key ${key} does not exist`));
 };
 
-mem.put = function(value, key, callback) {
+mem.put = function(value, keyGid, callback) {
+    const key = keyGid.key;
   callback = callback || function() {};
   if (key === null) {
     key = id.getID(value);
   }
-  console.log('calling local mem put function!');
+  console.log('calling local mem put function!', value, key);
     if (this.tempMem.hasOwnProperty(key)) {
-        console.log(`key ${key} exists!`);
+        console.log('key exists!', key);
         if (!Array.isArray(this.tempMem[key])) {
             this.tempMem[key] = [this.tempMem[key]];
         }
-        this.tempMem[key].push(value);
+        if (Array.isArray(value)) {
+            this.tempMem[key] = this.tempMem[key].concat(value);
+        } else {
+            this.tempMem[key].push(value);
+        }
+        console.log('push to array!', this.tempMem[key]);
         callback(null, value);
         return;
     }

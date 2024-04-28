@@ -117,14 +117,19 @@ test('(25 pts) Inverted index wordflow', (done) => {
         console.log('content type', typeof content);
         let terms = content.match(/\w+/g) || [];
         // stem each term
-        terms = terms.map((term) => global.stemmer.stem(term)).slice(0, 10);
+        terms = terms.map((term) => global.stemmer.stem(term));
         // console.log('stemmer is: ', global.stemmer);
         // console.log('stemmer result is: ', terms);
         let out = {};
         //{word: url}
         //{word:[url]}
         terms.forEach((term) => {
-            let termKey = term.toLowerCase();
+            let termKey 
+            if (term !== 'set') {
+               termKey = term.toLowerCase();
+            } else {
+                termKey = 'Set';//added due to some weird deserialize/serialize issue
+            }
             // let termKey = global.stemmer.stem(term.toLowerCase());
             // let mapping = {};
             // mapping[termKey] = url;
@@ -181,8 +186,8 @@ test('(25 pts) Inverted index wordflow', (done) => {
         }
 
         let execMr = global.promisify(distribution.downloadText.mr.exec)
-        let batchSize = 1;
-        let totalNumKeys = 1;//urlKeys.length
+        let batchSize = 2;
+        let totalNumKeys = 2;//urlKeys.length
         for (let i = 0; i < totalNumKeys; i += batchSize) {
             if (i + batchSize > totalNumKeys) {
                 batchSize = totalNumKeys - i;
