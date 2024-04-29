@@ -18,10 +18,6 @@ let mem = (config) => {
         callback(e, null);
         return;
       }
-            // if (Object.keys(e).length!==0) {
-            //   callback(e, null);
-            //   return;
-            // }
             nodes = Object.values(perNodeViews)[0];
             if (key === null) {
               let totalRequests = Object.keys(nodes).length;
@@ -45,15 +41,16 @@ let mem = (config) => {
                   node: node,
                 };
                 let args = [{key: key, gid: context.gid}];
-                localComm.send(args, remote, (e, vPerNode) => {
-                  completedRequests++;
-                  console.log('vPerNOde', vPerNode);
+                try {
+                  const vPerNode = await global.promisify(localComm.send)(args, remote);
+                  console.log('vPerNode', vPerNode);
                   values = values.concat(vPerNode);
-                  if (e) {
-                    errors.push(e);
-                  }
-                  checkAllDone();
-                });
+                  completedRequests++;
+                } catch (e) {
+                  errors.push(e);
+                  completedRequests++;
+                }
+                checkAllDone();
               }
             } else {
                 console.log('all mem get: ', key);
@@ -72,7 +69,7 @@ let mem = (config) => {
                 console.log('all mem get success: ', key, v);
                 callback(null, v);
               } catch (e) {
-                console.error('all mem get error: ', key, e);
+                console.error('all mem get error: ', key, e, e.stack);
                 callback(e, null);
               }
             }

@@ -23,7 +23,7 @@ const mr = function (config) {
           const callMap = async (key) => {//return resultKey
             let value;
             try {
-              value = await promisify(global.distribution[gid].store.get)(key);
+              value = await global.promisify(global.distribution[gid].store.get)(key);
             } catch (e) {
               console.error('Error getting value from store: ', e);
               throw e;
@@ -102,10 +102,10 @@ const mr = function (config) {
           const callReduce = async (key) => {//return resultKey
             let value;
             try {
-              value = await promisify(global.distribution[storeGroup].mem.get)(key);
+              value = await global.promisify(global.distribution[storeGroup].mem.get)(key);
               console.log('successfully getting value for key: ', key, 'value: ', value);
             } catch (e) {
-              console.error('Error getting value from mem for key: ', key, 'error: ', e);
+              console.error('Error getting value from mem for key: ', key, 'error: ', e, e.stack);
               throw e;
             }
 
@@ -118,19 +118,7 @@ const mr = function (config) {
 
             //store append to store final output
             try {
-              // let existingValue;
-              // try {
-              //   existingValue = await promisify(global.distribution[storeGroup].mem.get)(resultKey);
-              // } catch (e) {
-              //   existingValue = null; // Key does not exist, handle as null
-              // }
-              // let newValue;
-              // if (existingValue && Array.isArray(existingValue) && typeof existingValue[0] === 'object') { //if type if string, then that is still the data resulted from last subsystem
-              //   newValue = existingValue.concat(resultValue);
-              // } else {
-              //   newValue = resultValue;
-              // }
-              const v = await promisify(global.distribution[storeGroup].store.put)(resultValue, resultKey);
+              const v = await global.promisify(global.distribution[storeGroup].store.put)(resultValue, resultKey);
               console.log('reduce store complete: ', resultKey, v);
               return resultKey;
             } catch (e) {
@@ -353,7 +341,7 @@ const mr = function (config) {
 
       doMapReduce().then(async (result) => {
         console.log('mapReduce result: ', result);
-        const clearResult = await promisify(global.distribution[context.gid].mem.clear)();
+        const clearResult = await global.promisify(global.distribution[context.gid].mem.clear)();
         console.log('Clear operation result:', clearResult);
         callback(null, result);
       }).catch((e) => {
