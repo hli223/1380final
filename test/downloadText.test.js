@@ -155,7 +155,7 @@ test('(25 pts) downloadText workflow', (done) => {
       let batch = urlKeys.slice(i, i + batchSize);
       console.log('batch: ', batch, i, i + batchSize, totalNumKeys);
       try {
-        await execMr({ keys: batch, map: m1, reduce: null, storeGroup: 'downloadText' });
+        await execMr({ keys: batch, map: m1, reduce: null, storeGroup: 'downloadText', intermediateStore: 'store' });//intermediateStore specify where to store intermediate values (store for disk, mem for memory)
       } catch (err) {
         console.error('downloadText errorr: ', err.stack);
         done(err);
@@ -165,7 +165,7 @@ test('(25 pts) downloadText workflow', (done) => {
       let lastBatch = urlKeys.slice(-totalNumKeys % batchSize);
       console.log('lastBatch: ', lastBatch, totalNumKeys % batchSize);
       try {
-        await execMr({ keys: lastBatch, map: m1, reduce: null, storeGroup: 'downloadText' });
+        await execMr({ keys: lastBatch, map: m1, reduce: null, storeGroup: 'downloadText', intermediateStore: 'store' });
       } catch (err) {
         console.error('downloadText errorr: ', err.stack);
         done(err);
