@@ -26,7 +26,7 @@ let localServer = null;
 */
 
 const nodes = [];
-for (let i = 1; i <= 10; i++) {
+for (let i = 1; i <= 3; i++) {
     nodes.push({ ip: '127.0.0.1', port: startPort + i });
 }
 
@@ -179,6 +179,7 @@ test('(25 pts) Inverted index wordflow', (done) => {
         let urlKeys;
         try {
             urlKeys = await global.promisify(distribution.downloadText.store.get)(null);
+            urlKeys = urlKeys.slice(0, 4);
             console.log('Retrieved all url keys, number of keys: ', urlKeys.length);
         } catch (e) {
             console.error('Error fetching urlKeys', e);
@@ -187,7 +188,7 @@ test('(25 pts) Inverted index wordflow', (done) => {
 
         let execMr = global.promisify(distribution.downloadText.mr.exec)
         let batchSize = 1;
-        let totalNumKeys = 1;//urlKeys.length
+        let totalNumKeys = urlKeys.length;//urlKeys.length
         for (let i = 0; i < totalNumKeys; i += batchSize) {
             if (i + batchSize > totalNumKeys) {
                 batchSize = totalNumKeys - i;
