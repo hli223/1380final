@@ -3,8 +3,9 @@ const mem = {
   tempMem: {},
 };
 
-mem.get = function(key, callback) {
+mem.get = function(keyGid, callback) {
   callback = callback || function() {};
+  let key = keyGid.key;
   if (key === null) {
     callback(null, Object.keys(this.tempMem));
     return;

@@ -111,8 +111,8 @@ test('(25 pts) Inverted index wordflow', (done) => {
         // content: string, the content of the document
         // output: array of objects, each object has a single key-value pair
         console.log('input obj is ', inputObj);
-        let url = inputObj[0].url;
-        let content = inputObj[0].htmlContent;
+        let url = inputObj.url;
+        let content = inputObj.htmlContent;
         console.log('map input is ', url, content);
         console.log('content type', typeof content);
         let terms = content.match(/\w+/g) || [];

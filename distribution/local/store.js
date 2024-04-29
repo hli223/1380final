@@ -24,17 +24,34 @@ store.gidKeys = {}
 
 store.get = function(keyGid, callback) {
   callback = callback || function() {};
-  if (keyGid.key === null) {
+  if (!keyGid.key) {
     // Return a list of keys under the specified gid
-    callback(null, store.gidKeys[keyGid.gid]);
+    fs.readdir(basePath, (error, files) => {
+      if (error) {
+        callback(error);
+      } else {
+        let keys = [];
+        files.forEach(file => {
+          let gidKeyId = file.split('-');
+          let gid = gidKeyId[0];
+          if (gid !== keyGid.gid) {
+            return;
+          }
+          let keyId = gidKeyId[gidKeyId.length - 1];
+          keys.push(Buffer.from(keyId, 'base64').toString());
+        });
+        callback(null, keys);
+      }
+    });
+
   } else {
     let key = keyGid.key;
     let gid = keyGid.gid;
-    let keyId = id.getID(key);
+    let keyId = Buffer.from(key).toString("base64");
     const filePath = path.join(basePath, gid + '-' + keyId);
     fs.readFile(filePath, (err, data) => {
       if (err) {
-        callback(new Error('Failed to get: key does not exist'));
+        callback(new Error(`Failed to retrieve the value: The key '${key}' does not exist in the store.`));
         return;
       }
       const value = serialization.deserialize(data.toString());
@@ -53,7 +70,7 @@ store.put = function(value, keyGid, callback) {
   if (key === null) {
     key = id.getID(value);
   }
-  let keyId = id.getID(key);
+  let keyId = Buffer.from(key).toString("base64");
   const filePath = path.join(basePath, gid+'-'+keyId);
   const serializedValue = serialization.serialize(value);
   fs.writeFile(filePath, serializedValue, (err) => {
@@ -72,10 +89,11 @@ store.del = function(keyGid, callback) {
   callback = callback || function() {};
   const key = keyGid.key;
   const gid = keyGid.gid;
-  const filePath = path.join(basePath, gid + '-' + key);
+  let keyId = Buffer.from(key).toString("base64");
+  const filePath = path.join(basePath, gid+'-'+keyId); 
   fs.readFile(filePath, (err, data) => {
     if (err) {
-      callback(new Error('Failed to readFile in delete, key: ' + key + ' err: ' + err));
+      callback(new Error(`Failed to delete: key does not exist, key: ${key} err: ${err}`));
       return;
     }
     const value = serialization.deserialize(data.toString());

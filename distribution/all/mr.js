@@ -70,6 +70,7 @@ const mr = function (config) {
               }
               //shuffle
               // console.log('start shuffle!', result, Object.keys(result))
+              let intermediateStore = config.intermediateStore;
               for (const resultKey of Object.keys(result)) {
               //   let resultValue = result[resultKey];
               //   console.log('shuffle resultKey: ', resultKey);
@@ -98,11 +99,11 @@ const mr = function (config) {
               //   }
                  //store to mem immediately
                 try {
-                  console.log('store to mem!', resultKey, result[resultKey]);
-                  const v = await global.promisify(global.distribution[storeGroup].mem.put)(result[resultKey], resultKey);
-                  console.log('store mem complete:', resultKey);
+                  console.log('store to ' + intermediateStore + '!', resultKey, result[resultKey]);
+                  const v = await global.promisify(global.distribution[storeGroup][intermediateStore].put)(result[resultKey], resultKey);
+                  console.log('store ' + intermediateStore + ' complete:', resultKey);
                 } catch (e) {
-                  console.log('error in store to mem!', e);
+                  console.log('error in store to ' + intermediateStore + '!', e);
                   throw e;
                 }
               }
@@ -141,9 +142,8 @@ const mr = function (config) {
           }
 
           Promise.all(keys.map(key => callMap(key)))
-            .then((results) => {
-              console.log('map success', results);
-              callback(null, results);
+            .then(() => {
+              callback(null, 'map phase done');
             })
             .catch((e) => {
               callback(e, null);
@@ -341,6 +341,14 @@ const mr = function (config) {
         console.log('Map: length of keySublists: ', keySublists.length, 'number of elements in keySublists: ', keySublists.reduce((total, sublist) => total + sublist.length, 0), 'number of keys: ', configuration.keys.length);
 
         let mapPromises = [];
+        let mapConfig = {
+          map: configuration.map,
+          compact: configuration.compact,
+          notStore: configuration.notStore,
+          notShuffle: configuration.notShuffle,
+          storeGroup: configuration.storeGroup,
+          intermediateStore: configuration.intermediateStore || 'mem'
+        }
 
         for (let i = 0; i < keySublists.length; i++) {
           const keySublist = keySublists[i];
@@ -352,13 +360,6 @@ const mr = function (config) {
             node: selectedNode,
           };
 
-          const mapConfig = {
-            map: configuration.map,
-            compact: configuration.compact,
-            notStore: configuration.notStore,
-            notShuffle: configuration.notShuffle,
-            storeGroup: configuration.storeGroup,
-          }
           let args = [keySublist, context.gid,
             mapConfig];
           console.log('map args: ', args);
@@ -366,12 +367,22 @@ const mr = function (config) {
           mapPromises.push(global.promisify(localComm.send)(args, remote));
         }
         try {
-          let resultKeys = await Promise.all(mapPromises);
-          console.log('map results: ', resultKeys);
-          resultKeys = resultKeys.flat(Infinity);
-          console.log('flat map results: ', resultKeys);
+          let mapResults = await Promise.all(mapPromises);
+          console.log('map results: ', mapResults);
+          if (mapResults.some(result => result instanceof Error)) {//we encounter error in map phase
+            return mapResults;
+          }
           if (configuration.reduce===null) {
-            return resultKeys;
+            return mapResults;
+          }
+          let resultKeys;
+          try {
+            console.log('fetching resultKeys from ', mapConfig.intermediateStore);
+            resultKeys = await global.promisify(global.distribution[context.gid][mapConfig.intermediateStore].get)(null);
+            console.log('Fetched resultKeys from memory: ', resultKeys);
+          } catch (e) {
+            console.error('Error fetching resultKeys from memory: ', e);
+            throw e;
           }
           keySublists = splitDataKeysIntoShards(resultKeys);
           console.log('Reduce: length of keySublists: ', keySublists.length, 'number of elements in keySublists: ', keySublists.reduce((total, sublist) => total + sublist.length, 0), 'number of keys: ', resultKeys.length);
