@@ -2,6 +2,7 @@ const startPort = 8000;
 global.nodeConfig = { ip: '127.0.0.1', port: startPort };
 const distribution = require('../distribution');
 const id = distribution.util.id;
+const readline = require('readline');
 
 const groupsTemplate = require('../distribution/all/groups');
 
@@ -103,7 +104,28 @@ afterAll((done) => {
 
 
 
-test('(25 pts) Query wordflow', (done) => {
+test('(25 pts) Query workflow', (done) => {
+    const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout
+    });
 
+    rl.question('Please enter your input: ', (term) => {
+        console.log(`Received input: ${term}`);
+        // fetch the urls containing the word
+        // I guess the dataload is not too large, so promise is not necessary
+        distribution.invertedIdx.store.get(term, (e, v) => {
+            if (e) {
+                console.log('Error: ', e);
+            } else {
+                console.log('Result: ', v);
+            }
+            // sort the url based on the number of occurrences of the word
+            // should check the format returned by the store
+            rl.close();
+            done();
+        });
+
+    });
 }, 800000);
 
