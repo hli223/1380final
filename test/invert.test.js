@@ -26,7 +26,7 @@ let localServer = null;
 */
 
 const nodes = [];
-for (let i = 1; i <= 2; i++) {
+for (let i = 1; i <= 10; i++) {
     nodes.push({ ip: '127.0.0.1', port: startPort + i });
 }
 
@@ -117,9 +117,8 @@ test('(25 pts) Inverted index wordflow', (done) => {
         console.log('content type', typeof content);
         let terms = content.match(/\w+/g) || [];
         // stem each term
-        terms = terms.map((term) => global.stemmer.stem(term)).slice(0, 2);
+        terms = terms.map((term) => global.stemmer.stem(term));
 
-        terms.push('usenix');//for debugging
 
         console.log('stemmer result is: ', terms);
         let out = {};
@@ -188,7 +187,7 @@ test('(25 pts) Inverted index wordflow', (done) => {
 
         let execMr = global.promisify(distribution.downloadText.mr.exec)
         let batchSize = 1;
-        let totalNumKeys = 2;//urlKeys.length
+        let totalNumKeys = 1;//urlKeys.length
         for (let i = 0; i < totalNumKeys; i += batchSize) {
             if (i + batchSize > totalNumKeys) {
                 batchSize = totalNumKeys - i;

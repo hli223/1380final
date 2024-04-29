@@ -9,15 +9,19 @@ let mem = (config) => {
   context.hash = config.hash || id.naiveHash;
 
   return {
-    get: (key, callback) => {
+    get: async (key, callback) => {
       callback = callback || function() {};
-      console.log('mem get context!!', context);
-      global.distribution[context.gid].groups.get(context.gid,
-          (e, perNodeViews) => {
-            if (Object.keys(e).length!==0) {
-              callback(e, null);
-              return;
-            }
+      let perNodeViews;
+      try {
+        perNodeViews = await global.promisify(global.distribution[context.gid].groups.get)(context.gid);
+      } catch (e) {
+        callback(e, null);
+        return;
+      }
+            // if (Object.keys(e).length!==0) {
+            //   callback(e, null);
+            //   return;
+            // }
             nodes = Object.values(perNodeViews)[0];
             if (key === null) {
               let totalRequests = Object.keys(nodes).length;
@@ -52,6 +56,7 @@ let mem = (config) => {
                 });
               }
             } else {
+                console.log('all mem get: ', key);
               const nids = Object.values(nodes).map((node) => id.getNID(node));
               const kid = id.getID(key);
               const selectedNid = context.hash(kid, nids);
@@ -62,29 +67,32 @@ let mem = (config) => {
                 node: selectedNode,
               };
               let args = [{key: key, gid: context.gid}];
-              localComm.send(args, remote, (e, v) => {
-                if (e) {
-                  callback(e, null);
-                  return;
-                }
-                console.log('non null key value:', v);
+              try {
+                const v = await global.promisify(localComm.send)(args, remote);
+                console.log('all mem get success: ', key, v);
                 callback(null, v);
-              });
+              } catch (e) {
+                console.error('all mem get error: ', key, e);
+                callback(e, null);
+              }
             }
-          });
+
     },
-    put: (value, key, callback) => {
+    put: async (value, key, callback) => {
       callback = callback || function() {};
-      console.log('mem put!! context', context);
       if (key === null) {
         key = id.getID(value);
       }
-      global.distribution[context.gid].groups.get(context.gid,
-          (e, perNodeViews) => {
-            if (Object.keys(e).length!==0) {
-              callback(e, null);
-              return;
-            }
+      try {
+        perNodeViews = await global.promisify(global.distribution[context.gid].groups.get)(context.gid);
+      } catch (e) {
+        callback(e, null);
+        return;
+      }
+            // if (Object.keys(e).length!==0) {
+            //   callback(e, null);
+            //   return;
+            // }
             nodes = Object.values(perNodeViews)[0];
             const nids = Object.values(nodes).map((node) => id.getNID(node));
             const kid = id.getID(key);
@@ -96,18 +104,18 @@ let mem = (config) => {
               method: 'put',
               node: selectedNode,
             };
+            console.log('all mem put: ', key, value);
 
             let args = [value, {key: key, gid: context.gid}];
-            localComm.send(args, remote, (e, v) => {
-              if (e) {
+            try {
+                const v = await global.promisify(localComm.send)(args, remote);
+                callback(null, v);
+            } catch (e) {
                 callback(e, null);
-                return;
-              }
-              callback(null, v);
-            });
-          });
+            }
+
     },
-    del: (key, callback) => {
+    del: async (key, callback) => {
       callback = callback || function() {};
       global.distribution[context.gid].groups.get(context.gid,
           (e, perNodeViews) => {
@@ -137,7 +145,7 @@ let mem = (config) => {
             });
           });
     },
-clear: (callback) => {
+clear: async (callback) => {
   callback = callback || function() {};
   global.distribution[context.gid].groups.get(context.gid,
       (e, perNodeViews) => {

@@ -11,10 +11,8 @@ mem.get = function(keyGid, callback) {
     callback(null, Object.keys(this.tempMem));
     return;
   }
-  if (typeof key !== 'string') {
-    key = key['key'];
-  }
   if (this.tempMem.hasOwnProperty(key)) {
+    console.log('local mem get success: ', key, this.tempMem[key]);
     callback(null, this.tempMem[key]);
     return;
   }
@@ -27,7 +25,7 @@ mem.put = function(value, keyGid, callback) {
   if (key === null) {
     key = id.getID(value);
   }
-  console.log('calling local mem put function!', keyGid, value, key);
+  // console.log('calling local mem put function!', keyGid, value, key);
     if (this.tempMem.hasOwnProperty(key)) {
         console.log('key exists!', key);
         if (!Array.isArray(this.tempMem[key])) {
@@ -38,7 +36,7 @@ mem.put = function(value, keyGid, callback) {
         } else {
             this.tempMem[key].push(value);
         }
-        console.log('push to array!', this.tempMem[key]);
+        // console.log('push to array!', this.tempMem[key]);
         callback(null, value);
         return;
     }

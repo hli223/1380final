@@ -26,7 +26,7 @@ let localServer = null;
 */
 
 const nodes = [];
-for (let i = 1; i <= 2; i++) {
+for (let i = 1; i <= 10; i++) {
   nodes.push({ ip: '127.0.0.1', port: startPort + i });
 }
 
@@ -157,7 +157,7 @@ test('(25 pts) downloadText workflow', (done) => {
       try {
         await execMr({ keys: batch, map: m1, reduce: null, storeGroup: 'downloadText', intermediateStore: 'store' });//intermediateStore specify where to store intermediate values (store for disk, mem for memory)
       } catch (err) {
-        console.error('downloadText errorr: ', err.stack);
+        console.error('downloadText errorr: ', err, err.stack);
         done(err);
       }
     }

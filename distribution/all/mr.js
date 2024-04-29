@@ -103,8 +103,9 @@ const mr = function (config) {
             let value;
             try {
               value = await promisify(global.distribution[storeGroup].mem.get)(key);
+              console.log('successfully getting value for key: ', key, 'value: ', value);
             } catch (e) {
-              console.error('Error getting value from mem: ', e);
+              console.error('Error getting value from mem for key: ', key, 'error: ', e);
               throw e;
             }
 
@@ -144,6 +145,7 @@ const mr = function (config) {
               callback(null, 'reduce phase done');
             })
             .catch((e) => {
+              console.error('reduce error within reduce: ', e);
               callback(e, null);
             });
         },

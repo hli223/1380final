@@ -1,6 +1,7 @@
 const id = require('../util/id');
 
 const localComm = require('../local/comm');
+const promisify = require('../util/promisify');
 
 let store = (config) => {
   let context = {};
@@ -9,7 +10,7 @@ let store = (config) => {
   context.hash = config.hash || id.naiveHash;
 
   return {
-    get: (key, callback) => {
+    get: async (key, callback) => {
       callback = callback || function() {};
       global.distribution[context.gid].groups.get(context.gid,
           (e, perNodeViews) => {
@@ -67,7 +68,7 @@ let store = (config) => {
             }
           });
     },
-    put: (value, key, callback) => {
+    put: async (value, key, callback) => {
       callback = callback || function() {};
       if (key === null) {
         key = id.getID(value);
@@ -101,7 +102,7 @@ let store = (config) => {
             });
           });
     },
-    del: (key, callback) => {
+    del: async (key, callback) => {
       callback = callback || function() {};
       global.distribution[context.gid].groups.get(context.gid,
           (e, perNodeViews) => {
