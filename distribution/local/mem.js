@@ -7,6 +7,7 @@ mem.get = function(keyGid, callback) {
   callback = callback || function() {};
   let key = keyGid.key;
   if (key === null) {
+    console.log('calling local mem get function! on null', this.tempMem, Object.keys(this.tempMem));
     callback(null, Object.keys(this.tempMem));
     return;
   }
@@ -26,7 +27,7 @@ mem.put = function(value, keyGid, callback) {
   if (key === null) {
     key = id.getID(value);
   }
-  console.log('calling local mem put function!', value, key);
+  console.log('calling local mem put function!', keyGid, value, key);
     if (this.tempMem.hasOwnProperty(key)) {
         console.log('key exists!', key);
         if (!Array.isArray(this.tempMem[key])) {
@@ -43,6 +44,11 @@ mem.put = function(value, keyGid, callback) {
     }
   this.tempMem[key] = value;
   callback(null, value);
+};
+
+mem.clear = function(callback) {
+    this.tempMem = {};
+    callback(null, null);
 };
 
 mem.del = function(key, callback) {

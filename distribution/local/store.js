@@ -64,6 +64,7 @@ store.put = function(value, keyGid, callback) {
 //   if (!fs.existsSync(basePath)) {
 //     fs.mkdirSync(basePath, {recursive: true});
 //   }
+console.log('local storing! ', value, keyGid);
   callback = callback || function() {};
   let key = keyGid.key;
   let gid = keyGid.gid;
@@ -79,22 +80,31 @@ store.put = function(value, keyGid, callback) {
       return;
     }
     let finalData = serializedValue;
+    console.log('final data before: ', finalData, 'existingData: ', existingData, 'key: ', key);
     
-    if (!readErr) {
+    
+    if (existingData) {
+      console.log('existing data is not null', existingData.toString());
       try {
         const existingValue = serialization.deserialize(existingData.toString());
-        console.log('appending to existing data', existingValue, serializedValue)
+        const newValue = serialization.deserialize(serializedValue);
+        
         if (Array.isArray(existingValue)) {
-          finalData = serialization.serialize(existingValue.concat(serialization.deserialize(serializedValue)));
+          finalData = existingValue.concat(newValue);
         } else {
-          finalData = serialization.serialize([existingValue].concat(serialization.deserialize(serializedValue)));
+          finalData = existingValue.concat(newValue);
         }
+        console.log('found existing data in file for key', key, filePath, existingValue);
+        console.log('new value to be appended', newValue);
+        console.log('appending to existing data', finalData)
+        finalData = serialization.serialize(finalData);
       } catch (deserializationError) {
         callback(deserializationError);
         return;
       }
     }
     fs.writeFile(filePath, finalData, (writeErr) => {
+      console.log('writing to file', filePath, serialization.deserialize(finalData));
       if (writeErr) {
         callback(writeErr);
         return;
@@ -106,17 +116,8 @@ store.put = function(value, keyGid, callback) {
         store.gidKeys[gid].push(key);
       }
       callback(null, value);
+      return;
     });
-  });
-  fs.writeFile(filePath, serializedValue, (err) => {
-    if (err) return callback(err);
-    if (!store.gidKeys[gid]) {
-      store.gidKeys[gid] = [];
-    }
-    if (!store.gidKeys[gid].includes(key)) {
-      store.gidKeys[gid].push(key);
-    }
-    callback(null, value);
   });
 };
 

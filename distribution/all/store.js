@@ -91,6 +91,7 @@ let store = (config) => {
             };
 
             let args = [value, {key: key, gid: context.gid}];
+            console.log('storing!', args);
             localComm.send(args, remote, (e, v) => {
               if (e) {
                 callback(e, null);

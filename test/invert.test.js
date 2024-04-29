@@ -117,9 +117,11 @@ test('(25 pts) Inverted index wordflow', (done) => {
         console.log('content type', typeof content);
         let terms = content.match(/\w+/g) || [];
         // stem each term
-        terms = terms.map((term) => global.stemmer.stem(term));
-        // console.log('stemmer is: ', global.stemmer);
-        // console.log('stemmer result is: ', terms);
+        terms = terms.map((term) => global.stemmer.stem(term)).slice(0, 2);
+
+        terms.push('usenix');//for debugging
+
+        console.log('stemmer result is: ', terms);
         let out = {};
         //{word: url}
         //{word:[url]}

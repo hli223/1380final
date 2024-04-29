@@ -117,20 +117,20 @@ const mr = function (config) {
 
             //store append to store final output
             try {
-              let existingValue;
-              try {
-                existingValue = await promisify(global.distribution[storeGroup].mem.get)(resultKey);
-              } catch (e) {
-                existingValue = null; // Key does not exist, handle as null
-              }
-              let newValue;
-              if (existingValue && Array.isArray(existingValue) && typeof existingValue[0] === 'object') { //if type if string, then that is still the data resulted from last subsystem
-                newValue = existingValue.concat(resultValue);
-              } else {
-                newValue = resultValue;
-              }
-              const v = await promisify(global.distribution[storeGroup].store.put)(newValue, resultKey);
-              console.log('reduce store complete: ', v);
+              // let existingValue;
+              // try {
+              //   existingValue = await promisify(global.distribution[storeGroup].mem.get)(resultKey);
+              // } catch (e) {
+              //   existingValue = null; // Key does not exist, handle as null
+              // }
+              // let newValue;
+              // if (existingValue && Array.isArray(existingValue) && typeof existingValue[0] === 'object') { //if type if string, then that is still the data resulted from last subsystem
+              //   newValue = existingValue.concat(resultValue);
+              // } else {
+              //   newValue = resultValue;
+              // }
+              const v = await promisify(global.distribution[storeGroup].store.put)(resultValue, resultKey);
+              console.log('reduce store complete: ', resultKey, v);
               return resultKey;
             } catch (e) {
               throw e;
@@ -139,7 +139,7 @@ const mr = function (config) {
           }
 
           Promise.all(keys.map(key => callReduce(key)))
-            .then((results) => {
+            .then(async (results) => {
               console.log('reduce success', results);
               callback(null, 'reduce phase done');
             })
@@ -349,8 +349,10 @@ const mr = function (config) {
 
       }
 
-      doMapReduce().then((result) => {
+      doMapReduce().then(async (result) => {
         console.log('mapReduce result: ', result);
+        const clearResult = await promisify(global.distribution[context.gid].mem.clear)();
+        console.log('Clear operation result:', clearResult);
         callback(null, result);
       }).catch((e) => {
         callback(e, null);
