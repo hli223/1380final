@@ -73,6 +73,41 @@ store.put = function(value, keyGid, callback) {
   let keyId = Buffer.from(key).toString("base64");
   const filePath = path.join(basePath, gid+'-'+keyId);
   const serializedValue = serialization.serialize(value);
+  fs.readFile(filePath, (readErr, existingData) => {
+    if (readErr && readErr.code !== 'ENOENT') {
+      callback(readErr);
+      return;
+    }
+    let finalData = serializedValue;
+    
+    if (!readErr) {
+      try {
+        const existingValue = serialization.deserialize(existingData.toString());
+        console.log('appending to existing data', existingValue, serializedValue)
+        if (Array.isArray(existingValue)) {
+          finalData = serialization.serialize(existingValue.concat(serialization.deserialize(serializedValue)));
+        } else {
+          finalData = serialization.serialize([existingValue].concat(serialization.deserialize(serializedValue)));
+        }
+      } catch (deserializationError) {
+        callback(deserializationError);
+        return;
+      }
+    }
+    fs.writeFile(filePath, finalData, (writeErr) => {
+      if (writeErr) {
+        callback(writeErr);
+        return;
+      }
+      if (!store.gidKeys[gid]) {
+        store.gidKeys[gid] = [];
+      }
+      if (!store.gidKeys[gid].includes(key)) {
+        store.gidKeys[gid].push(key);
+      }
+      callback(null, value);
+    });
+  });
   fs.writeFile(filePath, serializedValue, (err) => {
     if (err) return callback(err);
     if (!store.gidKeys[gid]) {

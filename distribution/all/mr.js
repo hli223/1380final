@@ -72,32 +72,6 @@ const mr = function (config) {
               // console.log('start shuffle!', result, Object.keys(result))
               let intermediateStore = config.intermediateStore;
               for (const resultKey of Object.keys(result)) {
-              //   let resultValue = result[resultKey];
-              //   console.log('shuffle resultKey: ', resultKey);
-              //   try {
-              //     //add random wait time to avoid race condition
-              //     // await new Promise(resolve => setTimeout(resolve, Math.floor(Math.random() * 100)));
-              //     let value = await promisify(global.distribution[storeGroup].mem.get)(resultKey);
-              //     console.log('before add: ', resultKey, value);
-              //     console.log('value to be added: ', resultValue);
-              //     if (Array.isArray(resultValue)) {
-              //       value.push(...resultValue);
-              //     } else {
-              //       value.push(resultValue);
-              //     }
-              //     result[resultKey] = value;
-              //     console.log('added to exsiting list: ', resultKey, result[resultKey]);
-
-              //   } catch (e) {//no key existed
-              //     console.log('error in shuffle! mem.get', e);
-              //     if (Array.isArray(resultValue)) {
-              //       result[resultKey] = resultValue;
-              //     } else {
-              //       result[resultKey] = [resultValue];
-              //     }
-              //     console.log('creating a list!', resultKey);
-              //   }
-                 //store to mem immediately
                 try {
                   console.log('store to ' + intermediateStore + '!', resultKey, result[resultKey]);
                   const v = await global.promisify(global.distribution[storeGroup][intermediateStore].put)(result[resultKey], resultKey);
@@ -108,36 +82,6 @@ const mr = function (config) {
                 }
               }
               return Object.keys(result);
-              // console.log('end shuffle result: ', result);
-
-              // if (config.notStore) {
-              //   return result[resultKey];
-              // } else {//shuffle
-              //   if (Object.keys(result).length === 1) {
-              //     try {
-              //       console.log('map result is: ', result);
-              //       const v = await global.promisify(global.distribution[storeGroup].store.put)(result[resultKey], resultKey);
-              //       console.log('store complete:', v.length);
-              //       console.log('store complete:', v);
-              //       return Object.keys(result)[0];
-              //     } catch (e) {
-              //       throw e;
-              //     }
-              //   } else {
-                  
-              //     for (const resultKey of Object.keys(result)) {
-              //       try {
-              //         const v = await global.promisify(global.distribution[storeGroup].mem.put)(result[resultKey], resultKey);
-              //         console.log('store complete:', resultKey);
-              //       } catch (e) {
-              //         throw e;
-              //       }
-              //     }
-              //     return Object.keys(result);
-              //   }
-
-
-              // }
 
           }
 
@@ -197,35 +141,11 @@ const mr = function (config) {
           Promise.all(keys.map(key => callReduce(key)))
             .then((results) => {
               console.log('reduce success', results);
-              callback(null, results);
+              callback(null, 'reduce phase done');
             })
             .catch((e) => {
               callback(e, null);
             });
-
-
-          // global.distribution[gid].store.get(key, (e, value) => {
-          //   if (e) {
-          //     console.log('error in reduce: ', e);
-          //     callback(e, null);
-          //   }
-          //   try {
-          //     console.log('reduce key: ', key, 'value: ', value);
-          //     console.log('error in try', e);
-          //     let result = config.reduce(key, value);
-          //     console.log('reduce result in the infrastructure: ', result);
-          //     global.distribution[gid].store.put(result, key, (e, result) => {
-          //       if (e) {
-          //         console.log('error in reduce store.put: ', e);
-          //         callback(e, null);
-          //       }
-          //       callback(null, result);
-          //     });
-          //   } catch (e) {
-          //     console.log('reduce error: ', e);
-          //     callback(e, null);
-          //   }
-          // });
         },
       };
       mrServiceName = 'mr-' + id.getSID(mrService);

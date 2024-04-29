@@ -185,7 +185,7 @@ test('(25 pts) Inverted index wordflow', (done) => {
         }
 
         let execMr = global.promisify(distribution.downloadText.mr.exec)
-        let batchSize = 2;
+        let batchSize = 1;
         let totalNumKeys = 2;//urlKeys.length
         for (let i = 0; i < totalNumKeys; i += batchSize) {
             if (i + batchSize > totalNumKeys) {
