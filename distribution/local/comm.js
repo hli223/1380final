@@ -38,7 +38,7 @@ const comm = {
       'method': "PUT",
       'headers': {
         'Content-Type': "application/json",
-        'Content-Length': Buffer.byteLength(serializedMessage)
+        'Content-Length': serializedMessage.length
         // serializedMessage.length
       }
     };

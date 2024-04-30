@@ -67,6 +67,7 @@ let mem = (config) => {
                 node: selectedNode,
               };
               let args = [{key: key, gid: context.gid}];
+              await new Promise(resolve => setTimeout(resolve, 50));
               try {
                 const v = await global.promisify(localComm.send)(args, remote);
                 console.log('all mem get success: ', key, v);
