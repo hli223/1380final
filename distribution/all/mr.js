@@ -142,13 +142,14 @@ const mr = function (config) {
       };
       mrServiceName = 'mr-' + id.getSID(mrService);
       const doMapReduce = async () => {
+
         if (prevNodes === null) {
           try {
-            prevNodes = await global.promisify(global.distribution['invertedIdx'].groups.get)('invertedIdx');
+            prevNodes = await global.promisify(global.distribution[context.gid].groups.get)(context.gid);
             console.log('prevNodes in invert index: ', prevNodes);
           } catch (e) {
             console.log('error in getting prevNodes for invert index: ', e);
-            done(e)
+            throw e;
           }
         }
 
