@@ -125,9 +125,9 @@ test('(25 pts) Inverted index wordflow', (done) => {
         //{word: url}
         //{word:[url]}
         terms.forEach((term) => {
-            let termKey 
+            let termKey
             if (term !== 'set') {
-               termKey = term.toLowerCase();
+                termKey = term.toLowerCase();
             } else {
                 termKey = 'Set';//added due to some weird deserialize/serialize issue
             }
@@ -179,7 +179,7 @@ test('(25 pts) Inverted index wordflow', (done) => {
         let urlKeys;
         try {
             urlKeys = await global.promisify(distribution.downloadText.store.get)(null);
-            urlKeys = urlKeys.slice(0, 4);
+            // urlKeys = urlKeys.slice(0, 4);
             console.log('Retrieved all url keys, number of keys: ', urlKeys.length);
         } catch (e) {
             console.error('Error fetching urlKeys', e);
