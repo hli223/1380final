@@ -118,7 +118,13 @@ test('(25 pts) Query workflow', (done) => {
             if (e) {
                 console.log('Error: ', e);
             } else {
-                console.log('Result: ', v);
+                // rank the urls based on the number of occurrences of the word
+                // the v should be in form of [{url: count}, ...]
+                const sortedUrls = v.sort((a, b) => {
+                    return b[Object.keys(b)[0]] - a[Object.keys(a)[0]];
+                });
+                console.log('Sorted URLs: ', sortedUrls);
+                // console.log('Result: ', v);
             }
             // sort the url based on the number of occurrences of the word
             // should check the format returned by the store
