@@ -185,16 +185,8 @@ test('(25 pts) Inverted index wordflow', (done) => {
             console.error('Error fetching urlKeys', e);
             done(e);
         }
-        let prevNodes;
-        try {
-          prevNodes = await global.promisify(global.distribution['invertedIdx'].groups.get)('invertedIdx');
-          console.log('prevNodes in invert index: ', prevNodes);
-        } catch (e) {
-          console.log('error in getting prevNodes for invert index: ', e);
-          done(e)
-        }
+
         let configuration = { map: m1, reduce: r1, storeGroup: 'invertedIdx' };
-        configuration.prevNodes = prevNodes;
 
         let execMr = global.promisify(distribution.downloadText.mr.exec)
         let batchSize = 3;
