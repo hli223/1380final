@@ -5,7 +5,7 @@ const id = distribution.util.id;
 const fs = require('fs');
 
 const groupsTemplate = require('../distribution/all/groups');
-const ipAddresses = ['127.0.0.1', '127.0.0.1', '127.0.0.1']
+const ipAddresses = ['18.225.175.3', '3.142.135.227']
 
 const crawlUrlGroup = {};
 const downloadTextGroup = {};
@@ -29,7 +29,7 @@ let localServer = null;
 // console.log('numNodes: ' + numNodes+'\n');
 
 const nodes = [];
-for (let i = 1; i <= 3; i++) {
+for (let i = 1; i <= ipAddresses.length; i++) {
   nodes.push({ ip: ipAddresses[i-1], port: startPort + i });
 }
 
