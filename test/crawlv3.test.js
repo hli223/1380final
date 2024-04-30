@@ -5,7 +5,7 @@ const id = distribution.util.id;
 const fs = require('fs');
 
 const groupsTemplate = require('../distribution/all/groups');
-
+const ipAddresses = ['127.0.0.1', '127.0.0.1', '127.0.0.1']
 
 const crawlUrlGroup = {};
 const downloadTextGroup = {};
@@ -30,7 +30,7 @@ let localServer = null;
 
 const nodes = [];
 for (let i = 1; i <= 3; i++) {
-  nodes.push({ ip: '127.0.0.1', port: startPort + i });
+  nodes.push({ ip: ipAddresses[i-1], port: startPort + i });
 }
 
 
@@ -170,6 +170,7 @@ test('(25 pts) crawler workflow', (done) => {
       global.promisify(distribution.crawlUrl.store.put)(url, urlKey)
     );
   }
+  let configuration = { map: m1, reduce: null, notStore: true, returnMapResult: true, notShuffle: true }
   Promise.all(promises).then(async () => {
     let batchSize = 20;
     for (let i = 0; i < totalPages; i += batchSize) {
@@ -177,16 +178,18 @@ test('(25 pts) crawler workflow', (done) => {
         batchSize = totalPages - i;
       }
       let batch = urlKeys.slice(i, i + batchSize);
+      configuration.keys = batch;
       try {
-        await execMr({ keys: batch, map: m1, reduce: null, notStore: true, returnMapResult: true, notShuffle: true });
+        await execMr(configuration);
       } catch (error) {
         console.error('Error in execMr: ', error);
       }
     }
     if (totalPages % batchSize !== 0) {
       let lastBatch = urlKeys.slice(-totalPages % batchSize);
+      configuration.keys = lastBatch;
       try {
-        await execMr({ keys: lastBatch, map: m1, reduce: null, notStore: true, returnMapResult: true, notShuffle: true });
+        await execMr(configuration);
       } catch (error) {
         console.error('Error in execMr: ', error);
       }
