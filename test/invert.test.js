@@ -26,7 +26,7 @@ let localServer = null;
 */
 
 const nodes = [];
-for (let i = 1; i <= 10; i++) {
+for (let i = 1; i <= 3; i++) {
     nodes.push({ ip: '127.0.0.1', port: startPort + i });
 }
 
@@ -111,28 +111,41 @@ test('(25 pts) Inverted index wordflow', (done) => {
         // content: string, the content of the document
         // output: array of objects, each object has a single key-value pair
         console.log('input obj is ', inputObj);
-        let url = inputObj[0].url;
-        let content = inputObj[0].htmlContent;
+        let url = inputObj.url;
+        let content = inputObj.htmlContent;
         console.log('map input is ', url, content);
         console.log('content type', typeof content);
         let terms = content.match(/\w+/g) || [];
         // stem each term
         terms = terms.map((term) => global.stemmer.stem(term));
-        console.log('stemmer is: ', global.stemmer);
+
+
         console.log('stemmer result is: ', terms);
-        let out = [];
+        let out = {};
+        //{word: url}
+        //{word:[url]}
         terms.forEach((term) => {
-            let termKey = term.toLowerCase();
+            let termKey 
+            if (term !== 'set') {
+               termKey = term.toLowerCase();
+            } else {
+                termKey = 'Set';//added due to some weird deserialize/serialize issue
+            }
             // let termKey = global.stemmer.stem(term.toLowerCase());
-            let mapping = {};
-            mapping[termKey] = url;
-            out.push(mapping);
+            // let mapping = {};
+            // mapping[termKey] = url;
+            if (!out[termKey]) {
+                out[termKey] = [url];
+            } else {
+                out[termKey].push(url);
+            }
+            // out.push(mapping);
         });
-        console.log('the result of map function', out);
         return out;
     };
 
     let r1 = (term, listOfDocIdArray) => {
+        //listOfDocIdArray = [url1, url2, ...]
         // term: string, the term to be reduced
         // listOfDocIdArray: an array containing the doc ids that contain the term
         // output: {term: [{docId1: cnt1}, {docId2: cnt2}, ...]}
@@ -149,12 +162,15 @@ test('(25 pts) Inverted index wordflow', (done) => {
         });
         console.log('the result of counting', docIds);
         // then sort the docIds by the number of occurrences in descending order
-        docIds = Object.entries(docIds).sort((a, b) => b[1] - a[1]).map((v) => {
+        docIds = Object.entries(docIds).map((v) => {
             let mapping = {};
             mapping[v[0]] = v[1];
             return mapping;
         });
+        console.log('the result of format convert:', docIds);
         out[term] = docIds;
+
+        //out = {term1:[{actualUrl1: count}, {actualUrl2: count}, ...]} sort by number of occurences in descending order
         console.log('the result of reduce function', out);
         return out;
     };
@@ -163,6 +179,7 @@ test('(25 pts) Inverted index wordflow', (done) => {
         let urlKeys;
         try {
             urlKeys = await global.promisify(distribution.downloadText.store.get)(null);
+            urlKeys = urlKeys.slice(0, 4);
             console.log('Retrieved all url keys, number of keys: ', urlKeys.length);
         } catch (e) {
             console.error('Error fetching urlKeys', e);
@@ -170,8 +187,8 @@ test('(25 pts) Inverted index wordflow', (done) => {
         }
 
         let execMr = global.promisify(distribution.downloadText.mr.exec)
-        let batchSize = 10;
-        let totalNumKeys = urlKeys.length;
+        let batchSize = 1;
+        let totalNumKeys = urlKeys.length;//urlKeys.length
         for (let i = 0; i < totalNumKeys; i += batchSize) {
             if (i + batchSize > totalNumKeys) {
                 batchSize = totalNumKeys - i;

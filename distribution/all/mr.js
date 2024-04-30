@@ -23,7 +23,7 @@ const mr = function (config) {
           const callMap = async (key) => {//return resultKey
             let value;
             try {
-              value = await promisify(global.distribution[gid].store.get)(key);
+              value = await global.promisify(global.distribution[gid].store.get)(key);
             } catch (e) {
               console.error('Error getting value from store: ', e);
               throw e;
@@ -47,6 +47,7 @@ const mr = function (config) {
                 result = config.compact(result);
               }
               console.log('end processing key: ', key, 'value: ', value);
+              console.log('user defined map result: ', result);
               let storeGroup = config.storeGroup || gid;
               console.log('storeGroup: ', storeGroup);
               const resultKey = Object.keys(result)[0];
@@ -64,45 +65,29 @@ const mr = function (config) {
                 }
                 return resultKey;
               }
-
-              try {
-                let value = await promisify(global.distribution[storeGroup].store.get)(resultKey);
-                if (Array.isArray(resultValue)) {
-                  value.push(...resultValue);
-                } else {
-                  value.push(resultValue);
-                }
-                result[resultKey] = value;
-                console.log('added to exsiting list: ', result)
-              } catch (e) {
-                if (Array.isArray(resultValue)) {
-                  result[resultKey] = resultValue;
-                } else {
-                  result[resultKey] = [resultValue];
-                }
-                console.log('creating a list!', result)
-              }
-
               if (config.notStore) {
                 return result[resultKey];
-              } else {//shuffle
+              }
+              //shuffle
+              // console.log('start shuffle!', result, Object.keys(result))
+              let intermediateStore = config.intermediateStore;
+              for (const resultKey of Object.keys(result)) {
                 try {
-                  const v = await global.promisify(global.distribution[storeGroup].store.put)(result[resultKey], resultKey);
-                  console.log('store complete:', v.length);
-                  console.log('store complete:', v);
-                  return resultKey;
+                  console.log('store to ' + intermediateStore + '!', resultKey, result[resultKey]);
+                  const v = await global.promisify(global.distribution[storeGroup][intermediateStore].put)(result[resultKey], resultKey);
+                  console.log('store ' + intermediateStore + ' complete:', resultKey);
                 } catch (e) {
+                  console.log('error in store to ' + intermediateStore + '!', e);
                   throw e;
                 }
-
               }
+              return Object.keys(result);
 
           }
 
           Promise.all(keys.map(key => callMap(key)))
-            .then((results) => {
-              console.log('map success', results);
-              callback(null, results);
+            .then(() => {
+              callback(null, 'map phase done');
             })
             .catch((e) => {
               callback(e, null);
@@ -110,31 +95,47 @@ const mr = function (config) {
 
 
         },
-        reduce: (key, gid, r, callback) => {
-          console.log('reduce key before store.get: ', key);
+        reduce: (keys, gid, config, callback) => {
+          console.log('reduce keys before store.get: ', keys);
+          let storeGroup = config.storeGroup || gid;  
           callback = callback || function () { };
-          global.distribution[gid].store.get(key, (e, value) => {
-            if (e) {
-              console.log('error in reduce: ', e);
-              callback(e, null);
-            }
+          const callReduce = async (key) => {//return resultKey
+            let value;
             try {
-              console.log('reduce key: ', key, 'value: ', value);
-              console.log('error in try', e);
-              let result = r(key, value);
-              console.log('reduce result in the infrastructure: ', result);
-              global.distribution[gid].store.put(result, key, (e, result) => {
-                if (e) {
-                  console.log('error in reduce store.put: ', e);
-                  callback(e, null);
-                }
-                callback(null, result);
-              });
+              value = await global.promisify(global.distribution[storeGroup].mem.get)(key);
+              console.log('successfully getting value for key: ', key, 'value: ', value);
             } catch (e) {
-              console.log('reduce error: ', e);
-              callback(e, null);
+              console.error('Error getting value from mem for key: ', key, 'error: ', e, e.stack);
+              throw e;
             }
-          });
+
+            let result;
+            result = config.reduce(key, value);
+            
+            const resultKey = Object.keys(result)[0];
+            const resultValue = result[resultKey];
+
+
+            //store append to store final output
+            try {
+              const v = await global.promisify(global.distribution[storeGroup].store.put)(resultValue, resultKey);
+              console.log('reduce store complete: ', resultKey, v);
+              return resultKey;
+            } catch (e) {
+              throw e;
+            }
+
+          }
+
+          Promise.all(keys.map(key => callReduce(key)))
+            .then(async (results) => {
+              console.log('reduce success', results);
+              callback(null, 'reduce phase done');
+            })
+            .catch((e) => {
+              console.error('reduce error within reduce: ', e);
+              callback(e, null);
+            });
         },
       };
       mrServiceName = 'mr-' + id.getSID(mrService);
@@ -167,7 +168,7 @@ const mr = function (config) {
           // console.log('configuration.keys: ', configuration.keys);
         let completedRequests = 0;
         let errorsMap = {};
-        let mapResultKeys = new Set();
+        // let mapResultKeys = new Set();
         const checkAllDoneMap = () => {
           console.log('map completedRequests: ', completedRequests);
           if (completedRequests === totalRequests) {
@@ -239,20 +240,25 @@ const mr = function (config) {
           } else {
             let keysPerNode = Math.ceil(keys.length / numNodes);
             for (let i = 0; i < keys.length; i += keysPerNode) {
-              keySublists.push(keys.slice(i, i + keysPerNode));
+              keySublists.push(keys.slice(i, Math.min(i + keysPerNode, keys.length)));
             }
-            if (keys.length % keysPerNode !== 0) {
-              let lastBatch = keys.slice(-keys.length % keysPerNode);
-              keySublists.push(lastBatch);
-            }
+
           }
           return keySublists;
         }
         let keySublists = splitDataKeysIntoShards(configuration.keys);
 
-        console.log('Map: length of keySublists: ', keySublists.length, 'number of elements in keySublists: ', keySublists.reduce((total, sublist) => total + sublist.length, 0));
+        console.log('Map: length of keySublists: ', keySublists.length, 'number of elements in keySublists: ', keySublists.reduce((total, sublist) => total + sublist.length, 0), 'number of keys: ', configuration.keys.length);
 
         let mapPromises = [];
+        let mapConfig = {
+          map: configuration.map,
+          compact: configuration.compact,
+          notStore: configuration.notStore,
+          notShuffle: configuration.notShuffle,
+          storeGroup: configuration.storeGroup,
+          intermediateStore: configuration.intermediateStore || 'mem'
+        }
 
         for (let i = 0; i < keySublists.length; i++) {
           const keySublist = keySublists[i];
@@ -264,13 +270,6 @@ const mr = function (config) {
             node: selectedNode,
           };
 
-          const mapConfig = {
-            map: configuration.map,
-            compact: configuration.compact,
-            notStore: configuration.notStore,
-            notShuffle: configuration.notShuffle,
-            storeGroup: configuration.storeGroup,
-          }
           let args = [keySublist, context.gid,
             mapConfig];
           console.log('map args: ', args);
@@ -278,26 +277,56 @@ const mr = function (config) {
           mapPromises.push(global.promisify(localComm.send)(args, remote));
         }
         try {
-          let resultKeys = await Promise.all(mapPromises);
-          console.log('map results: ', resultKeys);
-          resultKeys = resultKeys.flat();
-          console.log('flat map results: ', resultKeys);
+          let mapResults = await Promise.all(mapPromises);
+          console.log('map results: ', mapResults);
+          if (mapResults.some(result => result instanceof Error)) {//we encounter error in map phase
+            return mapResults;
+          }
           if (configuration.reduce===null) {
-            return resultKeys;
+            return mapResults;
+          }
+          let resultKeys;
+          try {
+            console.log('fetching resultKeys from ', mapConfig.intermediateStore);
+            resultKeys = await global.promisify(global.distribution[context.gid][mapConfig.intermediateStore].get)(null);
+            console.log('Fetched resultKeys from memory: ', resultKeys);
+          } catch (e) {
+            console.error('Error fetching resultKeys from memory: ', e);
+            throw e;
           }
           keySublists = splitDataKeysIntoShards(resultKeys);
-          console.log('Redudce: length of keySublists: ', keySublists.length, 'number of elements in keySublists: ', keySublists.reduce((total, sublist) => total + sublist.length, 0));
+          console.log('Reduce: length of keySublists: ', keySublists.length, 'number of elements in keySublists: ', keySublists.reduce((total, sublist) => total + sublist.length, 0), 'number of keys: ', resultKeys.length);
 
           let reducePromises = [];
           for (let i = 0; i < keySublists.length; i++) {
             const keySublist = keySublists[i];
+            console.log('calling reduce on keys: ', keySublist);
+            const selectedNode = nodes[Object.keys(nodes)[i]];
+            let remote = {
+              service: mrServiceName,
+              method: 'reduce',
+              node: selectedNode,
+            };
+            const reduceConfig = {
+              reduce: configuration.reduce,
+              storeGroup: configuration.storeGroup,
+            }
+            let args = [keySublist, context.gid, reduceConfig];
+            console.log('reduce args: ', args);
+            console.log('reduce node: ', selectedNode);
+            reducePromises.push(global.promisify(localComm.send)(args, remote));
           }
 
-
-
-
-
-
+          try {
+            let resultKeys = await Promise.all(reducePromises);
+            console.log('reduce results: ', resultKeys);
+            resultKeys = resultKeys.flat(Infinity);
+            console.log('flat reduce results: ', resultKeys);
+            return resultKeys;
+          } catch (e) {
+            console.log('reduce error: ', e);
+            throw e;
+          }
 
         } catch (e) {
           console.log('map error: ', e);
@@ -310,8 +339,10 @@ const mr = function (config) {
 
       }
 
-      doMapReduce().then((result) => {
+      doMapReduce().then(async (result) => {
         console.log('mapReduce result: ', result);
+        const clearResult = await global.promisify(global.distribution[context.gid].mem.clear)();
+        console.log('Clear operation result:', clearResult);
         callback(null, result);
       }).catch((e) => {
         callback(e, null);

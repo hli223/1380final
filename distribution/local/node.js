@@ -1,4 +1,5 @@
 const http = require('http');
+http.globalAgent.maxSockets = Infinity;
 const url = require('url');
 
 let local = require('../local/local');

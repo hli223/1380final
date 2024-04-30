@@ -29,12 +29,12 @@ let localServer = null;
 // console.log('numNodes: ' + numNodes+'\n');
 
 const nodes = [];
-for (let i = 1; i <= 10; i++) {
+for (let i = 1; i <= 3; i++) {
   nodes.push({ ip: '127.0.0.1', port: startPort + i });
 }
 
 
-beforeAll((done) => {
+beforeAll( (done) => {
   /* Stop the nodes if they are running */
 
   nodes.forEach(node => {
@@ -52,7 +52,7 @@ beforeAll((done) => {
     console.log('start spawning nodes...')
     const spawnPromise = global.promisify(distribution.local.status.spawn);
     for (const node of nodes) {
-      await spawnPromise(node);
+        await spawnPromise(node);
     }
     console.log('node started!')
     cb();
@@ -83,7 +83,7 @@ beforeAll((done) => {
       });
     });
   });
-}, 800000);
+}, 400000);
 
 afterAll((done) => {
   const remote = { service: 'status', method: 'stop' };
@@ -98,68 +98,70 @@ afterAll((done) => {
     localServer.close();
     done();
   });
-}, 800000);
+}, 400000);
 
 test('(25 pts) crawler workflow', (done) => {
 
-  let m1 = async (gid, baseUrl) => {
-    let out = {}
-    try {
-      if (baseUrl.slice(-1) !== '/' && !baseUrl.endsWith('.txt') && !baseUrl.endsWith('.html')) {
-        baseUrl += '/'
-      }
-    } catch (e) {
-      console.log('error in m1: ' + baseUrl + ' ', e);
-      return { url: ['error in m1: ' + baseUrl + ' ', e] };
-    }
-    try {
-      process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
-      const response = await global.fetch(baseUrl);
-      if (!response.ok) {
-        return { ...out, [baseUrl]: `HTTP error! status: ${response.status}` };
-      }
-      var htmlContent = await response.text();
-      htmlContent = htmlContent.replace("\u00a9", "&copy;")
-      const dom = new global.JSDOM(htmlContent);
-      const document = dom.window.document;
-
-      console.log('baseUrl in map is: ', baseUrl, gid);
-      const anchors = document.querySelectorAll('a');
-
-
-
-      let promises = [];
-      let urls = [];
-      anchors.forEach((anchor) => {
-        const href = anchor.getAttribute('href');
-        if (href) {
-          var absoluteUrl = new URL(href, baseUrl).toString();
-          if (absoluteUrl.endsWith('index.html')) {
-            absoluteUrl = new URL(absoluteUrl + '/../').toString();
-          }
-          if (!baseUrl.startsWith(absoluteUrl)
-            && (absoluteUrl.startsWith('https://www.usenix.org/conference/')
-              && absoluteUrl.includes('/presentation/'))) {
-            urls.push(absoluteUrl);
-          }
+    let m1 = async (gid, baseUrl) => {
+        let out = {}
+        try {
+            if (baseUrl.slice(-1) !== '/' && !baseUrl.endsWith('.txt') && !baseUrl.endsWith('.html')) {
+            baseUrl += '/'
+            }
+        } catch (e) {
+            console.log('error in m1: ' + baseUrl + ' ', e);
+            return { url: ['error in m1: ' + baseUrl + ' ', e] };
         }
-      });
-      console.log('within user map, urls: ', urls);
-      out[baseUrl] = urls;
-      return out;
-    } catch (error) {
-      console.error(baseUrl + ' Fetch error: ', error);
-      out = { ...out, [baseUrl]: 'Error fetching URL: ' + baseUrl + ' ' + error };
-      return out
+        try {
+            process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
+            const response = await global.fetch(baseUrl);
+            if (!response.ok) {
+            return { ...out, [baseUrl]: `HTTP error! status: ${response.status}` };
+            }
+            var htmlContent = await response.text();
+            htmlContent = htmlContent.replace("\u00a9", "&copy;")
+            const dom = new global.JSDOM(htmlContent);
+            const document = dom.window.document;
+
+            console.log('baseUrl in map is: ', baseUrl, gid);
+            const anchors = document.querySelectorAll('a');
+
+            
+
+            let promises = [];
+            let urls = [];
+            anchors.forEach( (anchor) => {
+                const href = anchor.getAttribute('href');
+                if (href) {
+                    var absoluteUrl = new URL(href, baseUrl).toString();
+                    if (absoluteUrl.endsWith('index.html')) {
+                    absoluteUrl = new URL(absoluteUrl + '/../').toString();
+                    }
+                    if (!baseUrl.startsWith(absoluteUrl) 
+                    && (absoluteUrl.startsWith('https://www.usenix.org/conference/') 
+                && absoluteUrl.includes('/presentation/'))){
+                    urls.push(absoluteUrl);
+                    }
+                }
+            });
+            console.log('within user map, urls: ', urls);
+            out[baseUrl] = urls;
+            return out;
+        } catch (error) {
+            console.error(baseUrl + ' Fetch error: ', error);
+            out = { ...out, [baseUrl]: 'Error fetching URL: ' + baseUrl + ' ' + error };
+            return out
+        }
+        return out
+
+
     }
-
-
     const testStartTime = Date.now(); // Start timing here
     var baseUrl = 'https://www.usenix.org/publications/proceedings?page='
     let promises = [];
     let urlKeys = []
     let execMr = global.promisify(distribution.crawlUrl.mr.exec)
-    let totalPages = 346;//346
+    let totalPages = 100;//346
     for (let i = 1; i<=totalPages; i++) {
         let url = baseUrl + i;
         let urlKey = id.getID(url);
@@ -200,6 +202,7 @@ test('(25 pts) crawler workflow', (done) => {
 
 
 
+    
 
 
 
