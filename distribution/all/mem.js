@@ -147,41 +147,43 @@ let mem = (config) => {
             });
           });
     },
-clear: async (callback) => {
-  callback = callback || function() {};
-  global.distribution[context.gid].groups.get(context.gid,
-      (e, perNodeViews) => {
-        if (Object.keys(e).length !== 0) {
-          callback(e, null);
-          return;
+    clear: async (callback) => {
+    callback = callback || function() {};
+      if (perNodeViews === null) {
+        try {
+            perNodeViews = await global.promisify(global.distribution[context.gid].groups.get)(context.gid);
+        } catch (e) {
+            callback(e, null);
+            return;
         }
-        let nodes = Object.values(perNodeViews)[0];
-        let totalNodes = Object.keys(nodes).length;
-        let completedNodes = 0;
-        let errors = [];
+      }
+            let nodes = Object.values(perNodeViews)[0];
+            let totalNodes = Object.keys(nodes).length;
+            let completedNodes = 0;
+            let errors = [];
 
-        Object.values(nodes).forEach(node => {
-          let remote = {
-            service: 'mem',
-            method: 'clear',
-            node: node,
-          };
-          localComm.send([], remote, (err) => {
-            if (err) {
-              errors.push(err);
-            }
-            completedNodes++;
-            if (completedNodes === totalNodes) {
-              if (errors.length > 0) {
-                callback({ message: "Errors occurred during clearing", errors: errors }, null);
-              } else {
-                callback(null, { message: "All nodes cleared" });
-              }
-            }
-          });
-        });
-      });
-},
+            Object.values(nodes).forEach(node => {
+            let remote = {
+                service: 'mem',
+                method: 'clear',
+                node: node,
+            };
+            localComm.send([], remote, (err) => {
+                if (err) {
+                errors.push(err);
+                }
+                completedNodes++;
+                if (completedNodes === totalNodes) {
+                if (errors.length > 0) {
+                    callback({ message: "Errors occurred during clearing", errors: errors }, null);
+                } else {
+                    callback(null, { message: "All nodes cleared" });
+                }
+                }
+            });
+            });
+
+    },
     reconf: (preGroup, callback) => {
       callback = callback || function() {};
 

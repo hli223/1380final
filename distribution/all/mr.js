@@ -14,6 +14,7 @@ const mr = function (config) {
   context.gid = config.gid || 'all';
   context.hash = config.hash || id.naiveHash;
   let mrServiceExists = false;
+  let prevNodes = null;
 
   return {
     exec: (configuration, callback) => {
@@ -140,7 +141,17 @@ const mr = function (config) {
         },
       };
       mrServiceName = 'mr-' + id.getSID(mrService);
-      const doMapReduce = async (prevNodes) => {
+      const doMapReduce = async () => {
+        if (prevNodes === null) {
+          try {
+            prevNodes = await global.promisify(global.distribution['invertedIdx'].groups.get)('invertedIdx');
+            console.log('prevNodes in invert index: ', prevNodes);
+          } catch (e) {
+            console.log('error in getting prevNodes for invert index: ', e);
+            done(e)
+          }
+        }
+
         if (!mrServiceExists) {
           try {
             let resultKey = await global.promisify(global.distribution[context.gid].routes.put)(mrService, mrServiceName);
@@ -239,17 +250,18 @@ const mr = function (config) {
               reduce: configuration.reduce,
               storeGroup: configuration.storeGroup,
             }
-            
-            if (keySublist.length > 30) {
+            let reduceBatchSize = 15;
+            if (keySublist.length > reduceBatchSize) {
               let batches = [];
-              for (let j = 0; j < keySublist.length; j += 30) {
-                batches.push(keySublist.slice(j, j + 30 > keySublist.length ? keySublist.length : j + 30));
+              for (let j = 0; j < keySublist.length; j += reduceBatchSize) {
+                batches.push(keySublist.slice(j, j + reduceBatchSize > keySublist.length ? keySublist.length : j + reduceBatchSize));
               }
               for (let batch of batches) {
                 let args = [batch, context.gid, reduceConfig];
                 console.log('reduce args: ', args);
                 console.log('reduce node: ', selectedNode);
                 reducePromises.push(global.promisify(localComm.send)(args, remote));
+                await new Promise(resolve => setTimeout(resolve, 200));
               }
             } else {
               let args = [keySublist, context.gid, reduceConfig];
@@ -281,7 +293,7 @@ const mr = function (config) {
 
       }
 
-      doMapReduce(configuration.prevNodes).then(async (result) => {
+      doMapReduce().then(async (result) => {
         console.log('mapReduce result: ', result);
         const clearResult = await global.promisify(global.distribution[context.gid].mem.clear)();
         console.log('Clear operation result:', clearResult);
