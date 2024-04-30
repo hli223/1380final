@@ -1,23 +1,29 @@
 const id = require('../util/id');
 
 const localComm = require('../local/comm');
-const promisify = require('../util/promisify');
 
 let store = (config) => {
   let context = {};
   context.gid = config.gid || 'all';
 
   context.hash = config.hash || id.naiveHash;
+  let perNodeViews = null;
 
   return {
     get: async (key, callback) => {
       callback = callback || function() {};
-      global.distribution[context.gid].groups.get(context.gid,
-          (e, perNodeViews) => {
-            if (Object.keys(e).length!==0) {
-              callback(e, null);
-              return;
-            }
+      if (perNodeViews === null) {
+        try {
+            perNodeViews = await global.promisify(global.distribution[context.gid].groups.get)(context.gid);
+        } catch (e) {
+            callback(e, null);
+            return;
+        }
+      }
+            // if (Object.keys(e).length!==0) {
+            //   callback(e, null);
+            //   return;
+            // }
             nodes = Object.values(perNodeViews)[0];
             if (key === null) {
               let totalRequests = Object.keys(nodes).length;
@@ -66,19 +72,25 @@ let store = (config) => {
                 callback(null, v);
               });
             }
-          });
+
     },
     put: async (value, key, callback) => {
       callback = callback || function() {};
       if (key === null) {
         key = id.getID(value);
       }
-      global.distribution[context.gid].groups.get(context.gid,
-          (e, perNodeViews) => {
-            if (Object.keys(e).length!==0) {
-              callback(e, null);
-              return;
-            }
+      if (perNodeViews === null) {
+        try {
+            perNodeViews = await global.promisify(global.distribution[context.gid].groups.get)(context.gid);
+        } catch (e) {
+            callback(e, null);
+            return;
+        }
+      }
+            // if (Object.keys(e).length!==0) {
+            //   callback(e, null);
+            //   return;
+            // }
             nodes = Object.values(perNodeViews)[0];
             const nids = Object.values(nodes).map((node) => id.getNID(node));
             const kid = id.getID(key);
@@ -100,7 +112,7 @@ let store = (config) => {
               }
               callback(null, v);
             });
-          });
+
     },
     del: async (key, callback) => {
       callback = callback || function() {};

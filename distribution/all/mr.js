@@ -13,6 +13,7 @@ const mr = function (config) {
   let context = {};
   context.gid = config.gid || 'all';
   context.hash = config.hash || id.naiveHash;
+  let mrServiceExists = false;
 
   return {
     exec: (configuration, callback) => {
@@ -139,97 +140,24 @@ const mr = function (config) {
         },
       };
       mrServiceName = 'mr-' + id.getSID(mrService);
-      let nodes;
-      const doMapReduce = async () => {
-        let prevNodes;
-        try {
-          prevNodes = await global.promisify(global.distribution[context.gid].groups.get)(context.gid);
-          console.log('prevNodes', prevNodes);
-        } catch (e) {
-          console.log('error in getting prevNodes: ', e);
-          throw e;
+      const doMapReduce = async (prevNodes) => {
+        if (!mrServiceExists) {
+          try {
+            let resultKey = await global.promisify(global.distribution[context.gid].routes.put)(mrService, mrServiceName);
+            console.log('Instatiation completed!', resultKey);
+            mrServiceExists = true;
+          } catch (e) {
+            console.log('Error in promisifying and putting route: ', e);
+            throw e;
+          }
         }
 
-        try {
-          let resultKey = await global.promisify(global.distribution[context.gid].routes.put)(mrService, mrServiceName);
-          console.log('Instatiation completed!', resultKey);
-        } catch (e) {
-          console.log('Error in promisifying and putting route: ', e);
-          throw e;
-        }
-
-
-        nodes = Object.values(prevNodes)[0];
+        let nodes = Object.values(prevNodes)[0];
         let numNodes = Object.keys(nodes).length;
         console.log('numNodes: ', numNodes, nodes);
         // statusCheck();
         let totalRequests = configuration.keys.length;
         console.log('totalRequests: ', totalRequests);
-          // console.log('configuration.keys: ', configuration.keys);
-        let completedRequests = 0;
-        let errorsMap = {};
-        // let mapResultKeys = new Set();
-        const checkAllDoneMap = () => {
-          console.log('map completedRequests: ', completedRequests);
-          if (completedRequests === totalRequests) {
-            console.log('map errorsMap: ', errorsMap, Object.keys(errorsMap).length);
-            if (Object.keys(errorsMap).length > 0) {
-              console.log('found errors!')
-              callback(errorsMap, null);
-              return;
-            }
-            console.log('shuffled mapResultKeys: ', mapResultKeys);
-            if (configuration.reduce === null) {
-              // if there is no reduce,
-              // we just distributed map result store
-              // callback(null, mapResultKeys);
-              callback(null, 'map phase done');
-              return;
-            }
-            let totalRequestsReduce = mapResultKeys.size;
-            let completedRequestsReduce = 0;
-            console.log('totalRequestsReduce: ', totalRequestsReduce,
-              'completedRequestsReduce:', completedRequestsReduce);
-            let errorsReduce = [];
-            let reduceResults = [];
-            const checkAllDoneReduce = () => {
-              console.log('completedRequestsReduce: ', completedRequestsReduce);
-              if (completedRequestsReduce === totalRequestsReduce) {
-                console.log('reduced results: ', reduceResults);
-                callback(errorsReduce, reduceResults);
-              }
-            };
-            var storeGroup = '';
-            if (configuration.storeGroup) {
-              storeGroup = configuration.storeGroup;
-            } else {
-              storeGroup = context.gid;
-            }
-            console.log('mapResultKeys before reduce: ', mapResultKeys);
-            for (const key of mapResultKeys) {
-              const selectedNode = getSelectedNode(key, nodes, context);
-              let remote = {
-                service: mrServiceName,
-                method: 'reduce',
-                node: selectedNode,
-              };
-              console.log('reduce key before local comm: ', key);
-              localComm.send([key, storeGroup,
-                configuration.reduce],
-                remote, (e, reduceResult) => {
-                  if (e) {
-                    errorsReduce.push(e);
-                  } else {
-                    console.log('each reduceResult: ', reduceResult);
-                    reduceResults.push(reduceResult);
-                  }
-                  console.log('the final reduceResults: ', reduceResults);
-                  completedRequestsReduce++;
-                  checkAllDoneReduce();
-                });
-            }
-          }
-        };
         console.log('Start mapping phase!, number of keys: ', configuration.keys.length);
 
         //splitting data into shards
@@ -311,10 +239,24 @@ const mr = function (config) {
               reduce: configuration.reduce,
               storeGroup: configuration.storeGroup,
             }
-            let args = [keySublist, context.gid, reduceConfig];
-            console.log('reduce args: ', args);
-            console.log('reduce node: ', selectedNode);
-            reducePromises.push(global.promisify(localComm.send)(args, remote));
+            
+            if (keySublist.length > 30) {
+              let batches = [];
+              for (let j = 0; j < keySublist.length; j += 30) {
+                batches.push(keySublist.slice(j, j + 30 > keySublist.length ? keySublist.length : j + 30));
+              }
+              for (let batch of batches) {
+                let args = [batch, context.gid, reduceConfig];
+                console.log('reduce args: ', args);
+                console.log('reduce node: ', selectedNode);
+                reducePromises.push(global.promisify(localComm.send)(args, remote));
+              }
+            } else {
+              let args = [keySublist, context.gid, reduceConfig];
+              console.log('reduce args: ', args);
+              console.log('reduce node: ', selectedNode);
+              reducePromises.push(global.promisify(localComm.send)(args, remote));
+            }
           }
 
           try {
@@ -339,7 +281,7 @@ const mr = function (config) {
 
       }
 
-      doMapReduce().then(async (result) => {
+      doMapReduce(configuration.prevNodes).then(async (result) => {
         console.log('mapReduce result: ', result);
         const clearResult = await global.promisify(global.distribution[context.gid].mem.clear)();
         console.log('Clear operation result:', clearResult);

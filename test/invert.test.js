@@ -179,15 +179,25 @@ test('(25 pts) Inverted index wordflow', (done) => {
         let urlKeys;
         try {
             urlKeys = await global.promisify(distribution.downloadText.store.get)(null);
-            // urlKeys = urlKeys.slice(0, 4);
+            // urlKeys = urlKeys.slice(0, 6);
             console.log('Retrieved all url keys, number of keys: ', urlKeys.length);
         } catch (e) {
             console.error('Error fetching urlKeys', e);
             done(e);
         }
+        let prevNodes;
+        try {
+          prevNodes = await global.promisify(global.distribution['invertedIdx'].groups.get)('invertedIdx');
+          console.log('prevNodes in invert index: ', prevNodes);
+        } catch (e) {
+          console.log('error in getting prevNodes for invert index: ', e);
+          done(e)
+        }
+        let configuration = { map: m1, reduce: r1, storeGroup: 'invertedIdx' };
+        configuration.prevNodes = prevNodes;
 
         let execMr = global.promisify(distribution.downloadText.mr.exec)
-        let batchSize = 1;
+        let batchSize = 3;
         let totalNumKeys = urlKeys.length;//urlKeys.length
         for (let i = 0; i < totalNumKeys; i += batchSize) {
             if (i + batchSize > totalNumKeys) {
@@ -195,8 +205,9 @@ test('(25 pts) Inverted index wordflow', (done) => {
             }
             let batch = urlKeys.slice(i, i + batchSize);
             console.log('batch: ', batch, i, i + batchSize, totalNumKeys);
+            configuration.keys = batch;
             try {
-                await execMr({ keys: batch, map: m1, reduce: r1, storeGroup: 'invertedIdx' });
+                await execMr(configuration);
             } catch (err) {
                 console.error('invert index errorr: ', err.stack);
                 done(err);
@@ -205,8 +216,9 @@ test('(25 pts) Inverted index wordflow', (done) => {
         if (totalNumKeys % batchSize !== 0) {
             let lastBatch = urlKeys.slice(-totalNumKeys % batchSize);
             console.log('lastBatch: ', lastBatch, totalNumKeys % batchSize);
+            configuration.keys = lastBatch;
             try {
-                await execMr({ keys: lastBatch, map: m1, reduce: r1, storeGroup: 'invertedIdx' });
+                await execMr(configuration);
             } catch (err) {
                 console.error('invert index errorr: ', err.stack);
                 done(err);

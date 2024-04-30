@@ -1,23 +1,26 @@
 const id = require('../util/id');
 const localComm = require('../local/comm');
-
+const { promisify } = require('util');
 
 let mem = (config) => {
   let context = {};
   context.gid = config.gid || 'all';
 
   context.hash = config.hash || id.naiveHash;
+  let perNodeViews = null;
 
   return {
     get: async (key, callback) => {
       callback = callback || function() {};
-      let perNodeViews;
-      try {
-        perNodeViews = await global.promisify(global.distribution[context.gid].groups.get)(context.gid);
-      } catch (e) {
-        callback(e, null);
-        return;
+      if (perNodeViews === null) {
+        try {
+            perNodeViews = await global.promisify(global.distribution[context.gid].groups.get)(context.gid);
+        } catch (e) {
+            callback(e, null);
+            return;
+        }
       }
+
             nodes = Object.values(perNodeViews)[0];
             if (key === null) {
               let totalRequests = Object.keys(nodes).length;
@@ -80,11 +83,13 @@ let mem = (config) => {
       if (key === null) {
         key = id.getID(value);
       }
-      try {
-        perNodeViews = await global.promisify(global.distribution[context.gid].groups.get)(context.gid);
-      } catch (e) {
-        callback(e, null);
-        return;
+      if (perNodeViews === null) {
+        try {
+            perNodeViews = await global.promisify(global.distribution[context.gid].groups.get)(context.gid);
+        } catch (e) {
+            callback(e, null);
+            return;
+        }
       }
             // if (Object.keys(e).length!==0) {
             //   callback(e, null);
