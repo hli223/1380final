@@ -131,7 +131,7 @@ test('(25 pts) downloadText workflow', (done) => {
     }
     return out;
   };
-  const testStartTime = Date.now(); 
+  const testStartTime = Date.now();
 
   const downloadText = async (cb) => {
     let urlKeys;
@@ -174,7 +174,7 @@ test('(25 pts) downloadText workflow', (done) => {
 
   };
   downloadText().then(() => {
-    const testEndTime = Date.now(); 
+    const testEndTime = Date.now();
     const testDuration = testEndTime - testStartTime;
     console.log(`Test execution time (excluding setup and teardown): ${testDuration}ms`);
     done();
