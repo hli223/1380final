@@ -27,8 +27,10 @@ let localServer = null;
 */
 
 const nodes = [];
-for (let i = 1; i <= ipAddresses.length; i++) {
-  nodes.push({ ip: ipAddresses[i-1], port: startPort + i });
+
+for (let i = 1; i <= 1; i++) {
+  nodes.push({ ip: '127.0.0.1', port: startPort + i });
+
 }
 
 
@@ -180,6 +182,9 @@ test('(25 pts) downloadText workflow', (done) => {
     console.log(`Test execution time (excluding setup and teardown): ${testDuration}ms`);
     done();
   }).catch(err => {
+    const testEndTime = Date.now();
+    const testDuration = testEndTime - testStartTime;
+    console.log(`Test execution time (excluding setup and teardown): ${testDuration}ms`);
     console.error('Error in downloadText: ', err);
     done(err);
   });

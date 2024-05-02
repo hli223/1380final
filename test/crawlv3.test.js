@@ -5,7 +5,10 @@ const id = distribution.util.id;
 const fs = require('fs');
 
 const groupsTemplate = require('../distribution/all/groups');
-const ipAddresses = ['18.225.175.3', '3.142.135.227']
+
+// const ipAddresses = ['18.225.175.3', '3.142.135.227']
+// const ipAddresses = ['127.0.0.1', '127.0.0.1']
+
 
 const crawlUrlGroup = {};
 const downloadTextGroup = {};
@@ -161,7 +164,7 @@ test('(25 pts) crawler workflow', (done) => {
   let promises = [];
   let urlKeys = []
   let execMr = global.promisify(distribution.crawlUrl.mr.exec)
-  let totalPages = 100;//346
+  let totalPages = 346;//346
   for (let i = 1; i <= totalPages; i++) {
     let url = baseUrl + i;
     let urlKey = id.getID(url);

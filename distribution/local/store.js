@@ -92,7 +92,7 @@ console.log('local storing! ', value, keyGid);
         if (Array.isArray(existingValue)) {
           finalData = existingValue.concat(newValue);
         } else {
-          finalData = existingValue.concat(newValue);
+          finalData = newValue;
         }
         console.log('found existing data in file for key', key, filePath, existingValue);
         console.log('new value to be appended', newValue);
