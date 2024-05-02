@@ -4,7 +4,8 @@ const { url } = require('inspector');
 const distribution = require('../distribution');
 const id = distribution.util.id;
 
-const ipAddresses = ['18.225.175.3', '3.142.135.227']
+// const ipAddresses = ['18.225.175.3', '3.142.135.227']
+const ipAddresses = ['127.0.0.1', '127.0.0.1']
 
 const groupsTemplate = require('../distribution/all/groups');
 
@@ -28,8 +29,8 @@ let localServer = null;
 */
 
 const nodes = [];
-for (let i = 1; i <= ipAddresses.length; i++) {
-    nodes.push({ ip: ipAddresses[i-1], port: startPort + i });
+for (let i = 1; i <= 5; i++) {
+    nodes.push({ ip: '127.0.0.1', port: startPort + i });
 }
 
 
@@ -191,7 +192,7 @@ test('(25 pts) Inverted index wordflow', (done) => {
         let configuration = { map: m1, reduce: r1, storeGroup: 'invertedIdx' };
 
         let execMr = global.promisify(distribution.downloadText.mr.exec)
-        let batchSize = 3;
+        let batchSize =5;
         let totalNumKeys = urlKeys.length;//urlKeys.length
         for (let i = 0; i < totalNumKeys; i += batchSize) {
             if (i + batchSize > totalNumKeys) {
