@@ -3,7 +3,7 @@ global.nodeConfig = { ip: '127.0.0.1', port: startPort };
 const { url } = require('inspector');
 const distribution = require('../distribution');
 const id = distribution.util.id;
-const ipAddresses = ['127.0.0.1', '127.0.0.1', '127.0.0.1']
+const ipAddresses = ['18.225.175.3', '3.142.135.227']
 
 const groupsTemplate = require('../distribution/all/groups');
 
@@ -27,8 +27,10 @@ let localServer = null;
 */
 
 const nodes = [];
+
 for (let i = 1; i <= 1; i++) {
   nodes.push({ ip: '127.0.0.1', port: startPort + i });
+
 }
 
 
