@@ -4,7 +4,8 @@ const { url } = require('inspector');
 const distribution = require('../distribution');
 const id = distribution.util.id;
 
-const ipAddresses = ['18.225.175.3', '3.142.135.227']
+// const ipAddresses = ['18.225.175.3', '3.142.135.227']
+const ipAddresses = ['127.0.0.1', '127.0.0.1']
 
 const groupsTemplate = require('../distribution/all/groups');
 
